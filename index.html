@@ -70,7 +70,7 @@
             const longEMA = TechUtils.calculateEMA(closePrices, longPeriod);
             const dif = shortEMA.map((s, i) => s - longEMA[i]);
             const dea = TechUtils.calculateEMA(dif, midPeriod);
-            const macdBar = dif.map((d, i) => (d - dea[i]) * 2);
+            const macdBar = dif.map((d, i) => d - dea[i]); // MACD = DIF - DEA
             return { dif, dea, macdBar };
         }
     };
