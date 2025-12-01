@@ -55,12 +55,24 @@
 
     // --- 1. [Utils] 數學計算工具 (採用SMA預熱，命名與樹精靈同步) ---
     const TechUtils = {
-        /**
-         * 計算指數移動平均 (EMA)，採用 SMA 進行預熱以提高準確性。
-         * @param {number[]} data - 輸入的純數字陣列。
-         * @param {number} period - 週期。
-         * @returns {(number|null)[]} 回傳一個與 data 等長的陣列，前期無法計算的值為 null。
-         */
+        calculateSMA: (data, period) => {
+            if (!data || data.length < period) {
+                return new Array(data.length).fill(null);
+            }
+            const smaArray = new Array(data.length).fill(null);
+            let sum = 0;
+            for (let i = 0; i < data.length; i++) {
+                sum += data[i];
+                if (i >= period) {
+                    sum -= data[i - period];
+                    smaArray[i] = sum / period;
+                } else if (i === period - 1) {
+                    smaArray[i] = sum / period;
+                }
+            }
+            return smaArray;
+        },
+
         calculateEMA: (data, period) => {
             if (!data || data.length < period) {
                 return new Array(data.length).fill(null);
@@ -69,14 +81,12 @@
             const k = 2 / (period + 1);
             const emaArray = new Array(data.length).fill(null);
 
-            // 1. 使用 SMA 進行預熱
             let sma = 0;
             for (let i = 0; i < period; i++) {
                 sma += data[i];
             }
             emaArray[period - 1] = sma / period;
 
-            // 2. 從預熱點開始計算後續的 EMA
             for (let i = period; i < data.length; i++) {
                 emaArray[i] = (data[i] * k) + (emaArray[i - 1] * (1 - k));
             }
@@ -84,17 +94,12 @@
             return emaArray;
         },
 
-        /**
-         * 計算 MACD 指標，採用 SMA 預熱的 EMA 算法。
-         * 命名規則 (DIF, MACD, D-M) 與樹精靈同步。
-         */
         calculateMACD: (closePrices, shortPeriod = 12, longPeriod = 26, midPeriod = 9) => {
             const totalLength = closePrices.length;
             if (totalLength < longPeriod + midPeriod -1) {
                 return { dif: [], macd: [], dm: [] };
             }
 
-            // 1. 計算快線 (DIF)
             const shortEMA = TechUtils.calculateEMA(closePrices, shortPeriod);
             const longEMA = TechUtils.calculateEMA(closePrices, longPeriod);
 
@@ -105,7 +110,6 @@
                 }
             }
 
-            // 2. 計算慢線 (MACD)
             const difValues = dif.slice(longPeriod - 1);
             const macdValues = TechUtils.calculateEMA(difValues, midPeriod);
 
@@ -116,7 +120,6 @@
                 }
             }
             
-            // 3. 計算柱狀圖 (D-M)
             const dm = new Array(totalLength).fill(null);
             const startIndex = longPeriod - 1 + midPeriod - 1;
             for (let i = startIndex; i < totalLength; i++) {
@@ -249,6 +252,9 @@
 
             const closePrices = resampledData.map(item => item.close);
             const macdResult = TechUtils.calculateMACD(closePrices);
+            const ma5 = TechUtils.calculateSMA(closePrices, 5);
+            const ma10 = TechUtils.calculateSMA(closePrices, 10);
+            const ma20 = TechUtils.calculateSMA(closePrices, 20);
 
             const periodMap = { 'daily': '日線', 'weekly': '周線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
             const periodName = periodMap[periodType];
@@ -264,7 +270,7 @@
                 title: { text: `台灣加權指數 (${periodName})`, left: 'center' },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                 axisPointer: { link: { xAxisIndex: 'all' } },
-                legend: { top: 30, data: [periodName, 'DIF', 'MACD', 'D-M'] },
+                legend: { top: 30, data: [periodName, 'MA5', 'MA10', 'MA20', 'DIF', 'MACD', 'D-M'] },
                 grid: [
                     { left: '5%', right: '5%', top: '10%', height: '55%' },
                     { left: '5%', right: '5%', top: '72%', height: '20%' }
@@ -287,6 +293,9 @@
                         itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
                         large: true
                     },
+                    { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
+                    { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
+                    { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: '#32CD32' }, symbol: 'none' },
                     { name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
                     { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                     { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
