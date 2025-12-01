@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台股 20年歷史回測 - 雙周線 MACD</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
+
+    <style>
+        body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; margin: 20px; background: #f4f6f8; }
+        .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h2 { margin-top: 0; color: #2c3e50; border-left: 5px solid #3498db; padding-left: 10px; }
+        #chart { width: 100%; height: 700px; } /* 加高圖表以便觀察長週期 */
+        .status { margin-bottom: 15px; color: #7f8c8d; font-size: 0.95em; font-family: monospace; }
+        .badge { background: #3498db; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;}
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📈 台股 2005-2025 雙周線 MACD <span class="badge">Time: 2025-12-01</span></h2>
+    <div class="status" id="status">系統狀態：資料運算中...</div>
+    <div id="chart"></div>
+</div>
+
+<script>
+    // --- 0. 設定 Day.js ---
+    dayjs.extend(window.dayjs_plugin_weekOfYear);
+
+    // --- 1. [Utils] 數學計算工具 (保持不變) ---
+    const TechUtils = {
+        calculateEMA: (data, period) => {
+            const k = 2 / (period + 1);
+            let emaArray = [data[0]];
+            for (let i = 1; i < data.length; i++) {
+                emaArray.push(data[i] * k + emaArray[i - 1] * (1 - k));
+            }
+            return emaArray;
+        },
+        calculateMACD: (closePrices, shortPeriod = 12, longPeriod = 26, midPeriod = 9) => {
+            const shortEMA = TechUtils.calculateEMA(closePrices, shortPeriod);
+            const longEMA = TechUtils.calculateEMA(closePrices, longPeriod);
+            const dif = shortEMA.map((s, i) => s - longEMA[i]);
+            const dea = TechUtils.calculateEMA(dif, midPeriod);
+            const macdBar = dif.map((d, i) => (d - dea[i]) * 2);
+            return { dif, dea, macdBar };
+        }
+    };
+
+    // --- 2. [Service] 資料處理層 (大幅升級模擬邏輯) ---
+    const DataService = {
+        // 生成 20 年資料 (2005 - 2025)
+        generateLongTermData: () => {
+            const data = [];
+
+            // 設定起始與結束時間
+            const startDate = dayjs('2005-01-01');
+            const endDate = dayjs('2025-12-01'); // 現在時間
+
+            let currentDate = startDate;
+
+            // 模擬參數：2005年起價 50元，模擬台積電長期走勢
+            let price = 50;
+
+            // 只要日期還沒超過 2025-12-01 就繼續跑
+            while (currentDate.isBefore(endDate) || currentDate.isSame(endDate)) {
+                // 跳過週末
+                const dayOfWeek = currentDate.day();
+                if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+
+                    // 模擬股價隨機漫步 (Random Walk with Drift)
+                    // 長期趨勢向上 (Drift) + 隨機波動 (Volatility)
+                    const drift = 0.08; // 每日微幅上漲傾向
+                    const volatility = (Math.random() - 0.5) * 6; // 波動
+
+                    price = price + drift + volatility;
+                    if (price < 10) price = 10; // 防止跌破 10 元
+
+                    const open = price;
+                    const close = price + (Math.random() - 0.5) * 4;
+                    const high = Math.max(open, close) + Math.random() * 2;
+                    const low = Math.min(open, close) - Math.random() * 2;
+
+                    data.push({
+                        date: currentDate.format('YYYY-MM-DD'),
+                        open, high, low, close,
+                        volume: Math.floor(Math.random() * 20000 + 5000)
+                    });
+                }
+                // 加一天
+                currentDate = currentDate.add(1, 'day');
+            }
+            return data;
+        },
+
+        // 雙周線聚合 (邏輯不變，但資料量變大)
+        resampleToBiWeekly: (dailyData) => {
+            const grouped = {};
+            dailyData.forEach(tick => {
+                const d = dayjs(tick.date);
+                // 使用 年份-雙周 作為 Key，確保 2005-2025 不會重疊
+                const biWeekIndex = Math.floor(d.week() / 2);
+                // PadStart 確保排序正確: 2005-BW01, 2005-BW02
+                const key = `${d.year()}-BW${String(biWeekIndex).padStart(2, '0')}`;
+
+                if (!grouped[key]) grouped[key] = [];
+                grouped[key].push(tick);
+            });
+
+            return Object.keys(grouped).sort().map(key => {
+                const ticks = grouped[key];
+                return {
+                    date: key,
+                    open: ticks[0].open,
+                    close: ticks[ticks.length - 1].close,
+                    high: Math.max(...ticks.map(t => t.high)),
+                    low: Math.min(...ticks.map(t => t.low)),
+                    values: [ // Open, Close, Low, High
+                        ticks[0].open,
+                        ticks[ticks.length - 1].close,
+                        Math.min(...ticks.map(t => t.low)),
+                        Math.max(...ticks.map(t => t.high))
+                    ]
+                };
+            });
+        }
+    };
+
+    // --- 3. [View] 渲染層 ---
+    function initApp() {
+        const statusEl = document.getElementById('status');
+
+        // 1. 生成資料
+        console.time("GenerateData");
+        const dailyData = DataService.generateLongTermData();
+        console.timeEnd("GenerateData");
+
+        // 2. 轉換雙周線
+        console.time("Resample");
+        const biWeeklyData = DataService.resampleToBiWeekly(dailyData);
+        console.timeEnd("Resample");
+
+        // 3. 計算 MACD
+        const closePrices = biWeeklyData.map(item => item.close);
+        const macdResult = TechUtils.calculateMACD(closePrices);
+
+        statusEl.innerHTML = `
+            統計範圍：<b>${dailyData[0].date}</b> 至 <b>${dailyData[dailyData.length-1].date}</b><br>
+            原始日K：${dailyData.length.toLocaleString()} 筆 |
+            聚合雙周K：${biWeeklyData.length.toLocaleString()} 筆
+        `;
+
+        // 4. ECharts 設定
+        const chartDom = document.getElementById('chart');
+        const myChart = echarts.init(chartDom);
+
+        const option = {
+            title: { text: '模擬股價走勢圖 (2005-2025)', left: 'center' },
+            tooltip: {
+                trigger: 'axis',
+                axisPointer: { type: 'cross' },
+                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                borderWidth: 1,
+                borderColor: '#ccc',
+                padding: 10,
+                textStyle: { color: '#000' }
+            },
+            axisPointer: { link: { xAxisIndex: 'all' } },
+            legend: { top: 30, data: ['雙周K', 'MACD'] },
+            grid: [
+                { left: '5%', right: '5%', top: '10%', height: '55%' },
+                { left: '5%', right: '5%', top: '72%', height: '20%' } // MACD 區塊
+            ],
+            xAxis: [
+                {
+                    type: 'category',
+                    data: biWeeklyData.map(d => d.date),
+                    axisLine: { lineStyle: { color: '#8392A5' } }
+                },
+                {
+                    type: 'category',
+                    gridIndex: 1,
+                    data: biWeeklyData.map(d => d.date),
+                    axisLabel: { show: false }
+                }
+            ],
+            yAxis: [
+                { scale: true, splitLine: { show: true, lineStyle: { color: '#eee' } } },
+                { scale: true, gridIndex: 1, splitLine: { show: false } }
+            ],
+            // 關鍵設定：DataZoom 讓你可以滑動查看 20 年資料
+            dataZoom: [
+                {
+                    type: 'inside',
+                    xAxisIndex: [0, 1],
+                    start: 95, // 預設只看最後 5% (2024-2025)
+                    end: 100
+                },
+                {
+                    type: 'slider',
+                    xAxisIndex: [0, 1],
+                    top: '94%',
+                    start: 95,
+                    end: 100
+                }
+            ],
+            series: [
+                {
+                    name: '雙周K',
+                    type: 'candlestick',
+                    data: biWeeklyData.map(d => d.values),
+                    itemStyle: {
+                        color: '#eb5454',
+                        color0: '#47b262',
+                        borderColor: '#eb5454',
+                        borderColor0: '#47b262'
+                    },
+                    large: true // 開啟大數據量優化
+                },
+                {
+                    name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1,
+                    data: macdResult.dif,
+                    lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none'
+                },
+                {
+                    name: 'DEA', type: 'line', xAxisIndex: 1, yAxisIndex: 1,
+                    data: macdResult.dea,
+                    lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none'
+                },
+                {
+                    name: 'MACD', type: 'bar', xAxisIndex: 1, yAxisIndex: 1,
+                    data: macdResult.macdBar,
+                    itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' }
+                }
+            ]
+        };
+
+        myChart.setOption(option);
+        window.addEventListener('resize', myChart.resize);
+    }
+
+    initApp();
+</script>
+
+</body>
+</html>
