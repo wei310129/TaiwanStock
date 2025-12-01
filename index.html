@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台股真實歷史回測 - 可切換週期 MACD</title>
+    <title>台灣加權指數歷史回測(Beta 版)</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
@@ -37,7 +37,7 @@
 <body>
 
 <div class="card">
-    <h2 id="chart-title">📈 台灣加權指數歷史回測 <span class="badge">Real Data</span></h2>
+    <h2 id="chart-title">📈 台灣加權指數歷史回測(Beta 版) <span class="badge">Real Data</span></h2>
     <div class="controls">
         <button class="btn active" data-period="daily">日線</button>
         <button class="btn" data-period="weekly">周線</button>
@@ -365,10 +365,10 @@
             const option = {
                 title: [
                     { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
-                    { text: 'K線圖', left: '5%', top: '10%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
-                    { text: 'MACD', left: '5%', top: '53%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
-                    { text: 'KD 隨機指標', left: '5%', top: '68%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
-                    { text: 'RSI 相對強弱指標', left: '5%', top: '83%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } }
+                    { text: 'K線', left: '70px', top: '12%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
+                    { text: 'MACD', left: '70px', top: '54.5%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
+                    { text: 'KD', left: '70px', top: '69.5%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
+                    { text: 'RSI', left: '70px', top: '84.5%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } }
                 ],
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                 axisPointer: { link: { xAxisIndex: 'all' } },
@@ -380,18 +380,17 @@
                         { name: 'MA20', itemStyle: { color: '#32CD32' } },
                         { name: 'DIF', itemStyle: { color: '#DA6EE8' } },
                         { name: 'MACD', itemStyle: { color: '#00D5FA' } },
-                        { name: 'D-M', itemStyle: { color: '#eb5454' } },
-                        { name: 'K', itemStyle: { color: '#FF6B6B' } },
-                        { name: 'D', itemStyle: { color: '#4ECDC4' } },
-                        { name: 'RSI5', itemStyle: { color: '#FF8C00' } },
-                        { name: 'RSI10', itemStyle: { color: '#9370DB' } }
+                        { name: 'K(9)', itemStyle: { color: '#FF6B6B' } },
+                        { name: 'D(9)', itemStyle: { color: '#4ECDC4' } },
+                        { name: 'RSI(5T)', itemStyle: { color: '#FF8C00' } },
+                        { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
                     ]
                 },
                 grid: [
-                    { left: '5%', right: '5%', top: '12%', height: '38%' },
-                    { left: '5%', right: '5%', top: '54.5%', height: '11.5%' },
-                    { left: '5%', right: '5%', top: '69.5%', height: '11.5%' },
-                    { left: '5%', right: '5%', top: '84.5%', height: '11%' }
+                    { left: '50px', right: '5%', top: '12%', height: '38%' },
+                    { left: '50px', right: '5%', top: '54.5%', height: '11.5%' },
+                    { left: '50px', right: '5%', top: '69.5%', height: '11.5%' },
+                    { left: '50px', right: '5%', top: '84.5%', height: '11%' }
                 ],
                 xAxis: [
                     { type: 'category', data: resampledData.map(d => d.date), axisLabel: { show: false } },
@@ -400,10 +399,34 @@
                     { type: 'category', gridIndex: 3, data: resampledData.map(d => d.date), axisLabel: { show: false } }
                 ],
                 yAxis: [
-                    { scale: true, splitLine: { show: true, lineStyle: { color: '#eee' } } },
-                    { scale: true, gridIndex: 1, splitLine: { show: false } },
-                    { scale: true, gridIndex: 2, min: 0, max: 100, splitLine: { show: true, lineStyle: { color: '#eee' } } },
-                    { scale: true, gridIndex: 3, min: 0, max: 100, splitLine: { show: true, lineStyle: { color: '#eee' } } }
+                    {
+                        scale: true,
+                        splitLine: { show: true, lineStyle: { color: '#eee' } },
+                        axisLabel: {
+                            formatter: function(value) {
+                                return value.toLocaleString();
+                            }
+                        }
+                    },
+                    {
+                        scale: true,
+                        gridIndex: 1,
+                        splitLine: { show: false }
+                    },
+                    {
+                        scale: true,
+                        gridIndex: 2,
+                        min: 0,
+                        max: 100,
+                        splitLine: { show: true, lineStyle: { color: '#eee' } }
+                    },
+                    {
+                        scale: true,
+                        gridIndex: 3,
+                        min: 0,
+                        max: 100,
+                        splitLine: { show: true, lineStyle: { color: '#eee' } }
+                    }
                 ],
                 dataZoom: [
                     { type: 'inside', xAxisIndex: [0, 1, 2, 3], start: 95, end: 100 },
@@ -421,26 +444,39 @@
                     { name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
                     { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                     { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } },
-                    { name: 'K', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
-                    { name: 'D', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
-                    // RSI 快慢線
-                    { name: 'RSI5', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi5, lineStyle: { color: '#FF6B6B', width: 2 }, symbol: 'none' },
-                    { name: 'RSI10', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi10, lineStyle: { color: '#4ECDC4', width: 2 }, symbol: 'none' },
-                    // RSI 參考線：超買(70)、超賣(30)、中線(50)
+                    { name: 'K(9)', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
+                    { name: 'D(9)', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
+                    // KD 參考線：超買(80)、超賣(20)
                     {
-                        name: '超買線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
-                        data: new Array(resampledData.length).fill(70),
+                        name: 'KD超買', type: 'line', xAxisIndex: 2, yAxisIndex: 2,
+                        data: new Array(resampledData.length).fill(80),
                         lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
                         symbol: 'none', silent: true, animation: false
                     },
                     {
-                        name: '超賣線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
-                        data: new Array(resampledData.length).fill(30),
+                        name: 'KD超賣', type: 'line', xAxisIndex: 2, yAxisIndex: 2,
+                        data: new Array(resampledData.length).fill(20),
+                        lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
+                        symbol: 'none', silent: true, animation: false
+                    },
+                    // RSI 快慢線
+                    { name: 'RSI(5T)', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none' },
+                    { name: 'RSI(10T)', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
+                    // RSI 參考線：超買(80)、超賣(20)、中線(50)
+                    {
+                        name: 'RSI超買', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
+                        data: new Array(resampledData.length).fill(80),
+                        lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
+                        symbol: 'none', silent: true, animation: false
+                    },
+                    {
+                        name: 'RSI超賣', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
+                        data: new Array(resampledData.length).fill(20),
                         lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
                         symbol: 'none', silent: true, animation: false
                     },
                     {
-                        name: '中線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
+                        name: 'RSI中線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
                         data: new Array(resampledData.length).fill(50),
                         lineStyle: { color: '#999', width: 1, type: 'dotted' },
                         symbol: 'none', silent: true, animation: false
