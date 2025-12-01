@@ -39,9 +39,10 @@
 <div class="card">
     <h2 id="chart-title">📈 台灣加權指數歷史回測 <span class="badge">Real Data</span></h2>
     <div class="controls">
-        <button class="btn" data-period="daily">日線</button>
+        <button class="btn active" data-period="daily">日線</button>
+        <button class="btn" data-period="weekly">周線</button>
+        <button class="btn" data-period="bi-weekly">雙周線</button>
         <button class="btn" data-period="tri-weekly">三周線</button>
-        <button class="btn active" data-period="bi-weekly">雙周線</button>
         <button class="btn" data-period="monthly">月線</button>
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
@@ -52,7 +53,7 @@
     // --- 0. 設定 Day.js ---
     dayjs.extend(window.dayjs_plugin_weekOfYear);
 
-    // --- 1. [Utils] 數學計算工具 (保持不變) ---
+    // -還要-- 1. [Utils] 數學計算工具 (保持不變) ---
     const TechUtils = {
         calculateEMA: (data, period) => {
             if (data.length === 0) return [];
@@ -113,6 +114,9 @@
                 const d = dayjs(tick.date);
                 let key;
                 switch (periodType) {
+                    case 'weekly':
+                        key = `${d.year()}-W${String(d.week()).padStart(2, '0')}`;
+                        break;
                     case 'bi-weekly':
                         const biWeekIndex = Math.floor(d.week() / 2);
                         key = `${d.year()}-BW${String(biWeekIndex).padStart(2, '0')}`;
@@ -162,7 +166,7 @@
 
         statusEl.innerHTML = `系統狀態：真實資料載入成功，請選擇時間週期。`;
 
-        let currentPeriod = 'bi-weekly'; // 預設週期
+        let currentPeriod = 'daily'; // 預設週期
 
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
@@ -180,7 +184,7 @@
             const closePrices = resampledData.map(item => item.close);
             const macdResult = TechUtils.calculateMACD(closePrices);
 
-            const periodMap = { 'daily': '日線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
+            const periodMap = { 'daily': '日線', 'weekly': '周線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
             const periodName = periodMap[periodType];
             chartTitleEl.innerHTML = `📈 台灣加權指數 ${periodName} MACD <span class="badge">Real Data</span>`;
 
