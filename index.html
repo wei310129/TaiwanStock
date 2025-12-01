@@ -53,24 +53,78 @@
     // --- 0. 設定 Day.js ---
     dayjs.extend(window.dayjs_plugin_weekOfYear);
 
-    // --- 1. [Utils] 數學計算工具 (命名與樹精靈同步) ---
+    // --- 1. [Utils] 數學計算工具 (採用SMA預熱，命名與樹精靈同步) ---
     const TechUtils = {
+        /**
+         * 計算指數移動平均 (EMA)，採用 SMA 進行預熱以提高準確性。
+         * @param {number[]} data - 輸入的純數字陣列。
+         * @param {number} period - 週期。
+         * @returns {(number|null)[]} 回傳一個與 data 等長的陣列，前期無法計算的值為 null。
+         */
         calculateEMA: (data, period) => {
-            if (data.length === 0) return [];
-            const k = 2 / (period + 1);
-            let emaArray = [data[0]];
-            for (let i = 1; i < data.length; i++) {
-                emaArray.push(data[i] * k + emaArray[i - 1] * (1 - k));
+            if (!data || data.length < period) {
+                return new Array(data.length).fill(null);
             }
+
+            const k = 2 / (period + 1);
+            const emaArray = new Array(data.length).fill(null);
+
+            // 1. 使用 SMA 進行預熱
+            let sma = 0;
+            for (let i = 0; i < period; i++) {
+                sma += data[i];
+            }
+            emaArray[period - 1] = sma / period;
+
+            // 2. 從預熱點開始計算後續的 EMA
+            for (let i = period; i < data.length; i++) {
+                emaArray[i] = (data[i] * k) + (emaArray[i - 1] * (1 - k));
+            }
+
             return emaArray;
         },
+
+        /**
+         * 計算 MACD 指標，採用 SMA 預熱的 EMA 算法。
+         * 命名規則 (DIF, MACD, D-M) 與樹精靈同步。
+         */
         calculateMACD: (closePrices, shortPeriod = 12, longPeriod = 26, midPeriod = 9) => {
-            if (closePrices.length < longPeriod) return { dif: [], macd: [], dm: [] };
+            const totalLength = closePrices.length;
+            if (totalLength < longPeriod + midPeriod -1) {
+                return { dif: [], macd: [], dm: [] };
+            }
+
+            // 1. 計算快線 (DIF)
             const shortEMA = TechUtils.calculateEMA(closePrices, shortPeriod);
             const longEMA = TechUtils.calculateEMA(closePrices, longPeriod);
-            const dif = shortEMA.map((s, i) => s - longEMA[i]);
-            const macd = TechUtils.calculateEMA(dif, midPeriod); // DEA is named MACD
-            const dm = dif.map((d, i) => d - macd[i]);      // Histogram is named D-M
+
+            const dif = new Array(totalLength).fill(null);
+            for (let i = longPeriod - 1; i < totalLength; i++) {
+                if (longEMA[i] !== null && shortEMA[i] !== null) {
+                     dif[i] = shortEMA[i] - longEMA[i];
+                }
+            }
+
+            // 2. 計算慢線 (MACD)
+            const difValues = dif.slice(longPeriod - 1);
+            const macdValues = TechUtils.calculateEMA(difValues, midPeriod);
+
+            const macd = new Array(totalLength).fill(null);
+            for (let i = 0; i < macdValues.length; i++) {
+                if (macdValues[i] !== null) {
+                    macd[i + longPeriod - 1] = macdValues[i];
+                }
+            }
+            
+            // 3. 計算柱狀圖 (D-M)
+            const dm = new Array(totalLength).fill(null);
+            const startIndex = longPeriod - 1 + midPeriod - 1;
+            for (let i = startIndex; i < totalLength; i++) {
+                 if (dif[i] !== null && macd[i] !== null) {
+                    dm[i] = dif[i] - macd[i];
+                 }
+            }
+
             return { dif, macd, dm };
         }
     };
@@ -78,7 +132,7 @@
     // --- 2. [Service] 資料處理層 (改為串接真實 API) ---
     const DataService = {
         fetchRealData: async () => {
-            const API_URL = 'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=2005-01-01&end_date=2025-12-31';
+            const API_URL = 'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=TAIEX&start_date=1997-01-01';
             try {
                 const response = await fetch(API_URL);
                 if (!response.ok) {
@@ -105,7 +159,7 @@
 
         resampleToPeriod: (dailyData, periodType) => {
             if (periodType === 'daily') {
-                return dailyData;
+                return dailyData.map(d => ({ ...d, date: d.date }));
             }
 
             const grouped = {};
@@ -143,7 +197,7 @@
                 const high = Math.max(...ticks.map(t => t.high));
                 const low = Math.min(...ticks.map(t => t.low));
                 
-                const displayDate = periodType === 'daily' ? firstTick.date : `${firstTick.date} ~ ${lastTick.date}`;
+                const displayDate = `${firstTick.date} ~ ${lastTick.date}`;
 
                 return { 
                     date: displayDate,
