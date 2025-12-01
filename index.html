@@ -53,7 +53,7 @@
     // --- 0. 設定 Day.js ---
     dayjs.extend(window.dayjs_plugin_weekOfYear);
 
-    // -還要-- 1. [Utils] 數學計算工具 (保持不變) ---
+    // --- 1. [Utils] 數學計算工具 (命名與樹精靈同步) ---
     const TechUtils = {
         calculateEMA: (data, period) => {
             if (data.length === 0) return [];
@@ -65,13 +65,13 @@
             return emaArray;
         },
         calculateMACD: (closePrices, shortPeriod = 12, longPeriod = 26, midPeriod = 9) => {
-            if (closePrices.length < longPeriod) return { dif: [], dea: [], macdBar: [] };
+            if (closePrices.length < longPeriod) return { dif: [], macd: [], dm: [] };
             const shortEMA = TechUtils.calculateEMA(closePrices, shortPeriod);
             const longEMA = TechUtils.calculateEMA(closePrices, longPeriod);
             const dif = shortEMA.map((s, i) => s - longEMA[i]);
-            const dea = TechUtils.calculateEMA(dif, midPeriod);
-            const macdBar = dif.map((d, i) => d - dea[i]); // MACD = DIF - DEA
-            return { dif, dea, macdBar };
+            const macd = TechUtils.calculateEMA(dif, midPeriod); // DEA is named MACD
+            const dm = dif.map((d, i) => d - macd[i]);      // Histogram is named D-M
+            return { dif, macd, dm };
         }
     };
 
@@ -86,12 +86,11 @@
                 }
                 const result = await response.json();
                 if (result.data && result.data.length > 0) {
-                    // 將 API 回傳的資料格式轉換為我們圖表需要的格式
                     return result.data.map(item => ({
                         date: item.date,
                         open: item.open,
-                        high: item.max, // FinMind API 使用 'max'
-                        low: item.min,  // FinMind API 使用 'min'
+                        high: item.max,
+                        low: item.min,
                         close: item.close,
                         values: [item.open, item.close, item.min, item.max]
                     }));
@@ -100,7 +99,7 @@
                 }
             } catch (error) {
                 console.error("Failed to fetch real data:", error);
-                return []; // 發生錯誤時回傳空陣列
+                return [];
             }
         },
 
@@ -136,11 +135,24 @@
 
             return Object.keys(grouped).sort().map(key => {
                 const ticks = grouped[key];
-                const open = ticks[0].open;
-                const close = ticks[ticks.length - 1].close;
+                const firstTick = ticks[0];
+                const lastTick = ticks[ticks.length - 1];
+
+                const open = firstTick.open;
+                const close = lastTick.close;
                 const high = Math.max(...ticks.map(t => t.high));
                 const low = Math.min(...ticks.map(t => t.low));
-                return { date: key, open, close, high, low, values: [open, close, low, high] };
+                
+                const displayDate = periodType === 'daily' ? firstTick.date : `${firstTick.date} ~ ${lastTick.date}`;
+
+                return { 
+                    date: displayDate,
+                    open, 
+                    close, 
+                    high, 
+                    low, 
+                    values: [open, close, low, high] 
+                };
             });
         }
     };
@@ -161,12 +173,12 @@
         
         if (dailyData.length === 0) {
              statusEl.innerHTML = `系統狀態：<span style="color: red;">獲取真實資料失敗，請檢查網路連線或稍後再試。圖表無法載入。</span>`;
-             return; // 中斷執行
+             return;
         }
 
         statusEl.innerHTML = `系統狀態：真實資料載入成功，請選擇時間週期。`;
 
-        let currentPeriod = 'daily'; // 預設週期
+        let currentPeriod = 'daily';
 
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
@@ -198,7 +210,7 @@
                 title: { text: `台灣加權指數 (${periodName})`, left: 'center' },
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                 axisPointer: { link: { xAxisIndex: 'all' } },
-                legend: { top: 30, data: [periodName, 'MACD'] },
+                legend: { top: 30, data: [periodName, 'DIF', 'MACD', 'D-M'] },
                 grid: [
                     { left: '5%', right: '5%', top: '10%', height: '55%' },
                     { left: '5%', right: '5%', top: '72%', height: '20%' }
@@ -222,8 +234,8 @@
                         large: true
                     },
                     { name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
-                    { name: 'DEA', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dea, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
-                    { name: 'MACD', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macdBar, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
+                    { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
+                    { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
                 ]
             };
 
