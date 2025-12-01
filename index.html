@@ -12,7 +12,7 @@
         body { font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; margin: 20px; background: #f4f6f8; }
         .card { background: white; padding: 24px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         h2 { margin-top: 0; color: #2c3e50; border-left: 5px solid #3498db; padding-left: 10px; }
-        #chart { width: 100%; height: 700px; }
+        #chart { width: 100%; height: 900px; }
         .status { margin-bottom: 15px; color: #7f8c8d; font-size: 0.95em; font-family: monospace; }
         .badge { background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;}
         .controls { margin-bottom: 20px; }
@@ -129,6 +129,99 @@
             }
 
             return { dif, macd, dm };
+        },
+
+        calculateKD: (data, kPeriod = 9, dPeriod = 3) => {
+            const totalLength = data.length;
+            if (totalLength < kPeriod) {
+                return { k: [], d: [] };
+            }
+
+            const rsvArray = new Array(totalLength).fill(null);
+
+            for (let i = kPeriod - 1; i < totalLength; i++) {
+                let highestHigh = -Infinity;
+                let lowestLow = Infinity;
+
+                for (let j = i - kPeriod + 1; j <= i; j++) {
+                    if (data[j].high > highestHigh) highestHigh = data[j].high;
+                    if (data[j].low < lowestLow) lowestLow = data[j].low;
+                }
+
+                const range = highestHigh - lowestLow;
+                if (range !== 0) {
+                    rsvArray[i] = ((data[i].close - lowestLow) / range) * 100;
+                } else {
+                    rsvArray[i] = 50;
+                }
+            }
+
+            const kArray = new Array(totalLength).fill(null);
+            kArray[kPeriod - 1] = rsvArray[kPeriod - 1];
+
+            for (let i = kPeriod; i < totalLength; i++) {
+                if (rsvArray[i] !== null && kArray[i - 1] !== null) {
+                    kArray[i] = (kArray[i - 1] * 2 / 3) + (rsvArray[i] * 1 / 3);
+                }
+            }
+
+            const dArray = new Array(totalLength).fill(null);
+            dArray[kPeriod - 1] = kArray[kPeriod - 1];
+
+            for (let i = kPeriod; i < totalLength; i++) {
+                if (kArray[i] !== null && dArray[i - 1] !== null) {
+                    dArray[i] = (dArray[i - 1] * 2 / 3) + (kArray[i] * 1 / 3);
+                }
+            }
+
+            return { k: kArray, d: dArray };
+        },
+
+        calculateRSI: (closePrices, period = 14) => {
+            const totalLength = closePrices.length;
+            if (totalLength < period + 1) {
+                return new Array(totalLength).fill(null);
+            }
+
+            const rsiArray = new Array(totalLength).fill(null);
+            let avgGain = 0;
+            let avgLoss = 0;
+
+            for (let i = 1; i <= period; i++) {
+                const change = closePrices[i] - closePrices[i - 1];
+                if (change > 0) {
+                    avgGain += change;
+                } else {
+                    avgLoss += Math.abs(change);
+                }
+            }
+            avgGain /= period;
+            avgLoss /= period;
+
+            if (avgLoss === 0) {
+                rsiArray[period] = 100;
+            } else {
+                const rs = avgGain / avgLoss;
+                rsiArray[period] = 100 - (100 / (1 + rs));
+            }
+
+            for (let i = period + 1; i < totalLength; i++) {
+                const change = closePrices[i] - closePrices[i - 1];
+                const gain = change > 0 ? change : 0;
+                const loss = change < 0 ? Math.abs(change) : 0;
+
+                avgGain = (avgGain * (period - 1) + gain) / period;
+                avgLoss = (avgLoss * (period - 1) + loss) / period;
+
+                if (avgLoss === 0) {
+                    rsiArray[i] = 100;
+                } else {
+                    const rs = avgGain / avgLoss;
+                    rsiArray[i] = 100 - (100 / (1 + rs));
+                }
+            }
+
+            return rsiArray;
         }
     };
 
@@ -252,6 +345,9 @@
 
             const closePrices = resampledData.map(item => item.close);
             const macdResult = TechUtils.calculateMACD(closePrices);
+            const kdResult = TechUtils.calculateKD(resampledData);
+            const rsi5 = TechUtils.calculateRSI(closePrices, 5);  // 快線 (一週)
+            const rsi10 = TechUtils.calculateRSI(closePrices, 10); // 慢線 (兩週)
             const ma5 = TechUtils.calculateSMA(closePrices, 5);
             const ma10 = TechUtils.calculateSMA(closePrices, 10);
             const ma20 = TechUtils.calculateSMA(closePrices, 20);
@@ -267,25 +363,51 @@
             `;
 
             const option = {
-                title: { text: `台灣加權指數 (${periodName})`, left: 'center' },
+                title: [
+                    { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
+                    { text: 'K線圖', left: '5%', top: '10%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
+                    { text: 'MACD', left: '5%', top: '53%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
+                    { text: 'KD 隨機指標', left: '5%', top: '68%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
+                    { text: 'RSI 相對強弱指標', left: '5%', top: '83%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } }
+                ],
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                 axisPointer: { link: { xAxisIndex: 'all' } },
-                legend: { top: 30, data: [periodName, 'MA5', 'MA10', 'MA20', 'DIF', 'MACD', 'D-M'] },
+                legend: {
+                    top: 30,
+                    data: [
+                        { name: 'MA5', itemStyle: { color: '#FFBF00' } },
+                        { name: 'MA10', itemStyle: { color: '#8A2BE2' } },
+                        { name: 'MA20', itemStyle: { color: '#32CD32' } },
+                        { name: 'DIF', itemStyle: { color: '#DA6EE8' } },
+                        { name: 'MACD', itemStyle: { color: '#00D5FA' } },
+                        { name: 'D-M', itemStyle: { color: '#eb5454' } },
+                        { name: 'K', itemStyle: { color: '#FF6B6B' } },
+                        { name: 'D', itemStyle: { color: '#4ECDC4' } },
+                        { name: 'RSI5', itemStyle: { color: '#FF8C00' } },
+                        { name: 'RSI10', itemStyle: { color: '#9370DB' } }
+                    ]
+                },
                 grid: [
-                    { left: '5%', right: '5%', top: '10%', height: '55%' },
-                    { left: '5%', right: '5%', top: '72%', height: '20%' }
+                    { left: '5%', right: '5%', top: '12%', height: '38%' },
+                    { left: '5%', right: '5%', top: '54.5%', height: '11.5%' },
+                    { left: '5%', right: '5%', top: '69.5%', height: '11.5%' },
+                    { left: '5%', right: '5%', top: '84.5%', height: '11%' }
                 ],
                 xAxis: [
-                    { type: 'category', data: resampledData.map(d => d.date) },
-                    { type: 'category', gridIndex: 1, data: resampledData.map(d => d.date), axisLabel: { show: false } }
+                    { type: 'category', data: resampledData.map(d => d.date), axisLabel: { show: false } },
+                    { type: 'category', gridIndex: 1, data: resampledData.map(d => d.date), axisLabel: { show: false } },
+                    { type: 'category', gridIndex: 2, data: resampledData.map(d => d.date), axisLabel: { show: false } },
+                    { type: 'category', gridIndex: 3, data: resampledData.map(d => d.date), axisLabel: { show: false } }
                 ],
                 yAxis: [
                     { scale: true, splitLine: { show: true, lineStyle: { color: '#eee' } } },
-                    { scale: true, gridIndex: 1, splitLine: { show: false } }
+                    { scale: true, gridIndex: 1, splitLine: { show: false } },
+                    { scale: true, gridIndex: 2, min: 0, max: 100, splitLine: { show: true, lineStyle: { color: '#eee' } } },
+                    { scale: true, gridIndex: 3, min: 0, max: 100, splitLine: { show: true, lineStyle: { color: '#eee' } } }
                 ],
                 dataZoom: [
-                    { type: 'inside', xAxisIndex: [0, 1], start: 95, end: 100 },
-                    { type: 'slider', xAxisIndex: [0, 1], top: '94%', start: 95, end: 100 }
+                    { type: 'inside', xAxisIndex: [0, 1, 2, 3], start: 95, end: 100 },
+                    { type: 'slider', xAxisIndex: [0, 1, 2, 3], top: '97%', start: 95, end: 100 }
                 ],
                 series: [
                     {
@@ -298,7 +420,31 @@
                     { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: '#32CD32' }, symbol: 'none' },
                     { name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
                     { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
-                    { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
+                    { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } },
+                    { name: 'K', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
+                    { name: 'D', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
+                    // RSI 快慢線
+                    { name: 'RSI5', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi5, lineStyle: { color: '#FF6B6B', width: 2 }, symbol: 'none' },
+                    { name: 'RSI10', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi10, lineStyle: { color: '#4ECDC4', width: 2 }, symbol: 'none' },
+                    // RSI 參考線：超買(70)、超賣(30)、中線(50)
+                    {
+                        name: '超買線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
+                        data: new Array(resampledData.length).fill(70),
+                        lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
+                        symbol: 'none', silent: true, animation: false
+                    },
+                    {
+                        name: '超賣線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
+                        data: new Array(resampledData.length).fill(30),
+                        lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
+                        symbol: 'none', silent: true, animation: false
+                    },
+                    {
+                        name: '中線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
+                        data: new Array(resampledData.length).fill(50),
+                        lineStyle: { color: '#999', width: 1, type: 'dotted' },
+                        symbol: 'none', silent: true, animation: false
+                    }
                 ]
             };
 
