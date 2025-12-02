@@ -47,6 +47,130 @@
             margin-right: 6px;
             cursor: pointer;
         }
+        .floating-panel {
+            position: fixed;
+            top: 50%;
+            right: -320px;
+            transform: translateY(-50%);
+            width: 320px;
+            background: white;
+            border-radius: 12px 0 0 12px;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .floating-panel.open {
+            right: 0;
+        }
+        .panel-toggle {
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 60px;
+            border-radius: 8px 0 0 8px;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+        }
+        .panel-toggle:hover {
+            background: #2980b9;
+        }
+        .panel-content {
+            padding: 20px;
+        }
+        .panel-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .panel-section:last-child {
+            border-bottom: none;
+        }
+        .panel-section h3 {
+            margin: 0 0 12px 0;
+            font-size: 1em;
+            color: #2c3e50;
+        }
+        .range-input {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .range-input label {
+            flex: 1;
+            font-size: 0.9em;
+            color: #555;
+        }
+        .range-input input[type="number"] {
+            width: 60px;
+            padding: 4px 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .zone-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        .zone-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .master-toggle {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.95em;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .master-toggle:hover {
+            background: #c0392b;
+        }
+        .master-toggle.active {
+            background: #27ae60;
+        }
+        .master-toggle.active:hover {
+            background: #229954;
+        }
+        .panel-control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            margin-left: 15px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        .panel-control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+        }
+        .panel-control-btn:active {
+            transform: translateY(0);
+        }
+        .panel-control-btn.panel-open {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
     </style>
 </head>
 <body>
@@ -59,6 +183,7 @@
         <button class="btn" data-period="bi-weekly">雙周線</button>
         <button class="btn" data-period="tri-weekly">三周線</button>
         <button class="btn" data-period="monthly">月線</button>
+        <button class="panel-control-btn" id="mainPanelToggle">⚙️ 開啟控制面板</button>
         <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="macd" checked> MACD
         </label>
@@ -71,6 +196,69 @@
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
     <div id="chart"></div>
+</div>
+
+<!-- 浮動控制面板 -->
+<div class="floating-panel" id="floatingPanel">
+    <button class="panel-toggle" id="panelToggle">⚙️</button>
+    <div class="panel-content">
+        <div class="panel-section">
+            <h3>🔧 區域標記總開關</h3>
+            <button class="master-toggle active" id="masterToggle">開啟所有低檔標記</button>
+        </div>
+
+        <div class="panel-section">
+            <h3>📊 KD 指標設定</h3>
+            <div class="range-input">
+                <label>超賣區域 (低於):</label>
+                <input type="number" id="kdThreshold" value="20" min="0" max="100" step="5">
+            </div>
+            <div class="zone-checkbox">
+                <input type="checkbox" id="kdZoneEnabled" checked>
+                <label for="kdZoneEnabled">顯示 KD 低檔區域</label>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>📈 RSI 指標設定</h3>
+            <div class="range-input">
+                <label>超賣區域 (低於):</label>
+                <input type="number" id="rsiThreshold" value="20" min="0" max="100" step="5">
+            </div>
+            <div class="zone-checkbox">
+                <input type="checkbox" id="rsiZoneEnabled" checked>
+                <label for="rsiZoneEnabled">顯示 RSI 低檔區域</label>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>📉 MACD 指標設定</h3>
+            <div class="range-input">
+                <label>低檔區域 (低於):</label>
+                <input type="number" id="macdThreshold" value="-185" step="10">
+            </div>
+            <div class="zone-checkbox">
+                <input type="checkbox" id="macdZoneEnabled" checked>
+                <label for="macdZoneEnabled">顯示 MACD 低檔區域</label>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>🎯 K線區複合標記</h3>
+            <div class="zone-checkbox">
+                <input type="checkbox" id="compositeKD" checked>
+                <label for="compositeKD">採用 KD 條件</label>
+            </div>
+            <div class="zone-checkbox">
+                <input type="checkbox" id="compositeRSI" checked>
+                <label for="compositeRSI">採用 RSI 條件</label>
+            </div>
+            <div class="zone-checkbox">
+                <input type="checkbox" id="compositeMACD" checked>
+                <label for="compositeMACD">採用 MACD 條件</label>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -339,6 +527,42 @@
         const myChart = echarts.init(chartDom);
         const controlButtons = document.querySelectorAll('.btn');
 
+        // 浮動面板控制
+        const floatingPanel = document.getElementById('floatingPanel');
+        const panelToggle = document.getElementById('panelToggle');
+        const mainPanelToggle = document.getElementById('mainPanelToggle');
+
+        // 切換面板狀態的函數
+        function togglePanel() {
+            const isOpen = floatingPanel.classList.toggle('open');
+
+            // 更新主按鈕狀態
+            if (isOpen) {
+                mainPanelToggle.textContent = '⚙️ 關閉控制面板';
+                mainPanelToggle.classList.add('panel-open');
+            } else {
+                mainPanelToggle.textContent = '⚙️ 開啟控制面板';
+                mainPanelToggle.classList.remove('panel-open');
+            }
+        }
+
+        // 綁定兩個按鈕到同一個切換函數
+        panelToggle.addEventListener('click', togglePanel);
+        mainPanelToggle.addEventListener('click', togglePanel);
+
+        // 區域標記狀態管理
+        let zoneMarkingState = {
+            masterEnabled: true,
+            kd: { enabled: true, threshold: 20 },
+            rsi: { enabled: true, threshold: 20 },
+            macd: { enabled: true, threshold: -185 },
+            composite: {
+                useKD: true,
+                useRSI: true,
+                useMACD: true
+            }
+        };
+
         statusEl.innerHTML = `系統狀態：<span style="color: #3498db;">正在從 FinMind API 獲取真實台股加權指數歷史資料...</span>`;
 
         console.time("FetchRealData");
@@ -358,6 +582,270 @@
             kd: true,
             rsi: true
         };
+
+        // 主開關控制
+        const masterToggle = document.getElementById('masterToggle');
+        masterToggle.addEventListener('click', () => {
+            zoneMarkingState.masterEnabled = !zoneMarkingState.masterEnabled;
+            if (zoneMarkingState.masterEnabled) {
+                masterToggle.classList.add('active');
+                masterToggle.textContent = '開啟所有低檔標記';
+            } else {
+                masterToggle.classList.remove('active');
+                masterToggle.textContent = '關閉所有低檔標記';
+            }
+            updateChartMarkingsOnly();
+        });
+
+        // KD 設定控制
+        const kdThresholdInput = document.getElementById('kdThreshold');
+        const kdZoneEnabled = document.getElementById('kdZoneEnabled');
+        kdThresholdInput.addEventListener('change', () => {
+            zoneMarkingState.kd.threshold = parseFloat(kdThresholdInput.value);
+            updateChartMarkingsOnly();
+        });
+        kdZoneEnabled.addEventListener('change', () => {
+            zoneMarkingState.kd.enabled = kdZoneEnabled.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // RSI 設定控制
+        const rsiThresholdInput = document.getElementById('rsiThreshold');
+        const rsiZoneEnabled = document.getElementById('rsiZoneEnabled');
+        rsiThresholdInput.addEventListener('change', () => {
+            zoneMarkingState.rsi.threshold = parseFloat(rsiThresholdInput.value);
+            updateChartMarkingsOnly();
+        });
+        rsiZoneEnabled.addEventListener('change', () => {
+            zoneMarkingState.rsi.enabled = rsiZoneEnabled.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // MACD 設定控制
+        const macdThresholdInput = document.getElementById('macdThreshold');
+        const macdZoneEnabled = document.getElementById('macdZoneEnabled');
+        macdThresholdInput.addEventListener('change', () => {
+            zoneMarkingState.macd.threshold = parseFloat(macdThresholdInput.value);
+            updateChartMarkingsOnly();
+        });
+        macdZoneEnabled.addEventListener('change', () => {
+            zoneMarkingState.macd.enabled = macdZoneEnabled.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // 複合標記控制
+        const compositeKD = document.getElementById('compositeKD');
+        const compositeRSI = document.getElementById('compositeRSI');
+        const compositeMACD = document.getElementById('compositeMACD');
+        compositeKD.addEventListener('change', () => {
+            zoneMarkingState.composite.useKD = compositeKD.checked;
+            updateChartMarkingsOnly();
+        });
+        compositeRSI.addEventListener('change', () => {
+            zoneMarkingState.composite.useRSI = compositeRSI.checked;
+            updateChartMarkingsOnly();
+        });
+        compositeMACD.addEventListener('change', () => {
+            zoneMarkingState.composite.useMACD = compositeMACD.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // 儲存當前圖表數據，供標記更新使用
+        let currentChartData = null;
+
+        function updateChartMarkingsOnly() {
+            if (!currentChartData) return;
+
+            const option = myChart.getOption();
+            const newMarkAreas = generateMarkAreas(currentChartData);
+
+            // 更新所有需要標記的系列
+            option.series.forEach((s, idx) => {
+                if (s.name === currentChartData.periodName) {
+                    // K線圖的複合標記
+                    s.markArea = newMarkAreas.composite;
+                } else if (s.name === 'K(9)') {
+                    // KD 的標記
+                    s.markArea = newMarkAreas.kd;
+                } else if (s.name === 'RSI(5T)') {
+                    // RSI 的標記
+                    s.markArea = newMarkAreas.rsi;
+                } else if (s.name === 'DIF') {
+                    // MACD 的標記
+                    s.markArea = newMarkAreas.macd;
+                }
+            });
+
+            myChart.setOption(option);
+        }
+
+        function generateMarkAreas(data) {
+            const { resampledData, kdResult, rsi5, macdResult, periodName } = data;
+
+            if (!zoneMarkingState.masterEnabled) {
+                return { kd: { data: [] }, rsi: { data: [] }, macd: { data: [] }, composite: { data: [] } };
+            }
+
+            // KD 低檔區域標記
+            const kdMarkAreas = [];
+            if (zoneMarkingState.kd.enabled && indicatorVisible.kd) {
+                let inZone = false;
+                let zoneStart = null;
+
+                for (let i = 0; i < kdResult.k.length; i++) {
+                    const kValue = kdResult.k[i];
+                    const dValue = kdResult.d[i];
+
+                    if (kValue !== null && dValue !== null) {
+                        const isLow = kValue < zoneMarkingState.kd.threshold || dValue < zoneMarkingState.kd.threshold;
+
+                        if (isLow && !inZone) {
+                            inZone = true;
+                            zoneStart = resampledData[i].date;
+                        } else if (!isLow && inZone) {
+                            kdMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
+                                { xAxis: resampledData[i - 1].date }
+                            ]);
+                            inZone = false;
+                        }
+                    }
+                }
+
+                if (inZone) {
+                    kdMarkAreas.push([
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
+                        { xAxis: resampledData[resampledData.length - 1].date }
+                    ]);
+                }
+            }
+
+            // RSI 低檔區域標記
+            const rsiMarkAreas = [];
+            if (zoneMarkingState.rsi.enabled && indicatorVisible.rsi) {
+                let inZone = false;
+                let zoneStart = null;
+
+                for (let i = 0; i < rsi5.length; i++) {
+                    const rsiValue = rsi5[i];
+
+                    if (rsiValue !== null) {
+                        const isLow = rsiValue < zoneMarkingState.rsi.threshold;
+
+                        if (isLow && !inZone) {
+                            inZone = true;
+                            zoneStart = resampledData[i].date;
+                        } else if (!isLow && inZone) {
+                            rsiMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(147, 112, 219, 0.15)' } },
+                                { xAxis: resampledData[i - 1].date }
+                            ]);
+                            inZone = false;
+                        }
+                    }
+                }
+
+                if (inZone) {
+                    rsiMarkAreas.push([
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(147, 112, 219, 0.15)' } },
+                        { xAxis: resampledData[resampledData.length - 1].date }
+                    ]);
+                }
+            }
+
+            // MACD 低檔區域標記
+            const macdMarkAreas = [];
+            if (zoneMarkingState.macd.enabled && indicatorVisible.macd) {
+                let inZone = false;
+                let zoneStart = null;
+
+                for (let i = 0; i < macdResult.dif.length; i++) {
+                    const difValue = macdResult.dif[i];
+
+                    if (difValue !== null) {
+                        const isLow = difValue < zoneMarkingState.macd.threshold;
+
+                        if (isLow && !inZone) {
+                            inZone = true;
+                            zoneStart = resampledData[i].date;
+                        } else if (!isLow && inZone) {
+                            macdMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(0, 213, 250, 0.15)' } },
+                                { xAxis: resampledData[i - 1].date }
+                            ]);
+                            inZone = false;
+                        }
+                    }
+                }
+
+                if (inZone) {
+                    macdMarkAreas.push([
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(0, 213, 250, 0.15)' } },
+                        { xAxis: resampledData[resampledData.length - 1].date }
+                    ]);
+                }
+            }
+
+            // K線區複合標記 (所有選中條件都滿足的區域)
+            const compositeMarkAreas = [];
+            let inZone = false;
+            let zoneStart = null;
+
+            for (let i = 0; i < resampledData.length; i++) {
+                let allConditionsMet = true;
+
+                // 檢查 KD 條件
+                if (zoneMarkingState.composite.useKD) {
+                    const kValue = kdResult.k[i];
+                    const dValue = kdResult.d[i];
+                    if (kValue === null || dValue === null ||
+                        (kValue >= zoneMarkingState.kd.threshold && dValue >= zoneMarkingState.kd.threshold)) {
+                        allConditionsMet = false;
+                    }
+                }
+
+                // 檢查 RSI 條件
+                if (zoneMarkingState.composite.useRSI) {
+                    const rsiValue = rsi5[i];
+                    if (rsiValue === null || rsiValue >= zoneMarkingState.rsi.threshold) {
+                        allConditionsMet = false;
+                    }
+                }
+
+                // 檢查 MACD 條件
+                if (zoneMarkingState.composite.useMACD) {
+                    const difValue = macdResult.dif[i];
+                    if (difValue === null || difValue >= zoneMarkingState.macd.threshold) {
+                        allConditionsMet = false;
+                    }
+                }
+
+                if (allConditionsMet && !inZone) {
+                    inZone = true;
+                    zoneStart = resampledData[i].date;
+                } else if (!allConditionsMet && inZone) {
+                    compositeMarkAreas.push([
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
+                        { xAxis: resampledData[i - 1].date }
+                    ]);
+                    inZone = false;
+                }
+            }
+
+            if (inZone) {
+                compositeMarkAreas.push([
+                    { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
+                    { xAxis: resampledData[resampledData.length - 1].date }
+                ]);
+            }
+
+            return {
+                kd: { data: kdMarkAreas },
+                rsi: { data: rsiMarkAreas },
+                macd: { data: macdMarkAreas },
+                composite: { data: compositeMarkAreas }
+            };
+        }
 
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
@@ -384,6 +872,18 @@
 
             const periodMap = { 'daily': '日線', 'weekly': '周線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
             const periodName = periodMap[periodType];
+
+            // 儲存當前圖表數據供標記更新使用
+            currentChartData = {
+                resampledData,
+                kdResult,
+                rsi5,
+                macdResult,
+                periodName: periodName
+            };
+
+            // 生成標記區域
+            const markAreas = generateMarkAreas(currentChartData);
             chartTitleEl.innerHTML = `📈 台灣加權指數 ${periodName} <span class="badge">Real Data</span>`;
 
             statusEl.innerHTML = `
@@ -446,7 +946,8 @@
                 {
                     name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
                     itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
-                    large: true
+                    large: true,
+                    markArea: markAreas.composite
                 },
                 { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                 { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
@@ -471,7 +972,7 @@
                         { name: 'MACD', itemStyle: { color: '#00D5FA' } }
                     );
                     series.push(
-                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
+                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none', markArea: markAreas.macd },
                         { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                         { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
                     );
@@ -481,7 +982,7 @@
                         { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
                     );
                     series.push(
-                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
+                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none', markArea: markAreas.kd },
                         { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
@@ -502,7 +1003,7 @@
                         { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
                     );
                     series.push(
-                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none' },
+                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none', markArea: markAreas.rsi },
                         { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
                         {
                             name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
