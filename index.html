@@ -32,6 +32,21 @@
             color: white;
             border-color: #3498db;
         }
+        .indicator-checkbox {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-size: 0.95em;
+            user-select: none;
+        }
+        .indicator-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 6px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -44,6 +59,15 @@
         <button class="btn" data-period="bi-weekly">雙周線</button>
         <button class="btn" data-period="tri-weekly">三周線</button>
         <button class="btn" data-period="monthly">月線</button>
+        <label class="indicator-checkbox">
+            <input type="checkbox" data-indicator="macd" checked> MACD
+        </label>
+        <label class="indicator-checkbox">
+            <input type="checkbox" data-indicator="kd" checked> KD
+        </label>
+        <label class="indicator-checkbox">
+            <input type="checkbox" data-indicator="rsi" checked> RSI
+        </label>
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
     <div id="chart"></div>
@@ -329,6 +353,11 @@
         statusEl.innerHTML = `系統狀態：真實資料載入成功，請選擇時間週期。`;
 
         let currentPeriod = 'daily';
+        let indicatorVisible = {
+            macd: true,
+            kd: true,
+            rsi: true
+        };
 
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
@@ -355,7 +384,7 @@
 
             const periodMap = { 'daily': '日線', 'weekly': '周線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
             const periodName = periodMap[periodType];
-            chartTitleEl.innerHTML = `📈 台灣加權指數 ${periodName} MACD <span class="badge">Real Data</span>`;
+            chartTitleEl.innerHTML = `📈 台灣加權指數 ${periodName} <span class="badge">Real Data</span>`;
 
             statusEl.innerHTML = `
                 統計範圍：<b>${dailyData[0].date}</b> 至 <b>${dailyData[dailyData.length-1].date}</b><br>
@@ -363,128 +392,156 @@
                 聚合${periodName}：${resampledData.length.toLocaleString()} 筆
             `;
 
+            // 動態計算網格布局
+            const visibleIndicators = [];
+            if (indicatorVisible.macd) visibleIndicators.push('macd');
+            if (indicatorVisible.kd) visibleIndicators.push('kd');
+            if (indicatorVisible.rsi) visibleIndicators.push('rsi');
+
+            const indicatorCount = visibleIndicators.length;
+            const indicatorHeight = 11.5; // 每個指標高度百分比
+            const spacingBetweenCharts = 2.5; // 圖表之間的間距百分比
+            const totalSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
+            const kLineHeight = 86 - (indicatorCount * indicatorHeight) - totalSpacing - 3; // K線圖高度(留3%給dataZoom)
+
+            // 建立網格配置
+            const grids = [{ left: '50px', right: '5%', top: '12%', height: `${kLineHeight}%` }];
+            const titles = [
+                { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
+                { text: 'K線', left: '70px', top: '12%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } }
+            ];
+
+            let currentTop = 12 + kLineHeight + spacingBetweenCharts; // 當前位置
+            let gridIndex = 1;
+            const xAxisConfigs = [{ type: 'category', data: resampledData.map(d => d.date), axisLabel: { show: false } }];
+            const yAxisConfigs = [{
+                scale: true,
+                splitLine: { show: true, lineStyle: { color: '#eee' } },
+                axisLabel: {
+                    formatter: function(value) {
+                        return value.toLocaleString();
+                    }
+                }
+            }];
+            const xAxisIndices = [0];
+
+            visibleIndicators.forEach((indicator, idx) => {
+                grids.push({ left: '50px', right: '5%', top: `${currentTop}%`, height: `${indicatorHeight}%` });
+                titles.push({ text: indicator.toUpperCase(), left: '70px', top: `${currentTop}%`, textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } });
+                xAxisConfigs.push({ type: 'category', gridIndex: gridIndex, data: resampledData.map(d => d.date), axisLabel: { show: false } });
+                xAxisIndices.push(gridIndex);
+
+                if (indicator === 'macd') {
+                    yAxisConfigs.push({ scale: true, gridIndex: gridIndex, splitLine: { show: false } });
+                } else {
+                    yAxisConfigs.push({ scale: true, gridIndex: gridIndex, min: 0, max: 100, splitLine: { show: true, lineStyle: { color: '#eee' } } });
+                }
+
+                currentTop += indicatorHeight + spacingBetweenCharts;
+                gridIndex++;
+            });
+
+            // 建立系列數據
+            const series = [
+                {
+                    name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
+                    itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
+                    large: true
+                },
+                { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
+                { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
+                { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: '#32CD32' }, symbol: 'none' },
+                { name: 'MA60', type: 'line', data: ma60, smooth: true, lineStyle: { width: 1.5, color: '#FF1493' }, symbol: 'none' }
+            ];
+
+            const legendData = [
+                { name: 'MA5', itemStyle: { color: '#FFBF00' } },
+                { name: 'MA10', itemStyle: { color: '#8A2BE2' } },
+                { name: 'MA20', itemStyle: { color: '#32CD32' } },
+                { name: 'MA60', itemStyle: { color: '#FF1493' } }
+            ];
+
+            // 根據可見性添加指標系列
+            visibleIndicators.forEach((indicator, idx) => {
+                const axisIndex = idx + 1;
+
+                if (indicator === 'macd') {
+                    legendData.push(
+                        { name: 'DIF', itemStyle: { color: '#DA6EE8' } },
+                        { name: 'MACD', itemStyle: { color: '#00D5FA' } }
+                    );
+                    series.push(
+                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
+                        { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
+                        { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
+                    );
+                } else if (indicator === 'kd') {
+                    legendData.push(
+                        { name: 'K(9)', itemStyle: { color: '#FF6B6B' } },
+                        { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
+                    );
+                    series.push(
+                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
+                        { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
+                        {
+                            name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: new Array(resampledData.length).fill(80),
+                            lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
+                            symbol: 'none', silent: true, animation: false
+                        },
+                        {
+                            name: 'KD超賣', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: new Array(resampledData.length).fill(20),
+                            lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
+                            symbol: 'none', silent: true, animation: false
+                        }
+                    );
+                } else if (indicator === 'rsi') {
+                    legendData.push(
+                        { name: 'RSI(5T)', itemStyle: { color: '#FF8C00' } },
+                        { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
+                    );
+                    series.push(
+                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none' },
+                        { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
+                        {
+                            name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: new Array(resampledData.length).fill(80),
+                            lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
+                            symbol: 'none', silent: true, animation: false
+                        },
+                        {
+                            name: 'RSI超賣', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: new Array(resampledData.length).fill(20),
+                            lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
+                            symbol: 'none', silent: true, animation: false
+                        },
+                        {
+                            name: 'RSI中線', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: new Array(resampledData.length).fill(50),
+                            lineStyle: { color: '#999', width: 1, type: 'dotted' },
+                            symbol: 'none', silent: true, animation: false
+                        }
+                    );
+                }
+            });
+
             const option = {
-                title: [
-                    { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
-                    { text: 'K線', left: '70px', top: '12%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
-                    { text: 'MACD', left: '70px', top: '54.5%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
-                    { text: 'KD', left: '70px', top: '69.5%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } },
-                    { text: 'RSI', left: '70px', top: '84.5%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } }
-                ],
+                title: titles,
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
                 axisPointer: { link: { xAxisIndex: 'all' } },
                 legend: {
                     top: 30,
-                    data: [
-                        { name: 'MA5', itemStyle: { color: '#FFBF00' } },
-                        { name: 'MA10', itemStyle: { color: '#8A2BE2' } },
-                        { name: 'MA20', itemStyle: { color: '#32CD32' } },
-                        { name: 'MA60', itemStyle: { color: '#FF1493' } },
-                        { name: 'DIF', itemStyle: { color: '#DA6EE8' } },
-                        { name: 'MACD', itemStyle: { color: '#00D5FA' } },
-                        { name: 'K(9)', itemStyle: { color: '#FF6B6B' } },
-                        { name: 'D(9)', itemStyle: { color: '#4ECDC4' } },
-                        { name: 'RSI(5T)', itemStyle: { color: '#FF8C00' } },
-                        { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
-                    ]
+                    data: legendData
                 },
-                grid: [
-                    { left: '50px', right: '5%', top: '12%', height: '38%' },
-                    { left: '50px', right: '5%', top: '54.5%', height: '11.5%' },
-                    { left: '50px', right: '5%', top: '69.5%', height: '11.5%' },
-                    { left: '50px', right: '5%', top: '84.5%', height: '11%' }
-                ],
-                xAxis: [
-                    { type: 'category', data: resampledData.map(d => d.date), axisLabel: { show: false } },
-                    { type: 'category', gridIndex: 1, data: resampledData.map(d => d.date), axisLabel: { show: false } },
-                    { type: 'category', gridIndex: 2, data: resampledData.map(d => d.date), axisLabel: { show: false } },
-                    { type: 'category', gridIndex: 3, data: resampledData.map(d => d.date), axisLabel: { show: false } }
-                ],
-                yAxis: [
-                    {
-                        scale: true,
-                        splitLine: { show: true, lineStyle: { color: '#eee' } },
-                        axisLabel: {
-                            formatter: function(value) {
-                                return value.toLocaleString();
-                            }
-                        }
-                    },
-                    {
-                        scale: true,
-                        gridIndex: 1,
-                        splitLine: { show: false }
-                    },
-                    {
-                        scale: true,
-                        gridIndex: 2,
-                        min: 0,
-                        max: 100,
-                        splitLine: { show: true, lineStyle: { color: '#eee' } }
-                    },
-                    {
-                        scale: true,
-                        gridIndex: 3,
-                        min: 0,
-                        max: 100,
-                        splitLine: { show: true, lineStyle: { color: '#eee' } }
-                    }
-                ],
+                grid: grids,
+                xAxis: xAxisConfigs,
+                yAxis: yAxisConfigs,
                 dataZoom: [
-                    { type: 'inside', xAxisIndex: [0, 1, 2, 3], start: 95, end: 100 },
-                    { type: 'slider', xAxisIndex: [0, 1, 2, 3], top: '97%', start: 95, end: 100 }
+                    { type: 'inside', xAxisIndex: xAxisIndices, start: 95, end: 100 },
+                    { type: 'slider', xAxisIndex: xAxisIndices, top: '97%', start: 95, end: 100 }
                 ],
-                series: [
-                    {
-                        name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
-                        itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
-                        large: true
-                    },
-                    { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
-                    { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
-                    { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: '#32CD32' }, symbol: 'none' },
-                    { name: 'MA60', type: 'line', data: ma60, smooth: true, lineStyle: { width: 1.5, color: '#FF1493' }, symbol: 'none' },
-                    { name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
-                    { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
-                    { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } },
-                    { name: 'K(9)', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
-                    { name: 'D(9)', type: 'line', xAxisIndex: 2, yAxisIndex: 2, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
-                    // KD 參考線：超買(80)、超賣(20)
-                    {
-                        name: 'KD超買', type: 'line', xAxisIndex: 2, yAxisIndex: 2,
-                        data: new Array(resampledData.length).fill(80),
-                        lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
-                        symbol: 'none', silent: true, animation: false
-                    },
-                    {
-                        name: 'KD超賣', type: 'line', xAxisIndex: 2, yAxisIndex: 2,
-                        data: new Array(resampledData.length).fill(20),
-                        lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
-                        symbol: 'none', silent: true, animation: false
-                    },
-                    // RSI 快慢線
-                    { name: 'RSI(5T)', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none' },
-                    { name: 'RSI(10T)', type: 'line', xAxisIndex: 3, yAxisIndex: 3, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
-                    // RSI 參考線：超買(80)、超賣(20)、中線(50)
-                    {
-                        name: 'RSI超買', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
-                        data: new Array(resampledData.length).fill(80),
-                        lineStyle: { color: '#ff4444', width: 1, type: 'dashed' },
-                        symbol: 'none', silent: true, animation: false
-                    },
-                    {
-                        name: 'RSI超賣', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
-                        data: new Array(resampledData.length).fill(20),
-                        lineStyle: { color: '#44ff44', width: 1, type: 'dashed' },
-                        symbol: 'none', silent: true, animation: false
-                    },
-                    {
-                        name: 'RSI中線', type: 'line', xAxisIndex: 3, yAxisIndex: 3,
-                        data: new Array(resampledData.length).fill(50),
-                        lineStyle: { color: '#999', width: 1, type: 'dotted' },
-                        symbol: 'none', silent: true, animation: false
-                    }
-                ]
+                series: series
             };
 
             myChart.setOption(option, true);
@@ -497,6 +554,16 @@
                 if (period !== currentPeriod) {
                     updateChart(period);
                 }
+            });
+        });
+
+        // 指標開關按鈕
+        const indicatorCheckboxes = document.querySelectorAll('.indicator-checkbox input[type="checkbox"]');
+        indicatorCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', () => {
+                const indicator = checkbox.dataset.indicator;
+                indicatorVisible[indicator] = checkbox.checked;
+                updateChart(currentPeriod);
             });
         });
 
