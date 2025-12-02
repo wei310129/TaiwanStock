@@ -982,8 +982,13 @@
             // 更新所有需要標記的系列
             option.series.forEach((s, idx) => {
                 if (s.name === currentChartData.periodName) {
-                    // K線圖的複合標記
+                    // K線圖的複合標記和價差標註
                     s.markArea = newMarkAreas.composite;
+                    s.markPoint = {
+                        data: newMarkAreas.composite.markPoints || [],
+                        symbol: 'pin',
+                        symbolSize: 50
+                    };
                 } else if (s.name === 'K(9)') {
                     // KD 的標記
                     s.markArea = newMarkAreas.kd;
@@ -1108,8 +1113,11 @@
 
             // K線區複合標記 (所有選中條件都滿足的區域)
             const compositeMarkAreas = [];
+            const priceMarkPoints = []; // 用於存儲價差標註
+            const lowZones = []; // 記錄所有低檔區域的結束位置
             let inZone = false;
             let zoneStart = null;
+            let zoneStartIndex = null;
 
             for (let i = 0; i < resampledData.length; i++) {
                 let allConditionsMet = true;
@@ -1143,11 +1151,18 @@
                 if (allConditionsMet && !inZone) {
                     inZone = true;
                     zoneStart = resampledData[i].date;
+                    zoneStartIndex = i;
                 } else if (!allConditionsMet && inZone) {
                     compositeMarkAreas.push([
                         { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
                         { xAxis: resampledData[i - 1].date }
                     ]);
+                    // 記錄低檔區域的開始和結束位置
+                    lowZones.push({
+                        startIndex: zoneStartIndex,
+                        endIndex: i - 1,
+                        nextIndex: i // 下一根 K 棒（買入時機）
+                    });
                     inZone = false;
                 }
             }
@@ -1159,11 +1174,43 @@
                 ]);
             }
 
+            // 計算價差並生成標註
+            for (let i = 0; i < lowZones.length - 1; i++) {
+                const buyIndex = lowZones[i].nextIndex; // 當前低檔區域結束後的下一根 K 棒（買入）
+                const sellIndex = lowZones[i + 1].startIndex; // 下一個低檔區域的第一根 K 棒（賣出）
+
+                if (buyIndex < resampledData.length && sellIndex < resampledData.length && buyIndex < sellIndex) {
+                    const buyPrice = resampledData[buyIndex].close;
+                    const sellPrice = resampledData[sellIndex].close;
+                    const priceDiff = sellPrice - buyPrice;
+                    const percentDiff = ((priceDiff / buyPrice) * 100).toFixed(2);
+
+                    // 在兩個區域之間的中間位置添加標註
+                    const midIndex = Math.floor((buyIndex + sellIndex) / 2);
+
+                    priceMarkPoints.push({
+                        coord: [resampledData[midIndex].date, resampledData[midIndex].high * 1.02],
+                        value: `${priceDiff >= 0 ? '+' : ''}${priceDiff.toFixed(2)}\n(${percentDiff}%)`,
+                        itemStyle: {
+                            color: priceDiff >= 0 ? '#e74c3c' : '#27ae60'
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: priceDiff >= 0 ? '#e74c3c' : '#27ae60',
+                            fontSize: 11,
+                            fontWeight: 'bold',
+                            formatter: '{c}'
+                        }
+                    });
+                }
+            }
+
             return {
                 kd: { data: kdMarkAreas },
                 rsi: { data: rsiMarkAreas },
                 macd: { data: macdMarkAreas },
-                composite: { data: compositeMarkAreas }
+                composite: { data: compositeMarkAreas, markPoints: priceMarkPoints }
             };
         }
 
@@ -1267,7 +1314,12 @@
                     name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
                     itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
                     large: true,
-                    markArea: markAreas.composite
+                    markArea: markAreas.composite,
+                    markPoint: {
+                        data: markAreas.composite.markPoints || [],
+                        symbol: 'pin',
+                        symbolSize: 50
+                    }
                 },
                 { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                 { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
