@@ -47,13 +47,6 @@
             margin-right: 6px;
             cursor: pointer;
         }
-        .indicator-checkbox input[type="checkbox"]:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-        .indicator-checkbox:has(input:disabled) {
-            opacity: 0.7;
-        }
         .floating-panel {
             position: fixed;
             top: 50%;
@@ -96,8 +89,8 @@
             overflow-x: hidden;
         }
         .panel-section {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
+            margin-bottom: 5px;
+            /*padding-bottom: 0px;*/
             border-bottom: 1px solid #eee;
             transition: all 0.3s ease;
         }
@@ -113,7 +106,7 @@
             color: #2c3e50;
         }
         .range-input {
-            margin-bottom: 15px;
+            margin-bottom: 5px;
         }
         .range-input label {
             display: block;
@@ -299,9 +292,6 @@
         <button class="btn" data-period="monthly">月線</button>
         <button class="panel-control-btn" id="mainPanelToggle">⚙️ 開啟控制面板</button>
         <label class="indicator-checkbox">
-            <input type="checkbox" data-indicator="kline" checked disabled> K線圖
-        </label>
-        <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="macd" checked> MACD
         </label>
         <label class="indicator-checkbox">
@@ -341,10 +331,6 @@
                     <input type="number" id="kdThreshold" min="0" max="100" step="5" value="20">
                 </div>
             </div>
-            <div class="zone-checkbox">
-                <input type="checkbox" id="kdZoneEnabled" checked>
-                <label for="kdZoneEnabled">顯示 KD 低檔區域</label>
-            </div>
         </div>
 
         <div class="panel-section" data-indicator="rsi">
@@ -364,10 +350,6 @@
                     <input type="number" id="rsiThreshold" min="0" max="100" step="5" value="20">
                 </div>
             </div>
-            <div class="zone-checkbox">
-                <input type="checkbox" id="rsiZoneEnabled" checked>
-                <label for="rsiZoneEnabled">顯示 RSI 低檔區域</label>
-            </div>
         </div>
 
         <div class="panel-section" data-indicator="macd">
@@ -386,10 +368,6 @@
                     </div>
                     <input type="number" id="macdThreshold" min="-500" max="0" step="10" value="-185">
                 </div>
-            </div>
-            <div class="zone-checkbox">
-                <input type="checkbox" id="macdZoneEnabled" checked>
-                <label for="macdZoneEnabled">顯示 MACD 低檔區域</label>
             </div>
         </div>
 
@@ -696,9 +674,39 @@
             }
         }
 
+        // 關閉面板的函數
+        function closePanel() {
+            floatingPanel.classList.remove('open');
+            mainPanelToggle.textContent = '⚙️ 開啟控制面板';
+            mainPanelToggle.classList.remove('panel-open');
+        }
+
         // 綁定兩個按鈕到同一個切換函數
-        panelToggle.addEventListener('click', togglePanel);
-        mainPanelToggle.addEventListener('click', togglePanel);
+        panelToggle.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止事件冒泡
+            togglePanel();
+        });
+        mainPanelToggle.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止事件冒泡
+            togglePanel();
+        });
+
+        // 點擊面板外部關閉面板
+        document.addEventListener('click', (e) => {
+            const isClickInsidePanel = floatingPanel.contains(e.target);
+            const isClickOnMainToggle = mainPanelToggle.contains(e.target);
+            const isPanelOpen = floatingPanel.classList.contains('open');
+
+            // 如果面板是開啟的，且點擊不在面板內，也不在主按鈕上，則關閉面板
+            if (isPanelOpen && !isClickInsidePanel && !isClickOnMainToggle) {
+                closePanel();
+            }
+        });
+
+        // 防止點擊面板內部時關閉面板
+        floatingPanel.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
 
         // 區域標記狀態管理
         let zoneMarkingState = {
@@ -750,7 +758,6 @@
         // KD 設定控制
         const kdThresholdRange = document.getElementById('kdThresholdRange');
         const kdThresholdInput = document.getElementById('kdThreshold');
-        const kdZoneEnabled = document.getElementById('kdZoneEnabled');
 
         // 同步滑動條和輸入框
         kdThresholdRange.addEventListener('input', () => {
@@ -785,15 +792,9 @@
             updateChartMarkingsOnly();
         });
 
-        kdZoneEnabled.addEventListener('change', () => {
-            zoneMarkingState.kd.enabled = kdZoneEnabled.checked;
-            updateChartMarkingsOnly();
-        });
-
         // RSI 設定控制
         const rsiThresholdRange = document.getElementById('rsiThresholdRange');
         const rsiThresholdInput = document.getElementById('rsiThreshold');
-        const rsiZoneEnabled = document.getElementById('rsiZoneEnabled');
 
         // 同步滑動條和輸入框
         rsiThresholdRange.addEventListener('input', () => {
@@ -828,15 +829,9 @@
             updateChartMarkingsOnly();
         });
 
-        rsiZoneEnabled.addEventListener('change', () => {
-            zoneMarkingState.rsi.enabled = rsiZoneEnabled.checked;
-            updateChartMarkingsOnly();
-        });
-
         // MACD 設定控制
         const macdThresholdRange = document.getElementById('macdThresholdRange');
         const macdThresholdInput = document.getElementById('macdThreshold');
-        const macdZoneEnabled = document.getElementById('macdZoneEnabled');
 
         // 同步滑動條和輸入框
         macdThresholdRange.addEventListener('input', () => {
@@ -868,11 +863,6 @@
             macdThresholdInput.value = value;
             macdThresholdRange.value = value;
             zoneMarkingState.macd.threshold = value;
-            updateChartMarkingsOnly();
-        });
-
-        macdZoneEnabled.addEventListener('change', () => {
-            zoneMarkingState.macd.enabled = macdZoneEnabled.checked;
             updateChartMarkingsOnly();
         });
 
@@ -955,7 +945,7 @@
 
             // KD 低檔區域標記 (同步複合標記開關)
             const kdMarkAreas = [];
-            if (zoneMarkingState.kd.enabled && indicatorVisible.kd && zoneMarkingState.composite.useKD) {
+            if (indicatorVisible.kd && zoneMarkingState.composite.useKD) {
                 let inZone = false;
                 let zoneStart = null;
 
@@ -989,7 +979,7 @@
 
             // RSI 低檔區域標記 (同步複合標記開關)
             const rsiMarkAreas = [];
-            if (zoneMarkingState.rsi.enabled && indicatorVisible.rsi && zoneMarkingState.composite.useRSI) {
+            if (indicatorVisible.rsi && zoneMarkingState.composite.useRSI) {
                 let inZone = false;
                 let zoneStart = null;
 
@@ -1022,7 +1012,7 @@
 
             // MACD 低檔區域標記 (同步複合標記開關)
             const macdMarkAreas = [];
-            if (zoneMarkingState.macd.enabled && indicatorVisible.macd && zoneMarkingState.composite.useMACD) {
+            if (indicatorVisible.macd && zoneMarkingState.composite.useMACD) {
                 let inZone = false;
                 let zoneStart = null;
 
