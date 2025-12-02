@@ -217,7 +217,7 @@
         .zone-checkbox {
             display: flex;
             align-items: center;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             font-size: 0.9em;
         }
         .zone-checkbox input[type="checkbox"] {
@@ -225,6 +225,10 @@
             height: 16px;
             margin-right: 8px;
             cursor: pointer;
+        }
+        .zone-checkbox label:not(.toggle-switch) {
+            cursor: pointer;
+            user-select: none;
         }
         .zone-checkbox input[type="checkbox"]:disabled {
             cursor: not-allowed;
@@ -255,6 +259,57 @@
         .master-toggle.active:hover {
             background: #229954;
         }
+
+        /* 膠囊狀開關樣式 */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            margin-right: 10px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 26px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #27ae60;
+        }
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        .toggle-switch input:disabled + .toggle-slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .toggle-switch input:disabled + .toggle-slider:before {
+            background-color: #e0e0e0;
+        }
+
         .panel-control-btn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -311,7 +366,13 @@
     <div class="panel-content">
         <div class="panel-section">
             <h3>🔧 區域標記總開關</h3>
-            <button class="master-toggle active" id="masterToggle">開啟所有低檔標記</button>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="masterToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="masterToggle" style="font-size: 1em; font-weight: 500;">開啟所有低檔標記</label>
+            </div>
         </div>
 
         <div class="panel-section" data-indicator="macd">
@@ -374,15 +435,24 @@
         <div class="panel-section">
             <h3>🎯 K線區複合標記</h3>
             <div class="zone-checkbox">
-                <input type="checkbox" id="compositeMACD" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="compositeMACD" checked>
+                    <span class="toggle-slider"></span>
+                </label>
                 <label for="compositeMACD">採用 MACD 條件</label>
             </div>
             <div class="zone-checkbox">
-                <input type="checkbox" id="compositeKD" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="compositeKD" checked>
+                    <span class="toggle-slider"></span>
+                </label>
                 <label for="compositeKD">採用 KD 條件</label>
             </div>
             <div class="zone-checkbox">
-                <input type="checkbox" id="compositeRSI" checked>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="compositeRSI" checked>
+                    <span class="toggle-slider"></span>
+                </label>
                 <label for="compositeRSI">採用 RSI 條件</label>
             </div>
         </div>
@@ -743,15 +813,8 @@
 
         // 主開關控制
         const masterToggle = document.getElementById('masterToggle');
-        masterToggle.addEventListener('click', () => {
-            zoneMarkingState.masterEnabled = !zoneMarkingState.masterEnabled;
-            if (zoneMarkingState.masterEnabled) {
-                masterToggle.classList.add('active');
-                masterToggle.textContent = '開啟所有低檔標記';
-            } else {
-                masterToggle.classList.remove('active');
-                masterToggle.textContent = '關閉所有低檔標記';
-            }
+        masterToggle.addEventListener('change', () => {
+            zoneMarkingState.masterEnabled = masterToggle.checked;
             updateChartMarkingsOnly();
         });
 
