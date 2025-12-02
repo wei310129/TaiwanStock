@@ -351,6 +351,7 @@
             const ma5 = TechUtils.calculateSMA(closePrices, 5);
             const ma10 = TechUtils.calculateSMA(closePrices, 10);
             const ma20 = TechUtils.calculateSMA(closePrices, 20);
+            const ma60 = TechUtils.calculateSMA(closePrices, 60);
 
             const periodMap = { 'daily': '日線', 'weekly': '周線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
             const periodName = periodMap[periodType];
@@ -378,6 +379,7 @@
                         { name: 'MA5', itemStyle: { color: '#FFBF00' } },
                         { name: 'MA10', itemStyle: { color: '#8A2BE2' } },
                         { name: 'MA20', itemStyle: { color: '#32CD32' } },
+                        { name: 'MA60', itemStyle: { color: '#FF1493' } },
                         { name: 'DIF', itemStyle: { color: '#DA6EE8' } },
                         { name: 'MACD', itemStyle: { color: '#00D5FA' } },
                         { name: 'K(9)', itemStyle: { color: '#FF6B6B' } },
@@ -441,6 +443,7 @@
                     { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                     { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
                     { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: '#32CD32' }, symbol: 'none' },
+                    { name: 'MA60', type: 'line', data: ma60, smooth: true, lineStyle: { width: 1.5, color: '#FF1493' }, symbol: 'none' },
                     { name: 'DIF', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
                     { name: 'MACD', type: 'line', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                     { name: 'D-M', type: 'bar', xAxisIndex: 1, yAxisIndex: 1, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } },
