@@ -47,6 +47,101 @@
             margin-right: 6px;
             cursor: pointer;
         }
+        .control-panel-btn {
+            background: #6c757d;
+            color: white;
+            border: 1px solid #6c757d;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.95em;
+            margin-left: 20px;
+            transition: background 0.2s;
+        }
+        .control-panel-btn:hover { background: #5a6268; }
+        .floating-panel {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            border: 2px solid #3498db;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            z-index: 1000;
+            min-width: 300px;
+            display: none;
+        }
+        .floating-panel.show { display: block; }
+        .floating-panel h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .close-btn:hover { background: #c0392b; }
+        .panel-section {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+        .panel-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #495057;
+        }
+        .panel-section input[type="number"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        .panel-section input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .master-switch {
+            background: #28a745;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        .master-switch label {
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        .master-switch input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -68,9 +163,55 @@
         <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="rsi" checked> RSI
         </label>
+        <button class="control-panel-btn" id="openPanelBtn">⚙️ 調整標記閾值</button>
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
     <div id="chart"></div>
+</div>
+
+<div class="floating-panel" id="controlPanel">
+    <h3>
+        標記區域控制
+        <button class="close-btn" id="closePanelBtn">✕</button>
+    </h3>
+
+    <div class="master-switch">
+        <label>
+            <input type="checkbox" id="masterSwitch" checked>
+            啟用所有低檔標記
+        </label>
+    </div>
+
+    <div class="panel-section">
+        <label>KD 低檔閾值</label>
+        <input type="number" id="kdThreshold" value="20" min="0" max="100" step="1">
+    </div>
+
+    <div class="panel-section">
+        <label>RSI 低檔閾值</label>
+        <input type="number" id="rsiThreshold" value="20" min="0" max="100" step="1">
+    </div>
+
+    <div class="panel-section">
+        <label>MACD 低檔閾值</label>
+        <input type="number" id="macdThreshold" value="-185" step="1">
+    </div>
+
+    <div class="panel-section">
+        <label style="margin-bottom: 10px;">K線標記採用指標</label>
+        <div class="checkbox-row">
+            <input type="checkbox" id="useKdForKline" checked>
+            <label style="margin: 0;">使用 KD</label>
+        </div>
+        <div class="checkbox-row">
+            <input type="checkbox" id="useMacdForKline" checked>
+            <label style="margin: 0;">使用 MACD</label>
+        </div>
+        <div class="checkbox-row">
+            <input type="checkbox" id="useRsiForKline" checked>
+            <label style="margin: 0;">使用 RSI</label>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -359,6 +500,205 @@
             rsi: true
         };
 
+        // 標記閾值配置
+        let thresholdConfig = {
+            kd: 20,
+            rsi: 20,
+            macd: -185,
+            masterEnabled: true,
+            klineUseKd: true,
+            klineUseMacd: true,
+            klineUseRsi: true
+        };
+
+        // 控制面板邏輯
+        const controlPanel = document.getElementById('controlPanel');
+        const openPanelBtn = document.getElementById('openPanelBtn');
+        const closePanelBtn = document.getElementById('closePanelBtn');
+        const masterSwitch = document.getElementById('masterSwitch');
+        const kdThresholdInput = document.getElementById('kdThreshold');
+        const rsiThresholdInput = document.getElementById('rsiThreshold');
+        const macdThresholdInput = document.getElementById('macdThreshold');
+        const useKdForKline = document.getElementById('useKdForKline');
+        const useMacdForKline = document.getElementById('useMacdForKline');
+        const useRsiForKline = document.getElementById('useRsiForKline');
+
+        openPanelBtn.addEventListener('click', () => {
+            controlPanel.classList.add('show');
+        });
+
+        closePanelBtn.addEventListener('click', () => {
+            controlPanel.classList.remove('show');
+        });
+
+        // 監聽閾值變化 - 只更新標記，不重新計算技術指標
+        function updateMarkAreas() {
+            thresholdConfig.kd = parseFloat(kdThresholdInput.value);
+            thresholdConfig.rsi = parseFloat(rsiThresholdInput.value);
+            thresholdConfig.macd = parseFloat(macdThresholdInput.value);
+            thresholdConfig.masterEnabled = masterSwitch.checked;
+            thresholdConfig.klineUseKd = useKdForKline.checked;
+            thresholdConfig.klineUseMacd = useMacdForKline.checked;
+            thresholdConfig.klineUseRsi = useRsiForKline.checked;
+
+            // 只更新圖表的 markArea，不重新渲染整個圖表
+            updateChartMarkAreas();
+        }
+
+        masterSwitch.addEventListener('change', updateMarkAreas);
+        kdThresholdInput.addEventListener('input', updateMarkAreas);
+        rsiThresholdInput.addEventListener('input', updateMarkAreas);
+        macdThresholdInput.addEventListener('input', updateMarkAreas);
+        useKdForKline.addEventListener('change', updateMarkAreas);
+        useMacdForKline.addEventListener('change', updateMarkAreas);
+        useRsiForKline.addEventListener('change', updateMarkAreas);
+
+        // 存儲當前圖表數據，用於快速更新標記區域
+        let currentChartData = null;
+
+        // 生成標記區域
+        function generateMarkAreas(data, threshold, color) {
+            if (!thresholdConfig.masterEnabled) return [];
+
+            const markAreaData = [];
+            let inLowZone = false;
+            let startIdx = null;
+
+            for (let i = 0; i < data.length; i++) {
+                if (data[i] !== null && data[i] < threshold) {
+                    if (!inLowZone) {
+                        startIdx = i;
+                        inLowZone = true;
+                    }
+                } else {
+                    if (inLowZone && startIdx !== null) {
+                        markAreaData.push([
+                            { xAxis: startIdx, itemStyle: { color: color, opacity: 0.3 } },
+                            { xAxis: i - 1 }
+                        ]);
+                        inLowZone = false;
+                        startIdx = null;
+                    }
+                }
+            }
+
+            // 處理結尾仍在低檔區的情況
+            if (inLowZone && startIdx !== null) {
+                markAreaData.push([
+                    { xAxis: startIdx, itemStyle: { color: color, opacity: 0.3 } },
+                    { xAxis: data.length - 1 }
+                ]);
+            }
+
+            return markAreaData;
+        }
+
+        // 生成K線多指標交集標記
+        function generateKlineMarkAreas(kdData, macdData, rsiData) {
+            if (!thresholdConfig.masterEnabled) return [];
+
+            const markAreaData = [];
+            let inCombinedZone = false;
+            let startIdx = null;
+
+            for (let i = 0; i < kdData.length; i++) {
+                let meetsCriteria = true;
+
+                if (thresholdConfig.klineUseKd) {
+                    if (kdData[i] === null || kdData[i] >= thresholdConfig.kd) meetsCriteria = false;
+                }
+
+                if (thresholdConfig.klineUseMacd) {
+                    if (macdData[i] === null || macdData[i] >= thresholdConfig.macd) meetsCriteria = false;
+                }
+
+                if (thresholdConfig.klineUseRsi) {
+                    if (rsiData[i] === null || rsiData[i] >= thresholdConfig.rsi) meetsCriteria = false;
+                }
+
+                if (meetsCriteria) {
+                    if (!inCombinedZone) {
+                        startIdx = i;
+                        inCombinedZone = true;
+                    }
+                } else {
+                    if (inCombinedZone && startIdx !== null) {
+                        markAreaData.push([
+                            { xAxis: startIdx, itemStyle: { color: '#FFD700', opacity: 0.25 } },
+                            { xAxis: i - 1 }
+                        ]);
+                        inCombinedZone = false;
+                        startIdx = null;
+                    }
+                }
+            }
+
+            if (inCombinedZone && startIdx !== null) {
+                markAreaData.push([
+                    { xAxis: startIdx, itemStyle: { color: '#FFD700', opacity: 0.25 } },
+                    { xAxis: kdData.length - 1 }
+                ]);
+            }
+
+            return markAreaData;
+        }
+
+        // 快速更新標記區域（不重新渲染技術線圖）
+        function updateChartMarkAreas() {
+            if (!currentChartData) return;
+
+            const { kdResult, macdResult, rsi5, resampledData, visibleIndicators } = currentChartData;
+
+            // 更新每個指標的標記區域
+            const updatedSeries = myChart.getOption().series.map((s, idx) => {
+                // K線圖的標記（系列0）
+                if (s.type === 'candlestick') {
+                    return {
+                        ...s,
+                        markArea: {
+                            data: generateKlineMarkAreas(kdResult.k, macdResult.dm, rsi5)
+                        }
+                    };
+                }
+
+                // KD 的 K線標記
+                if (s.name === 'K(9)') {
+                    return {
+                        ...s,
+                        markArea: {
+                            data: generateMarkAreas(kdResult.k, thresholdConfig.kd, '#FF6B6B')
+                        }
+                    };
+                }
+
+                // RSI(5T) 的標記
+                if (s.name === 'RSI(5T)') {
+                    return {
+                        ...s,
+                        markArea: {
+                            data: generateMarkAreas(rsi5, thresholdConfig.rsi, '#FF8C00')
+                        }
+                    };
+                }
+
+                // MACD D-M 的標記
+                if (s.name === 'D-M') {
+                    return {
+                        ...s,
+                        markArea: {
+                            data: generateMarkAreas(macdResult.dm, thresholdConfig.macd, '#DA6EE8')
+                        }
+                    };
+                }
+
+                return s;
+            });
+
+            myChart.setOption({
+                series: updatedSeries
+            });
+        }
+
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
             currentPeriod = periodType;
@@ -441,12 +781,26 @@
                 gridIndex++;
             });
 
+            // 存儲當前圖表數據
+            currentChartData = {
+                kdResult,
+                macdResult,
+                rsi5,
+                resampledData,
+                visibleIndicators
+            };
+
             // 建立系列數據
             const series = [
                 {
-                    name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
+                    name: periodName,
+                    type: 'candlestick',
+                    data: resampledData.map(d => d.values),
                     itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
-                    large: true
+                    large: true,
+                    markArea: {
+                        data: generateKlineMarkAreas(kdResult.k, macdResult.dm, rsi5)
+                    }
                 },
                 { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                 { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
@@ -473,7 +827,17 @@
                     series.push(
                         { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none' },
                         { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
-                        { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
+                        {
+                            name: 'D-M',
+                            type: 'bar',
+                            xAxisIndex: axisIndex,
+                            yAxisIndex: axisIndex,
+                            data: macdResult.dm,
+                            itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' },
+                            markArea: {
+                                data: generateMarkAreas(macdResult.dm, thresholdConfig.macd, '#DA6EE8')
+                            }
+                        }
                     );
                 } else if (indicator === 'kd') {
                     legendData.push(
@@ -481,7 +845,18 @@
                         { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
                     );
                     series.push(
-                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none' },
+                        {
+                            name: 'K(9)',
+                            type: 'line',
+                            xAxisIndex: axisIndex,
+                            yAxisIndex: axisIndex,
+                            data: kdResult.k,
+                            lineStyle: { color: '#FF6B6B', width: 1.5 },
+                            symbol: 'none',
+                            markArea: {
+                                data: generateMarkAreas(kdResult.k, thresholdConfig.kd, '#FF6B6B')
+                            }
+                        },
                         { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
@@ -502,7 +877,18 @@
                         { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
                     );
                     series.push(
-                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none' },
+                        {
+                            name: 'RSI(5T)',
+                            type: 'line',
+                            xAxisIndex: axisIndex,
+                            yAxisIndex: axisIndex,
+                            data: rsi5,
+                            lineStyle: { color: '#FF8C00', width: 2 },
+                            symbol: 'none',
+                            markArea: {
+                                data: generateMarkAreas(rsi5, thresholdConfig.rsi, '#FF8C00')
+                            }
+                        },
                         { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
                         {
                             name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
