@@ -47,6 +47,13 @@
             margin-right: 6px;
             cursor: pointer;
         }
+        .indicator-checkbox input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .indicator-checkbox:has(input:disabled) {
+            opacity: 0.7;
+        }
         .floating-panel {
             position: fixed;
             top: 50%;
@@ -89,9 +96,13 @@
             margin-bottom: 20px;
             padding-bottom: 15px;
             border-bottom: 1px solid #eee;
+            transition: all 0.3s ease;
         }
         .panel-section:last-child {
             border-bottom: none;
+        }
+        .panel-section.hidden {
+            display: none;
         }
         .panel-section h3 {
             margin: 0 0 12px 0;
@@ -126,6 +137,14 @@
             height: 16px;
             margin-right: 8px;
             cursor: pointer;
+        }
+        .zone-checkbox input[type="checkbox"]:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+        }
+        .zone-checkbox:has(input:disabled) {
+            opacity: 0.5;
+            color: #999;
         }
         .master-toggle {
             background: #e74c3c;
@@ -185,6 +204,9 @@
         <button class="btn" data-period="monthly">月線</button>
         <button class="panel-control-btn" id="mainPanelToggle">⚙️ 開啟控制面板</button>
         <label class="indicator-checkbox">
+            <input type="checkbox" data-indicator="kline" checked disabled> K線圖
+        </label>
+        <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="macd" checked> MACD
         </label>
         <label class="indicator-checkbox">
@@ -207,7 +229,7 @@
             <button class="master-toggle active" id="masterToggle">開啟所有低檔標記</button>
         </div>
 
-        <div class="panel-section">
+        <div class="panel-section" data-indicator="kd">
             <h3>📊 KD 指標設定</h3>
             <div class="range-input">
                 <label>超賣區域 (低於):</label>
@@ -219,7 +241,7 @@
             </div>
         </div>
 
-        <div class="panel-section">
+        <div class="panel-section" data-indicator="rsi">
             <h3>📈 RSI 指標設定</h3>
             <div class="range-input">
                 <label>超賣區域 (低於):</label>
@@ -231,7 +253,7 @@
             </div>
         </div>
 
-        <div class="panel-section">
+        <div class="panel-section" data-indicator="macd">
             <h3>📉 MACD 指標設定</h3>
             <div class="range-input">
                 <label>低檔區域 (低於):</label>
@@ -637,16 +659,40 @@
         const compositeKD = document.getElementById('compositeKD');
         const compositeRSI = document.getElementById('compositeRSI');
         const compositeMACD = document.getElementById('compositeMACD');
+
+        // 獲取對應的面板區塊
+        const kdPanelSection = document.querySelector('.panel-section[data-indicator="kd"]');
+        const rsiPanelSection = document.querySelector('.panel-section[data-indicator="rsi"]');
+        const macdPanelSection = document.querySelector('.panel-section[data-indicator="macd"]');
+
         compositeKD.addEventListener('change', () => {
             zoneMarkingState.composite.useKD = compositeKD.checked;
+            // 控制 KD 設定區塊的顯示/隱藏
+            if (compositeKD.checked) {
+                kdPanelSection.classList.remove('hidden');
+            } else {
+                kdPanelSection.classList.add('hidden');
+            }
             updateChartMarkingsOnly();
         });
         compositeRSI.addEventListener('change', () => {
             zoneMarkingState.composite.useRSI = compositeRSI.checked;
+            // 控制 RSI 設定區塊的顯示/隱藏
+            if (compositeRSI.checked) {
+                rsiPanelSection.classList.remove('hidden');
+            } else {
+                rsiPanelSection.classList.add('hidden');
+            }
             updateChartMarkingsOnly();
         });
         compositeMACD.addEventListener('change', () => {
             zoneMarkingState.composite.useMACD = compositeMACD.checked;
+            // 控制 MACD 設定區塊的顯示/隱藏
+            if (compositeMACD.checked) {
+                macdPanelSection.classList.remove('hidden');
+            } else {
+                macdPanelSection.classList.add('hidden');
+            }
             updateChartMarkingsOnly();
         });
 
@@ -686,9 +732,9 @@
                 return { kd: { data: [] }, rsi: { data: [] }, macd: { data: [] }, composite: { data: [] } };
             }
 
-            // KD 低檔區域標記
+            // KD 低檔區域標記 (同步複合標記開關)
             const kdMarkAreas = [];
-            if (zoneMarkingState.kd.enabled && indicatorVisible.kd) {
+            if (zoneMarkingState.kd.enabled && indicatorVisible.kd && zoneMarkingState.composite.useKD) {
                 let inZone = false;
                 let zoneStart = null;
 
@@ -720,9 +766,9 @@
                 }
             }
 
-            // RSI 低檔區域標記
+            // RSI 低檔區域標記 (同步複合標記開關)
             const rsiMarkAreas = [];
-            if (zoneMarkingState.rsi.enabled && indicatorVisible.rsi) {
+            if (zoneMarkingState.rsi.enabled && indicatorVisible.rsi && zoneMarkingState.composite.useRSI) {
                 let inZone = false;
                 let zoneStart = null;
 
@@ -753,9 +799,9 @@
                 }
             }
 
-            // MACD 低檔區域標記
+            // MACD 低檔區域標記 (同步複合標記開關)
             const macdMarkAreas = [];
-            if (zoneMarkingState.macd.enabled && indicatorVisible.macd) {
+            if (zoneMarkingState.macd.enabled && indicatorVisible.macd && zoneMarkingState.composite.useMACD) {
                 let inZone = false;
                 let zoneStart = null;
 
@@ -1064,6 +1110,40 @@
             checkbox.addEventListener('change', () => {
                 const indicator = checkbox.dataset.indicator;
                 indicatorVisible[indicator] = checkbox.checked;
+
+                // 同步更新控制面板中的複合標記選項和設定區塊
+                if (indicator === 'kd') {
+                    compositeKD.checked = checkbox.checked;
+                    compositeKD.disabled = !checkbox.checked;
+                    zoneMarkingState.composite.useKD = checkbox.checked;
+                    // 控制 KD 設定區塊的顯示/隱藏
+                    if (checkbox.checked) {
+                        kdPanelSection.classList.remove('hidden');
+                    } else {
+                        kdPanelSection.classList.add('hidden');
+                    }
+                } else if (indicator === 'rsi') {
+                    compositeRSI.checked = checkbox.checked;
+                    compositeRSI.disabled = !checkbox.checked;
+                    zoneMarkingState.composite.useRSI = checkbox.checked;
+                    // 控制 RSI 設定區塊的顯示/隱藏
+                    if (checkbox.checked) {
+                        rsiPanelSection.classList.remove('hidden');
+                    } else {
+                        rsiPanelSection.classList.add('hidden');
+                    }
+                } else if (indicator === 'macd') {
+                    compositeMACD.checked = checkbox.checked;
+                    compositeMACD.disabled = !checkbox.checked;
+                    zoneMarkingState.composite.useMACD = checkbox.checked;
+                    // 控制 MACD 設定區塊的顯示/隱藏
+                    if (checkbox.checked) {
+                        macdPanelSection.classList.remove('hidden');
+                    } else {
+                        macdPanelSection.classList.add('hidden');
+                    }
+                }
+
                 updateChart(currentPeriod);
             });
         });
