@@ -67,6 +67,7 @@
             z-index: 1000;
             max-height: 80vh;
             overflow-y: auto;
+            overflow-x: hidden;
         }
         .floating-panel.open {
             right: 0;
@@ -91,6 +92,8 @@
         }
         .panel-content {
             padding: 20px;
+            box-sizing: border-box;
+            overflow-x: hidden;
         }
         .panel-section {
             margin-bottom: 20px;
@@ -110,21 +113,113 @@
             color: #2c3e50;
         }
         .range-input {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
         .range-input label {
-            flex: 1;
+            display: block;
             font-size: 0.9em;
             color: #555;
+            margin-bottom: 8px;
         }
-        .range-input input[type="number"] {
-            width: 60px;
-            padding: 4px 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .range-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .range-slider-container {
+            flex: 1;
+            min-width: 0;
+        }
+        .range-slider-wrapper {
+            position: relative;
+            padding: 0 5px;
+        }
+        .range-slider-container input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+        }
+        .range-slider-container input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            background: #d0d0d0;
+        }
+        .range-slider-container input[type="range"]::-moz-range-track {
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            background: #d0d0d0;
+        }
+        .range-slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #17a2b8;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            margin-top: -6px;
+        }
+        .range-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+            background: #138496;
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        .range-slider-container input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #17a2b8;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+        }
+        .range-slider-container input[type="range"]::-moz-range-thumb:hover {
+            background: #138496;
+            transform: scale(1.1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+            padding: 0 5px;
+        }
+        .range-labels span {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 600;
+        }
+        .range-control input[type="number"] {
+            width: 70px;
+            padding: 6px 10px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
             font-size: 0.9em;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+            transition: border-color 0.2s;
+        }
+        .range-control input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .range-value-display {
+            min-width: 45px;
+            text-align: center;
+            font-weight: bold;
+            color: #3498db;
+            font-size: 1em;
         }
         .zone-checkbox {
             display: flex;
@@ -233,7 +328,18 @@
             <h3>📊 KD 指標設定</h3>
             <div class="range-input">
                 <label>超賣區域 (低於):</label>
-                <input type="number" id="kdThreshold" value="20" min="0" max="100" step="5">
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="100" step="5" value="20">
+                        </div>
+                        <div class="range-labels">
+                            <span>0</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <input type="number" id="kdThreshold" min="0" max="100" step="5" value="20">
+                </div>
             </div>
             <div class="zone-checkbox">
                 <input type="checkbox" id="kdZoneEnabled" checked>
@@ -245,7 +351,18 @@
             <h3>📈 RSI 指標設定</h3>
             <div class="range-input">
                 <label>超賣區域 (低於):</label>
-                <input type="number" id="rsiThreshold" value="20" min="0" max="100" step="5">
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="100" step="5" value="20">
+                        </div>
+                        <div class="range-labels rsi-labels">
+                            <span>0</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <input type="number" id="rsiThreshold" min="0" max="100" step="5" value="20">
+                </div>
             </div>
             <div class="zone-checkbox">
                 <input type="checkbox" id="rsiZoneEnabled" checked>
@@ -257,7 +374,18 @@
             <h3>📉 MACD 指標設定</h3>
             <div class="range-input">
                 <label>低檔區域 (低於):</label>
-                <input type="number" id="macdThreshold" value="-185" step="10">
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="macdThresholdRange" class="macd-range" min="-500" max="0" step="10" value="-185">
+                        </div>
+                        <div class="range-labels macd-labels">
+                            <span>-500</span>
+                            <span>0</span>
+                        </div>
+                    </div>
+                    <input type="number" id="macdThreshold" min="-500" max="0" step="10" value="-185">
+                </div>
             </div>
             <div class="zone-checkbox">
                 <input type="checkbox" id="macdZoneEnabled" checked>
@@ -620,36 +748,129 @@
         });
 
         // KD 設定控制
+        const kdThresholdRange = document.getElementById('kdThresholdRange');
         const kdThresholdInput = document.getElementById('kdThreshold');
         const kdZoneEnabled = document.getElementById('kdZoneEnabled');
-        kdThresholdInput.addEventListener('change', () => {
-            zoneMarkingState.kd.threshold = parseFloat(kdThresholdInput.value);
+
+        // 同步滑動條和輸入框
+        kdThresholdRange.addEventListener('input', () => {
+            const value = parseInt(kdThresholdRange.value);
+            kdThresholdInput.value = value;
+            zoneMarkingState.kd.threshold = value;
             updateChartMarkingsOnly();
         });
+
+        kdThresholdInput.addEventListener('input', () => {
+            let value = parseInt(kdThresholdInput.value);
+            // 確保值在範圍內且為整數
+            if (isNaN(value)) value = 20;
+            value = Math.max(0, Math.min(100, value));
+            // 調整為步進值的倍數
+            value = Math.round(value / 5) * 5;
+            kdThresholdInput.value = value;
+            kdThresholdRange.value = value;
+            zoneMarkingState.kd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        kdThresholdInput.addEventListener('blur', () => {
+            // 失去焦點時確保值有效
+            let value = parseInt(kdThresholdInput.value);
+            if (isNaN(value)) value = 20;
+            value = Math.max(0, Math.min(100, value));
+            value = Math.round(value / 5) * 5;
+            kdThresholdInput.value = value;
+            kdThresholdRange.value = value;
+            zoneMarkingState.kd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
         kdZoneEnabled.addEventListener('change', () => {
             zoneMarkingState.kd.enabled = kdZoneEnabled.checked;
             updateChartMarkingsOnly();
         });
 
         // RSI 設定控制
+        const rsiThresholdRange = document.getElementById('rsiThresholdRange');
         const rsiThresholdInput = document.getElementById('rsiThreshold');
         const rsiZoneEnabled = document.getElementById('rsiZoneEnabled');
-        rsiThresholdInput.addEventListener('change', () => {
-            zoneMarkingState.rsi.threshold = parseFloat(rsiThresholdInput.value);
+
+        // 同步滑動條和輸入框
+        rsiThresholdRange.addEventListener('input', () => {
+            const value = parseInt(rsiThresholdRange.value);
+            rsiThresholdInput.value = value;
+            zoneMarkingState.rsi.threshold = value;
             updateChartMarkingsOnly();
         });
+
+        rsiThresholdInput.addEventListener('input', () => {
+            let value = parseInt(rsiThresholdInput.value);
+            // 確保值在範圍內且為整數
+            if (isNaN(value)) value = 20;
+            value = Math.max(0, Math.min(100, value));
+            // 調整為步進值的倍數
+            value = Math.round(value / 5) * 5;
+            rsiThresholdInput.value = value;
+            rsiThresholdRange.value = value;
+            zoneMarkingState.rsi.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        rsiThresholdInput.addEventListener('blur', () => {
+            // 失去焦點時確保值有效
+            let value = parseInt(rsiThresholdInput.value);
+            if (isNaN(value)) value = 20;
+            value = Math.max(0, Math.min(100, value));
+            value = Math.round(value / 5) * 5;
+            rsiThresholdInput.value = value;
+            rsiThresholdRange.value = value;
+            zoneMarkingState.rsi.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
         rsiZoneEnabled.addEventListener('change', () => {
             zoneMarkingState.rsi.enabled = rsiZoneEnabled.checked;
             updateChartMarkingsOnly();
         });
 
         // MACD 設定控制
+        const macdThresholdRange = document.getElementById('macdThresholdRange');
         const macdThresholdInput = document.getElementById('macdThreshold');
         const macdZoneEnabled = document.getElementById('macdZoneEnabled');
-        macdThresholdInput.addEventListener('change', () => {
-            zoneMarkingState.macd.threshold = parseFloat(macdThresholdInput.value);
+
+        // 同步滑動條和輸入框
+        macdThresholdRange.addEventListener('input', () => {
+            const value = parseInt(macdThresholdRange.value);
+            macdThresholdInput.value = value;
+            zoneMarkingState.macd.threshold = value;
             updateChartMarkingsOnly();
         });
+
+        macdThresholdInput.addEventListener('input', () => {
+            let value = parseInt(macdThresholdInput.value);
+            // 確保值在範圍內且為整數
+            if (isNaN(value)) value = -185;
+            value = Math.max(-500, Math.min(0, value));
+            // 調整為步進值的倍數
+            value = Math.round(value / 10) * 10;
+            macdThresholdInput.value = value;
+            macdThresholdRange.value = value;
+            zoneMarkingState.macd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        macdThresholdInput.addEventListener('blur', () => {
+            // 失去焦點時確保值有效
+            let value = parseInt(macdThresholdInput.value);
+            if (isNaN(value)) value = -185;
+            value = Math.max(-500, Math.min(0, value));
+            value = Math.round(value / 10) * 10;
+            macdThresholdInput.value = value;
+            macdThresholdRange.value = value;
+            zoneMarkingState.macd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
         macdZoneEnabled.addEventListener('change', () => {
             zoneMarkingState.macd.enabled = macdZoneEnabled.checked;
             updateChartMarkingsOnly();
