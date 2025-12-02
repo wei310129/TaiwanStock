@@ -314,6 +314,25 @@
             <button class="master-toggle active" id="masterToggle">開啟所有低檔標記</button>
         </div>
 
+        <div class="panel-section" data-indicator="macd">
+            <h3>📉 MACD 指標設定</h3>
+            <div class="range-input">
+                <label>低檔區域 (低於):</label>
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="macdThresholdRange" class="macd-range" min="-1000" max="500" step="10" value="300">
+                        </div>
+                        <div class="range-labels macd-labels">
+                            <span>-1000</span>
+                            <span>500</span>
+                        </div>
+                    </div>
+                    <input type="number" id="macdThreshold" min="-1000" max="500" step="10" value="300">
+                </div>
+            </div>
+        </div>
+
         <div class="panel-section" data-indicator="kd">
             <h3>📊 KD 指標設定</h3>
             <div class="range-input">
@@ -321,14 +340,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="100" step="5" value="20">
+                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="80" step="5" value="60">
                         </div>
                         <div class="range-labels">
                             <span>0</span>
-                            <span>100</span>
+                            <span>80</span>
                         </div>
                     </div>
-                    <input type="number" id="kdThreshold" min="0" max="100" step="5" value="20">
+                    <input type="number" id="kdThreshold" min="0" max="80" step="5" value="60">
                 </div>
             </div>
         </div>
@@ -340,33 +359,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="100" step="5" value="20">
+                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="80" step="5" value="60">
                         </div>
                         <div class="range-labels rsi-labels">
                             <span>0</span>
-                            <span>100</span>
+                            <span>80</span>
                         </div>
                     </div>
-                    <input type="number" id="rsiThreshold" min="0" max="100" step="5" value="20">
-                </div>
-            </div>
-        </div>
-
-        <div class="panel-section" data-indicator="macd">
-            <h3>📉 MACD 指標設定</h3>
-            <div class="range-input">
-                <label>低檔區域 (低於):</label>
-                <div class="range-control">
-                    <div class="range-slider-container">
-                        <div class="range-slider-wrapper">
-                            <input type="range" id="macdThresholdRange" class="macd-range" min="-500" max="0" step="10" value="-185">
-                        </div>
-                        <div class="range-labels macd-labels">
-                            <span>-500</span>
-                            <span>0</span>
-                        </div>
-                    </div>
-                    <input type="number" id="macdThreshold" min="-500" max="0" step="10" value="-185">
+                    <input type="number" id="rsiThreshold" min="0" max="80" step="5" value="60">
                 </div>
             </div>
         </div>
@@ -374,16 +374,16 @@
         <div class="panel-section">
             <h3>🎯 K線區複合標記</h3>
             <div class="zone-checkbox">
+                <input type="checkbox" id="compositeMACD" checked>
+                <label for="compositeMACD">採用 MACD 條件</label>
+            </div>
+            <div class="zone-checkbox">
                 <input type="checkbox" id="compositeKD" checked>
                 <label for="compositeKD">採用 KD 條件</label>
             </div>
             <div class="zone-checkbox">
                 <input type="checkbox" id="compositeRSI" checked>
                 <label for="compositeRSI">採用 RSI 條件</label>
-            </div>
-            <div class="zone-checkbox">
-                <input type="checkbox" id="compositeMACD" checked>
-                <label for="compositeMACD">採用 MACD 條件</label>
             </div>
         </div>
     </div>
@@ -711,9 +711,9 @@
         // 區域標記狀態管理
         let zoneMarkingState = {
             masterEnabled: true,
-            kd: { enabled: true, threshold: 20 },
-            rsi: { enabled: true, threshold: 20 },
-            macd: { enabled: true, threshold: -185 },
+            kd: { enabled: true, threshold: 60 },
+            rsi: { enabled: true, threshold: 60 },
+            macd: { enabled: true, threshold: 300 },
             composite: {
                 useKD: true,
                 useRSI: true,
@@ -770,8 +770,8 @@
         kdThresholdInput.addEventListener('input', () => {
             let value = parseInt(kdThresholdInput.value);
             // 確保值在範圍內且為整數
-            if (isNaN(value)) value = 20;
-            value = Math.max(0, Math.min(100, value));
+            if (isNaN(value)) value = 60;
+            value = Math.max(0, Math.min(80, value));
             // 調整為步進值的倍數
             value = Math.round(value / 5) * 5;
             kdThresholdInput.value = value;
@@ -783,8 +783,8 @@
         kdThresholdInput.addEventListener('blur', () => {
             // 失去焦點時確保值有效
             let value = parseInt(kdThresholdInput.value);
-            if (isNaN(value)) value = 20;
-            value = Math.max(0, Math.min(100, value));
+            if (isNaN(value)) value = 60;
+            value = Math.max(0, Math.min(80, value));
             value = Math.round(value / 5) * 5;
             kdThresholdInput.value = value;
             kdThresholdRange.value = value;
@@ -807,8 +807,8 @@
         rsiThresholdInput.addEventListener('input', () => {
             let value = parseInt(rsiThresholdInput.value);
             // 確保值在範圍內且為整數
-            if (isNaN(value)) value = 20;
-            value = Math.max(0, Math.min(100, value));
+            if (isNaN(value)) value = 60;
+            value = Math.max(0, Math.min(80, value));
             // 調整為步進值的倍數
             value = Math.round(value / 5) * 5;
             rsiThresholdInput.value = value;
@@ -820,8 +820,8 @@
         rsiThresholdInput.addEventListener('blur', () => {
             // 失去焦點時確保值有效
             let value = parseInt(rsiThresholdInput.value);
-            if (isNaN(value)) value = 20;
-            value = Math.max(0, Math.min(100, value));
+            if (isNaN(value)) value = 60;
+            value = Math.max(0, Math.min(80, value));
             value = Math.round(value / 5) * 5;
             rsiThresholdInput.value = value;
             rsiThresholdRange.value = value;
@@ -844,8 +844,8 @@
         macdThresholdInput.addEventListener('input', () => {
             let value = parseInt(macdThresholdInput.value);
             // 確保值在範圍內且為整數
-            if (isNaN(value)) value = -185;
-            value = Math.max(-500, Math.min(0, value));
+            if (isNaN(value)) value = 300;
+            value = Math.max(-1000, Math.min(500, value));
             // 調整為步進值的倍數
             value = Math.round(value / 10) * 10;
             macdThresholdInput.value = value;
@@ -857,8 +857,8 @@
         macdThresholdInput.addEventListener('blur', () => {
             // 失去焦點時確保值有效
             let value = parseInt(macdThresholdInput.value);
-            if (isNaN(value)) value = -185;
-            value = Math.max(-500, Math.min(0, value));
+            if (isNaN(value)) value = 300;
+            value = Math.max(-1000, Math.min(500, value));
             value = Math.round(value / 10) * 10;
             macdThresholdInput.value = value;
             macdThresholdRange.value = value;
@@ -961,7 +961,7 @@
                             zoneStart = resampledData[i].date;
                         } else if (!isLow && inZone) {
                             kdMarkAreas.push([
-                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
                                 { xAxis: resampledData[i - 1].date }
                             ]);
                             inZone = false;
@@ -971,7 +971,7 @@
 
                 if (inZone) {
                     kdMarkAreas.push([
-                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
                         { xAxis: resampledData[resampledData.length - 1].date }
                     ]);
                 }
@@ -1082,7 +1082,7 @@
                     zoneStart = resampledData[i].date;
                 } else if (!allConditionsMet && inZone) {
                     compositeMarkAreas.push([
-                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
                         { xAxis: resampledData[i - 1].date }
                     ]);
                     inZone = false;
@@ -1091,7 +1091,7 @@
 
             if (inZone) {
                 compositeMarkAreas.push([
-                    { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
+                    { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
                     { xAxis: resampledData[resampledData.length - 1].date }
                 ]);
             }
