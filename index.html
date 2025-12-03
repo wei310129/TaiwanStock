@@ -333,9 +333,72 @@
         .panel-control-btn.panel-open {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
+
+        /* 附著在控制面板旁的書籤側邊欄 */
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 50px;
+            background: #2c3e50;
+            border-radius: 12px 0 0 12px;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            transition: right 0.3s ease, width 0.3s ease;
+        }
+        .sidebar.panel-open {
+            right: 320px;
+        }
+        .sidebar:hover {
+            width: 150px;
+        }
+        .sidebar-bookmark {
+            position: relative;
+            padding: 15px;
+            cursor: pointer;
+            color: white;
+            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .sidebar-bookmark:last-child {
+            border-bottom: none;
+        }
+        .sidebar-bookmark:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        .sidebar-bookmark.active {
+            background: #3498db;
+        }
+        .sidebar-bookmark-icon {
+            min-width: 20px;
+            font-size: 18px;
+            margin-right: 10px;
+            display: inline-block;
+        }
+        .sidebar-bookmark-text {
+            font-size: 14px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .sidebar:hover .sidebar-bookmark-text {
+            opacity: 1;
+        }
     </style>
 </head>
 <body>
+
+<!-- 左側書籤側邊欄 -->
+<div class="sidebar">
+    <div class="sidebar-bookmark" id="lowPriceAreaBookmark">
+        <span class="sidebar-bookmark-icon">📊</span>
+        <span class="sidebar-bookmark-text">低檔區域</span>
+    </div>
+</div>
 
 <div class="card">
     <h2 id="chart-title">📈 台灣加權指數歷史回測(Beta 版) <span class="badge">Real Data</span></h2>
@@ -345,7 +408,6 @@
         <button class="btn" data-period="bi-weekly">雙周線</button>
         <button class="btn" data-period="tri-weekly">三周線</button>
         <button class="btn" data-period="monthly">月線</button>
-        <button class="panel-control-btn" id="mainPanelToggle">⚙️ 開啟低檔區域控制面板</button>
         <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="macd" checked> MACD
         </label>
@@ -728,35 +790,36 @@
         // 浮動面板控制
         const floatingPanel = document.getElementById('floatingPanel');
         const panelToggle = document.getElementById('panelToggle');
-        const mainPanelToggle = document.getElementById('mainPanelToggle');
+        const lowPriceAreaBookmark = document.getElementById('lowPriceAreaBookmark');
+        const sidebar = document.querySelector('.sidebar');
 
         // 切換面板狀態的函數
         function togglePanel() {
             const isOpen = floatingPanel.classList.toggle('open');
 
-            // 更新主按鈕狀態
+            // 更新書籤狀態和位置
             if (isOpen) {
-                mainPanelToggle.textContent = '⚙️ 關閉低檔區域控制面板';
-                mainPanelToggle.classList.add('panel-open');
+                lowPriceAreaBookmark.classList.add('active');
+                sidebar.classList.add('panel-open');
             } else {
-                mainPanelToggle.textContent = '⚙️ 開啟低檔區域控制面板';
-                mainPanelToggle.classList.remove('panel-open');
+                lowPriceAreaBookmark.classList.remove('active');
+                sidebar.classList.remove('panel-open');
             }
         }
 
         // 關閉面板的函數
         function closePanel() {
             floatingPanel.classList.remove('open');
-            mainPanelToggle.textContent = '⚙️ 開啟低檔區域控制面板';
-            mainPanelToggle.classList.remove('panel-open');
+            lowPriceAreaBookmark.classList.remove('active');
+            sidebar.classList.remove('panel-open');
         }
 
-        // 綁定兩個按鈕到同一個切換函數
+        // 綁定書籤和面板切換按鈕到同一個切換函數
         panelToggle.addEventListener('click', (e) => {
             e.stopPropagation(); // 防止事件冒泡
             togglePanel();
         });
-        mainPanelToggle.addEventListener('click', (e) => {
+        lowPriceAreaBookmark.addEventListener('click', (e) => {
             e.stopPropagation(); // 防止事件冒泡
             togglePanel();
         });
@@ -764,11 +827,11 @@
         // 點擊面板外部關閉面板
         document.addEventListener('click', (e) => {
             const isClickInsidePanel = floatingPanel.contains(e.target);
-            const isClickOnMainToggle = mainPanelToggle.contains(e.target);
+            const isClickOnBookmark = lowPriceAreaBookmark.contains(e.target);
             const isPanelOpen = floatingPanel.classList.contains('open');
 
-            // 如果面板是開啟的，且點擊不在面板內，也不在主按鈕上，則關閉面板
-            if (isPanelOpen && !isClickInsidePanel && !isClickOnMainToggle) {
+            // 如果面板是開啟的，且點擊不在面板內，也不在書籤上，則關閉面板
+            if (isPanelOpen && !isClickInsidePanel && !isClickOnBookmark) {
                 closePanel();
             }
         });
