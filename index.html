@@ -392,8 +392,12 @@
 </head>
 <body>
 
-<!-- 左側書籤側邊欄 -->
+<!-- 右側書籤側邊欄 -->
 <div class="sidebar">
+    <div class="sidebar-bookmark" id="highPriceAreaBookmark">
+        <span class="sidebar-bookmark-icon">📈</span>
+        <span class="sidebar-bookmark-text">高檔區域</span>
+    </div>
     <div class="sidebar-bookmark" id="lowPriceAreaBookmark">
         <span class="sidebar-bookmark-icon">📊</span>
         <span class="sidebar-bookmark-text">低檔區域</span>
@@ -426,6 +430,99 @@
 <div class="floating-panel" id="floatingPanel">
     <button class="panel-toggle" id="panelToggle">⚙️</button>
     <div class="panel-content">
+        <div class="panel-section">
+            <h3>高檔區域標記</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="highMasterToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="highMasterToggle" style="font-size: 1em; font-weight: 500;">開啟所有高檔標記</label>
+            </div>
+        </div>
+
+        <div class="panel-section" data-indicator="macd" id="highMacdSection">
+            <h3>📈 MACD 指標設定</h3>
+            <div class="range-input">
+                <label>高檔區域 (高於):</label>
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="highMacdThresholdRange" class="macd-range" min="-500" max="1000" step="5" value="0">
+                        </div>
+                        <div class="range-labels macd-labels">
+                            <span>-500</span>
+                            <span>1000</span>
+                        </div>
+                    </div>
+                    <input type="number" id="highMacdThreshold" min="-500" max="1000" step="5" value="0">
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section" data-indicator="kd" id="highKdSection">
+            <h3>📊 KD 指標設定</h3>
+            <div class="range-input">
+                <label>超買區域 (高於):</label>
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="highKdThresholdRange" class="kd-range" min="20" max="100" step="1" value="70">
+                        </div>
+                        <div class="range-labels">
+                            <span>20</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <input type="number" id="highKdThreshold" min="20" max="100" step="1" value="70">
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section" data-indicator="rsi" id="highRsiSection">
+            <h3>📈 RSI 指標設定</h3>
+            <div class="range-input">
+                <label>超買區域 (高於):</label>
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="highRsiThresholdRange" class="rsi-range" min="20" max="100" step="1" value="70">
+                        </div>
+                        <div class="range-labels rsi-labels">
+                            <span>20</span>
+                            <span>100</span>
+                        </div>
+                    </div>
+                    <input type="number" id="highRsiThreshold" min="20" max="100" step="1" value="70">
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>🎯 K線區複合標記</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="highCompositeMACD" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="highCompositeMACD">採用 MACD 條件</label>
+            </div>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="highCompositeKD" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="highCompositeKD">採用 KD 條件</label>
+            </div>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="highCompositeRSI" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="highCompositeRSI">採用 RSI 條件</label>
+            </div>
+        </div>
+
         <div class="panel-section">
             <h3>低檔區域標記</h3>
             <div class="zone-checkbox">
@@ -797,12 +894,16 @@
         function togglePanel() {
             const isOpen = floatingPanel.classList.toggle('open');
 
-            // 更新書籤狀態和位置
+            // 更新側邊欄位置
             if (isOpen) {
-                lowPriceAreaBookmark.classList.add('active');
                 sidebar.classList.add('panel-open');
             } else {
+                // 關閉時移除所有書籤的 active 狀態
                 lowPriceAreaBookmark.classList.remove('active');
+                const highPriceBookmark = document.getElementById('highPriceAreaBookmark');
+                if (highPriceBookmark) {
+                    highPriceBookmark.classList.remove('active');
+                }
                 sidebar.classList.remove('panel-open');
             }
         }
@@ -811,6 +912,10 @@
         function closePanel() {
             floatingPanel.classList.remove('open');
             lowPriceAreaBookmark.classList.remove('active');
+            const highPriceBookmark = document.getElementById('highPriceAreaBookmark');
+            if (highPriceBookmark) {
+                highPriceBookmark.classList.remove('active');
+            }
             sidebar.classList.remove('panel-open');
         }
 
@@ -821,17 +926,42 @@
         });
         lowPriceAreaBookmark.addEventListener('click', (e) => {
             e.stopPropagation(); // 防止事件冒泡
-            togglePanel();
+            // 確保面板打開
+            if (!floatingPanel.classList.contains('open')) {
+                floatingPanel.classList.add('open');
+                sidebar.classList.add('panel-open');
+            }
+            // 找到低檔區域標記的位置並滾動
+            const panelContent = document.querySelector('.panel-content');
+            const panelSections = panelContent.querySelectorAll('.panel-section h3');
+            for (let section of panelSections) {
+                if (section.textContent.includes('低檔區域標記')) {
+                    const lowPriceSectionElement = section.closest('.panel-section');
+                    if (lowPriceSectionElement) {
+                        panelContent.scrollTo({
+                            top: lowPriceSectionElement.offsetTop - 10,
+                            behavior: 'smooth'
+                        });
+                        break;
+                    }
+                }
+            }
+            // 高亮效果
+            lowPriceAreaBookmark.classList.add('active');
+            const highPriceBookmark = document.getElementById('highPriceAreaBookmark');
+            if (highPriceBookmark) {
+                highPriceBookmark.classList.remove('active');
+            }
         });
 
         // 點擊面板外部關閉面板
         document.addEventListener('click', (e) => {
             const isClickInsidePanel = floatingPanel.contains(e.target);
-            const isClickOnBookmark = lowPriceAreaBookmark.contains(e.target);
+            const isClickOnLowBookmark = lowPriceAreaBookmark.contains(e.target);
             const isPanelOpen = floatingPanel.classList.contains('open');
 
-            // 如果面板是開啟的，且點擊不在面板內，也不在書籤上，則關閉面板
-            if (isPanelOpen && !isClickInsidePanel && !isClickOnBookmark) {
+            // 如果面板是開啟的，且點擊不在面板內，也不在任何書籤上，則關閉面板
+            if (isPanelOpen && !isClickInsidePanel && !isClickOnLowBookmark && !sidebar.contains(e.target)) {
                 closePanel();
             }
         });
@@ -848,6 +978,16 @@
             rsi: { enabled: true, threshold: 30 },
             macd: { enabled: true, threshold: 0 },
             composite: {
+                useKD: true,
+                useRSI: true,
+                useMACD: true
+            },
+            // 高檔區域標記
+            highMasterEnabled: false,  // 預設關閉高檔標記
+            highKd: { enabled: true, threshold: 70 },
+            highRsi: { enabled: true, threshold: 70 },
+            highMacd: { enabled: true, threshold: 0 },
+            highComposite: {
                 useKD: true,
                 useRSI: true,
                 useMACD: true
@@ -1033,6 +1173,153 @@
             updateChartMarkingsOnly();
         });
 
+        // === 高檔區域控制 ===
+
+        // 高檔主開關控制
+        const highMasterToggle = document.getElementById('highMasterToggle');
+        highMasterToggle.addEventListener('change', () => {
+            zoneMarkingState.highMasterEnabled = highMasterToggle.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // 高檔 KD 設定控制
+        const highKdThresholdRange = document.getElementById('highKdThresholdRange');
+        const highKdThresholdInput = document.getElementById('highKdThreshold');
+
+        highKdThresholdRange.addEventListener('input', () => {
+            const value = parseInt(highKdThresholdRange.value);
+            highKdThresholdInput.value = value;
+            zoneMarkingState.highKd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        highKdThresholdInput.addEventListener('input', () => {
+            let value = parseInt(highKdThresholdInput.value);
+            if (isNaN(value)) value = 70;
+            value = Math.max(20, Math.min(100, value));
+            value = Math.round(value);
+            highKdThresholdInput.value = value;
+            highKdThresholdRange.value = value;
+            zoneMarkingState.highKd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        highKdThresholdInput.addEventListener('blur', () => {
+            let value = parseInt(highKdThresholdInput.value);
+            if (isNaN(value)) value = 70;
+            value = Math.max(20, Math.min(100, value));
+            value = Math.round(value);
+            highKdThresholdInput.value = value;
+            highKdThresholdRange.value = value;
+            zoneMarkingState.highKd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        // 高檔 RSI 設定控制
+        const highRsiThresholdRange = document.getElementById('highRsiThresholdRange');
+        const highRsiThresholdInput = document.getElementById('highRsiThreshold');
+
+        highRsiThresholdRange.addEventListener('input', () => {
+            const value = parseInt(highRsiThresholdRange.value);
+            highRsiThresholdInput.value = value;
+            zoneMarkingState.highRsi.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        highRsiThresholdInput.addEventListener('input', () => {
+            let value = parseInt(highRsiThresholdInput.value);
+            if (isNaN(value)) value = 70;
+            value = Math.max(20, Math.min(100, value));
+            value = Math.round(value);
+            highRsiThresholdInput.value = value;
+            highRsiThresholdRange.value = value;
+            zoneMarkingState.highRsi.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        highRsiThresholdInput.addEventListener('blur', () => {
+            let value = parseInt(highRsiThresholdInput.value);
+            if (isNaN(value)) value = 70;
+            value = Math.max(20, Math.min(100, value));
+            value = Math.round(value);
+            highRsiThresholdInput.value = value;
+            highRsiThresholdRange.value = value;
+            zoneMarkingState.highRsi.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        // 高檔 MACD 設定控制
+        const highMacdThresholdRange = document.getElementById('highMacdThresholdRange');
+        const highMacdThresholdInput = document.getElementById('highMacdThreshold');
+
+        highMacdThresholdRange.addEventListener('input', () => {
+            const value = parseInt(highMacdThresholdRange.value);
+            highMacdThresholdInput.value = value;
+            zoneMarkingState.highMacd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        highMacdThresholdInput.addEventListener('input', () => {
+            let value = parseInt(highMacdThresholdInput.value);
+            if (isNaN(value)) value = 0;
+            value = Math.max(-500, Math.min(1000, value));
+            value = Math.round(value / 5) * 5;
+            highMacdThresholdInput.value = value;
+            highMacdThresholdRange.value = value;
+            zoneMarkingState.highMacd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        highMacdThresholdInput.addEventListener('blur', () => {
+            let value = parseInt(highMacdThresholdInput.value);
+            if (isNaN(value)) value = 0;
+            value = Math.max(-500, Math.min(1000, value));
+            value = Math.round(value / 5) * 5;
+            highMacdThresholdInput.value = value;
+            highMacdThresholdRange.value = value;
+            zoneMarkingState.highMacd.threshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        // 高檔複合標記控制
+        const highCompositeKD = document.getElementById('highCompositeKD');
+        const highCompositeRSI = document.getElementById('highCompositeRSI');
+        const highCompositeMACD = document.getElementById('highCompositeMACD');
+
+        const highKdPanelSection = document.getElementById('highKdSection');
+        const highRsiPanelSection = document.getElementById('highRsiSection');
+        const highMacdPanelSection = document.getElementById('highMacdSection');
+
+        highCompositeKD.addEventListener('change', () => {
+            zoneMarkingState.highComposite.useKD = highCompositeKD.checked;
+            if (highCompositeKD.checked) {
+                highKdPanelSection.classList.remove('hidden');
+            } else {
+                highKdPanelSection.classList.add('hidden');
+            }
+            updateChartMarkingsOnly();
+        });
+
+        highCompositeRSI.addEventListener('change', () => {
+            zoneMarkingState.highComposite.useRSI = highCompositeRSI.checked;
+            if (highCompositeRSI.checked) {
+                highRsiPanelSection.classList.remove('hidden');
+            } else {
+                highRsiPanelSection.classList.add('hidden');
+            }
+            updateChartMarkingsOnly();
+        });
+
+        highCompositeMACD.addEventListener('change', () => {
+            zoneMarkingState.highComposite.useMACD = highCompositeMACD.checked;
+            if (highCompositeMACD.checked) {
+                highMacdPanelSection.classList.remove('hidden');
+            } else {
+                highMacdPanelSection.classList.add('hidden');
+            }
+            updateChartMarkingsOnly();
+        });
+
         // 儲存當前圖表數據，供標記更新使用
         let currentChartData = null;
 
@@ -1045,24 +1332,48 @@
             // 更新所有需要標記的系列
             option.series.forEach((s, idx) => {
                 if (s.name === currentChartData.periodName) {
-                    // K線圖的複合標記
-                    s.markArea = newMarkAreas.composite;
-                    s.markLine = { data: newMarkAreas.composite.lines, symbol: 'none', label: { show: false } };
+                    // K線圖的複合標記（包含低檔和高檔）
+                    s.markArea = {
+                        data: [...newMarkAreas.composite.data, ...newMarkAreas.highComposite.data]
+                    };
+                    s.markLine = {
+                        data: [...newMarkAreas.composite.lines, ...newMarkAreas.highComposite.lines],
+                        symbol: 'none',
+                        label: { show: false }
+                    };
                 } else if (s.name === '低檔反彈收盤') {
                     // 🎯 橘色標記點（散點圖）
                     s.data = newMarkAreas.postZoneMarkers.data;
                 } else if (s.name === 'K(9)') {
-                    // KD 的標記
-                    s.markArea = newMarkAreas.kd;
-                    s.markLine = { data: newMarkAreas.kd.lines, symbol: 'none', label: { show: false } };
+                    // KD 的標記（包含低檔和高檔）
+                    s.markArea = {
+                        data: [...newMarkAreas.kd.data, ...newMarkAreas.highKd.data]
+                    };
+                    s.markLine = {
+                        data: [...newMarkAreas.kd.lines, ...newMarkAreas.highKd.lines],
+                        symbol: 'none',
+                        label: { show: false }
+                    };
                 } else if (s.name === 'RSI(5T)') {
-                    // RSI 的標記
-                    s.markArea = newMarkAreas.rsi;
-                    s.markLine = { data: newMarkAreas.rsi.lines, symbol: 'none', label: { show: false } };
+                    // RSI 的標記（包含低檔和高檔）
+                    s.markArea = {
+                        data: [...newMarkAreas.rsi.data, ...newMarkAreas.highRsi.data]
+                    };
+                    s.markLine = {
+                        data: [...newMarkAreas.rsi.lines, ...newMarkAreas.highRsi.lines],
+                        symbol: 'none',
+                        label: { show: false }
+                    };
                 } else if (s.name === 'DIF') {
-                    // MACD 的標記
-                    s.markArea = newMarkAreas.macd;
-                    s.markLine = { data: newMarkAreas.macd.lines, symbol: 'none', label: { show: false } };
+                    // MACD 的標記（包含低檔和高檔）
+                    s.markArea = {
+                        data: [...newMarkAreas.macd.data, ...newMarkAreas.highMacd.data]
+                    };
+                    s.markLine = {
+                        data: [...newMarkAreas.macd.lines, ...newMarkAreas.highMacd.lines],
+                        symbol: 'none',
+                        label: { show: false }
+                    };
                 }
             });
 
@@ -1091,27 +1402,36 @@
         function generateMarkAreas(data) {
             const { resampledData, kdResult, rsi5, macdResult, periodName } = data;
 
-            if (!zoneMarkingState.masterEnabled) {
-                return {
-                    kd: { data: [], lines: [] },
-                    rsi: { data: [], lines: [] },
-                    macd: { data: [], lines: [] },
-                    composite: { data: [], lines: [] },
-                    postZoneMarkers: { data: [] }
-                };
-            }
-
+            // 低檔區域標記初始化
             const postZoneMarkers = { data: [] };
+            let kdMarkAreas = [];
+            let kdMarkLines = [];
+            let rsiMarkAreas = [];
+            let rsiMarkLines = [];
+            let macdMarkAreas = [];
+            let macdMarkLines = [];
+            let compositeMarkAreas = [];
+            let compositeMarkLines = [];
 
-            // 🔍 檢查：如果所有技術線圖都關閉，不生成複合標記
-            const hasAnyIndicator = zoneMarkingState.composite.useKD ||
-                                   zoneMarkingState.composite.useRSI ||
-                                   zoneMarkingState.composite.useMACD;
+            // === 低檔區域標記邏輯 ===
+            if (!zoneMarkingState.masterEnabled) {
+                // 低檔標記關閉時，使用空陣列
+                kdMarkAreas = [];
+                kdMarkLines = [];
+                rsiMarkAreas = [];
+                rsiMarkLines = [];
+                macdMarkAreas = [];
+                macdMarkLines = [];
+                compositeMarkAreas = [];
+                compositeMarkLines = [];
+            } else {
+                // 🔍 檢查：如果所有技術線圖都關閉，不生成複合標記
+                const hasAnyIndicator = zoneMarkingState.composite.useKD ||
+                                       zoneMarkingState.composite.useRSI ||
+                                       zoneMarkingState.composite.useMACD;
 
-            // KD 低檔區域標記（K 和 D 都低於閾值才標記）
-            const kdMarkAreas = [];
-            const kdMarkLines = [];
-            if (indicatorVisible.kd && zoneMarkingState.composite.useKD) {
+                // KD 低檔區域標記（K 和 D 都低於閾值才標記）
+                if (indicatorVisible.kd && zoneMarkingState.composite.useKD) {
                 let inZone = false;
                 let zoneStart = null;
                 let zoneStartIndex = null;
@@ -1166,8 +1486,6 @@
             }
 
             // RSI 低檔區域標記
-            const rsiMarkAreas = [];
-            const rsiMarkLines = [];
             if (indicatorVisible.rsi && zoneMarkingState.composite.useRSI) {
                 let inZone = false;
                 let zoneStart = null;
@@ -1220,8 +1538,6 @@
             }
 
             // MACD 低檔區域標記
-            const macdMarkAreas = [];
-            const macdMarkLines = [];
             if (indicatorVisible.macd && zoneMarkingState.composite.useMACD) {
                 let inZone = false;
                 let zoneStart = null;
@@ -1274,9 +1590,6 @@
             }
 
             // K線區複合標記 (所有選中條件都滿足的區域)
-            const compositeMarkAreas = [];
-            const compositeMarkLines = [];
-
             // 🔍 只有在至少有一個指標啟用時才進行掃描
             if (hasAnyIndicator) {
                 let inZone = false;
@@ -1387,6 +1700,246 @@
                 }
             }
             } // 結束 hasAnyIndicator 檢查
+            } // 結束低檔區域標記的 else 區塊
+
+            // === 高檔區域標記 ===
+            const highKdMarkAreas = [];
+            const highKdMarkLines = [];
+            const highRsiMarkAreas = [];
+            const highRsiMarkLines = [];
+            const highMacdMarkAreas = [];
+            const highMacdMarkLines = [];
+            const highCompositeMarkAreas = [];
+            const highCompositeMarkLines = [];
+
+            if (!zoneMarkingState.highMasterEnabled) {
+                // 高檔標記關閉時，返回空標記
+            } else {
+                const hasAnyHighIndicator = zoneMarkingState.highComposite.useKD ||
+                                           zoneMarkingState.highComposite.useRSI ||
+                                           zoneMarkingState.highComposite.useMACD;
+
+                // KD 高檔區域標記（K 和 D 都高於閾值才標記）
+                if (indicatorVisible.kd && zoneMarkingState.highComposite.useKD) {
+                    let inZone = false;
+                    let zoneStart = null;
+                    let zoneStartIndex = null;
+
+                    for (let i = 0; i < kdResult.k.length; i++) {
+                        const kValue = kdResult.k[i];
+                        const dValue = kdResult.d[i];
+
+                        if (kValue !== null && dValue !== null) {
+                            const isHigh = kValue > zoneMarkingState.highKd.threshold && dValue > zoneMarkingState.highKd.threshold;
+
+                            if (isHigh && !inZone) {
+                                inZone = true;
+                                zoneStart = resampledData[i].date;
+                                zoneStartIndex = i;
+                            } else if (!isHigh && inZone) {
+                                const zoneEndIndex = i - 1;
+                                if (zoneStartIndex === zoneEndIndex) {
+                                    highKdMarkLines.push({
+                                        xAxis: zoneStart,
+                                        lineStyle: { color: 'rgba(255, 140, 0, 0.25)', width: 2, type: 'solid' }
+                                    });
+                                } else {
+                                    highKdMarkAreas.push([
+                                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 140, 0, 0.25)' } },
+                                        { xAxis: resampledData[zoneEndIndex].date }
+                                    ]);
+                                }
+                                inZone = false;
+                            }
+                        }
+                    }
+
+                    if (inZone) {
+                        const zoneEndIndex = resampledData.length - 1;
+                        if (zoneStartIndex === zoneEndIndex) {
+                            highKdMarkLines.push({
+                                xAxis: zoneStart,
+                                lineStyle: { color: 'rgba(255, 140, 0, 0.25)', width: 2, type: 'solid' }
+                            });
+                        } else {
+                            highKdMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 140, 0, 0.25)' } },
+                                { xAxis: resampledData[zoneEndIndex].date }
+                            ]);
+                        }
+                    }
+                }
+
+                // RSI 高檔區域標記
+                if (indicatorVisible.rsi && zoneMarkingState.highComposite.useRSI) {
+                    let inZone = false;
+                    let zoneStart = null;
+                    let zoneStartIndex = null;
+
+                    for (let i = 0; i < rsi5.length; i++) {
+                        const rsiValue = rsi5[i];
+
+                        if (rsiValue !== null) {
+                            const isHigh = rsiValue > zoneMarkingState.highRsi.threshold;
+
+                            if (isHigh && !inZone) {
+                                inZone = true;
+                                zoneStart = resampledData[i].date;
+                                zoneStartIndex = i;
+                            } else if (!isHigh && inZone) {
+                                const zoneEndIndex = i - 1;
+                                if (zoneStartIndex === zoneEndIndex) {
+                                    highRsiMarkLines.push({
+                                        xAxis: zoneStart,
+                                        lineStyle: { color: 'rgba(255, 99, 71, 0.15)', width: 2, type: 'solid' }
+                                    });
+                                } else {
+                                    highRsiMarkAreas.push([
+                                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 99, 71, 0.15)' } },
+                                        { xAxis: resampledData[zoneEndIndex].date }
+                                    ]);
+                                }
+                                inZone = false;
+                            }
+                        }
+                    }
+
+                    if (inZone) {
+                        const zoneEndIndex = resampledData.length - 1;
+                        if (zoneStartIndex === zoneEndIndex) {
+                            highRsiMarkLines.push({
+                                xAxis: zoneStart,
+                                lineStyle: { color: 'rgba(255, 99, 71, 0.15)', width: 2, type: 'solid' }
+                            });
+                        } else {
+                            highRsiMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 99, 71, 0.15)' } },
+                                { xAxis: resampledData[zoneEndIndex].date }
+                            ]);
+                        }
+                    }
+                }
+
+                // MACD 高檔區域標記
+                if (indicatorVisible.macd && zoneMarkingState.highComposite.useMACD) {
+                    let inZone = false;
+                    let zoneStart = null;
+                    let zoneStartIndex = null;
+
+                    for (let i = 0; i < macdResult.dif.length; i++) {
+                        const difValue = macdResult.dif[i];
+
+                        if (difValue !== null) {
+                            const isHigh = difValue > zoneMarkingState.highMacd.threshold;
+
+                            if (isHigh && !inZone) {
+                                inZone = true;
+                                zoneStart = resampledData[i].date;
+                                zoneStartIndex = i;
+                            } else if (!isHigh && inZone) {
+                                const zoneEndIndex = i - 1;
+                                if (zoneStartIndex === zoneEndIndex) {
+                                    highMacdMarkLines.push({
+                                        xAxis: zoneStart,
+                                        lineStyle: { color: 'rgba(255, 69, 0, 0.15)', width: 2, type: 'solid' }
+                                    });
+                                } else {
+                                    highMacdMarkAreas.push([
+                                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 69, 0, 0.15)' } },
+                                        { xAxis: resampledData[zoneEndIndex].date }
+                                    ]);
+                                }
+                                inZone = false;
+                            }
+                        }
+                    }
+
+                    if (inZone) {
+                        const zoneEndIndex = resampledData.length - 1;
+                        if (zoneStartIndex === zoneEndIndex) {
+                            highMacdMarkLines.push({
+                                xAxis: zoneStart,
+                                lineStyle: { color: 'rgba(255, 69, 0, 0.15)', width: 2, type: 'solid' }
+                            });
+                        } else {
+                            highMacdMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 69, 0, 0.15)' } },
+                                { xAxis: resampledData[zoneEndIndex].date }
+                            ]);
+                        }
+                    }
+                }
+
+                // K線區高檔複合標記
+                if (hasAnyHighIndicator) {
+                    let inZone = false;
+                    let zoneStart = null;
+                    let zoneStartIndex = null;
+
+                    for (let i = 0; i < resampledData.length; i++) {
+                        let allConditionsMet = true;
+
+                        if (zoneMarkingState.highComposite.useKD) {
+                            const kValue = kdResult.k[i];
+                            const dValue = kdResult.d[i];
+                            if (kValue === null || dValue === null ||
+                                kValue <= zoneMarkingState.highKd.threshold || dValue <= zoneMarkingState.highKd.threshold) {
+                                allConditionsMet = false;
+                            }
+                        }
+
+                        if (zoneMarkingState.highComposite.useRSI) {
+                            const rsiValue = rsi5[i];
+                            if (rsiValue === null || rsiValue <= zoneMarkingState.highRsi.threshold) {
+                                allConditionsMet = false;
+                            }
+                        }
+
+                        if (zoneMarkingState.highComposite.useMACD) {
+                            const difValue = macdResult.dif[i];
+                            if (difValue === null || difValue <= zoneMarkingState.highMacd.threshold) {
+                                allConditionsMet = false;
+                            }
+                        }
+
+                        if (allConditionsMet && !inZone) {
+                            inZone = true;
+                            zoneStart = resampledData[i].date;
+                            zoneStartIndex = i;
+                        } else if (!allConditionsMet && inZone) {
+                            const zoneEndIndex = i - 1;
+
+                            if (zoneStartIndex === zoneEndIndex) {
+                                highCompositeMarkLines.push({
+                                    xAxis: zoneStart,
+                                    lineStyle: { color: 'rgba(220, 20, 60, 0.2)', width: 3, type: 'solid' }
+                                });
+                            } else {
+                                highCompositeMarkAreas.push([
+                                    { xAxis: zoneStart, itemStyle: { color: 'rgba(220, 20, 60, 0.2)' } },
+                                    { xAxis: resampledData[zoneEndIndex].date }
+                                ]);
+                            }
+                            inZone = false;
+                        }
+                    }
+
+                    if (inZone) {
+                        const zoneEndIndex = resampledData.length - 1;
+                        if (zoneStartIndex === zoneEndIndex) {
+                            highCompositeMarkLines.push({
+                                xAxis: zoneStart,
+                                lineStyle: { color: 'rgba(220, 20, 60, 0.2)', width: 3, type: 'solid' }
+                            });
+                        } else {
+                            highCompositeMarkAreas.push([
+                                { xAxis: zoneStart, itemStyle: { color: 'rgba(220, 20, 60, 0.2)' } },
+                                { xAxis: resampledData[zoneEndIndex].date }
+                            ]);
+                        }
+                    }
+                }
+            }
 
             // 除錯日誌
             console.log('📊 區域標記統計 ─────────────────');
@@ -1395,6 +1948,10 @@
             console.log(`  🟣 RSI 低檔區: ${rsiMarkAreas.length} 個`);
             console.log(`  🔵 MACD 低檔區: ${macdMarkAreas.length} 個`);
             console.log(`  🎯 反彈標記點: ${postZoneMarkers.data.length} 個`);
+            console.log(`  🔺 複合高檔區: ${highCompositeMarkAreas.length} 個`);
+            console.log(`  🟠 KD 高檔區: ${highKdMarkAreas.length} 個`);
+            console.log(`  🔴 RSI 高檔區: ${highRsiMarkAreas.length} 個`);
+            console.log(`  🟥 MACD 高檔區: ${highMacdMarkAreas.length} 個`);
             console.log('─────────────────────────────────');
 
             return {
@@ -1402,7 +1959,12 @@
                 rsi: { data: rsiMarkAreas, lines: rsiMarkLines },
                 macd: { data: macdMarkAreas, lines: macdMarkLines },
                 composite: { data: compositeMarkAreas, lines: compositeMarkLines },
-                postZoneMarkers
+                postZoneMarkers,
+                // 高檔區域標記
+                highKd: { data: highKdMarkAreas, lines: highKdMarkLines },
+                highRsi: { data: highRsiMarkAreas, lines: highRsiMarkLines },
+                highMacd: { data: highMacdMarkAreas, lines: highMacdMarkLines },
+                highComposite: { data: highCompositeMarkAreas, lines: highCompositeMarkLines }
             };
         }
 
@@ -1508,8 +2070,14 @@
                     name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
                     itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
                     large: true,
-                    markArea: markAreas.composite,
-                    markLine: { data: markAreas.composite.lines, symbol: 'none', label: { show: false } }
+                    markArea: {
+                        data: [...markAreas.composite.data, ...markAreas.highComposite.data]
+                    },
+                    markLine: {
+                        data: [...markAreas.composite.lines, ...markAreas.highComposite.lines],
+                        symbol: 'none',
+                        label: { show: false }
+                    }
                 },
                 {
                     name: '低檔反彈收盤',
@@ -1579,7 +2147,12 @@
                         { name: 'MACD', itemStyle: { color: '#00D5FA' } }
                     );
                     series.push(
-                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none', markArea: markAreas.macd, markLine: { data: markAreas.macd.lines, symbol: 'none', label: { show: false } } },
+                        {
+                            name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none',
+                            markArea: { data: [...markAreas.macd.data, ...markAreas.highMacd.data] },
+                            markLine: { data: [...markAreas.macd.lines, ...markAreas.highMacd.lines], symbol: 'none', label: { show: false } }
+                        },
                         { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                         { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
                     );
@@ -1589,7 +2162,12 @@
                         { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
                     );
                     series.push(
-                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none', markArea: markAreas.kd, markLine: { data: markAreas.kd.lines, symbol: 'none', label: { show: false } } },
+                        {
+                            name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none',
+                            markArea: { data: [...markAreas.kd.data, ...markAreas.highKd.data] },
+                            markLine: { data: [...markAreas.kd.lines, ...markAreas.highKd.lines], symbol: 'none', label: { show: false } }
+                        },
                         { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
@@ -1610,7 +2188,12 @@
                         { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
                     );
                     series.push(
-                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none', markArea: markAreas.rsi, markLine: { data: markAreas.rsi.lines, symbol: 'none', label: { show: false } } },
+                        {
+                            name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
+                            data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none',
+                            markArea: { data: [...markAreas.rsi.data, ...markAreas.highRsi.data] },
+                            markLine: { data: [...markAreas.rsi.lines, ...markAreas.highRsi.lines], symbol: 'none', label: { show: false } }
+                        },
                         { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
                         {
                             name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
@@ -1707,6 +2290,27 @@
 
                 toggleIndicatorVisibility();
             });
+        });
+
+        // 書籤點擊事件：滾動到對應控制區域
+        const highPriceAreaBookmark = document.getElementById('highPriceAreaBookmark');
+        const panelContent = document.querySelector('.panel-content');
+
+        highPriceAreaBookmark.addEventListener('click', (e) => {
+            e.stopPropagation(); // 防止事件冒泡
+            // 確保面板打開
+            if (!floatingPanel.classList.contains('open')) {
+                floatingPanel.classList.add('open');
+                sidebar.classList.add('panel-open');
+            }
+            // 滾動到高檔區域標記（面板頂部）
+            panelContent.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            // 高亮效果
+            highPriceAreaBookmark.classList.add('active');
+            lowPriceAreaBookmark.classList.remove('active');
         });
 
         updateChart(currentPeriod);
