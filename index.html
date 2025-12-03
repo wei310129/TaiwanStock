@@ -1349,6 +1349,9 @@
                 } else if (s.name === '低檔反彈收盤') {
                     // 🎯 橘色標記點（散點圖）
                     s.data = newMarkAreas.postZoneMarkers.data;
+                } else if (s.name === '高檔回落收盤') {
+                    // 🟣 紫色標記點（散點圖）
+                    s.data = newMarkAreas.highPostZoneMarkers.data;
                 } else if (s.name === 'K(9)') {
                     // KD 的標記（包含低檔和高檔）
                     s.markArea = {
@@ -1409,6 +1412,7 @@
 
             // 低檔區域標記初始化
             const postZoneMarkers = { data: [] };
+            const highPostZoneMarkers = { data: [] };  // 高檔區域後的標記點
             let kdMarkAreas = [];
             let kdMarkLines = [];
             let rsiMarkAreas = [];
@@ -1925,6 +1929,41 @@
                                     { xAxis: resampledData[zoneEndIndex].date }
                                 ]);
                             }
+
+                            // 記錄高檔區結束後的下一根K棒收盤價
+                            const nextIndex = i;
+                            if (nextIndex < resampledData.length) {
+                                const nextCandle = resampledData[nextIndex];
+
+                                // 檢查高檔區最後一根K棒的指標值
+                                const kValue = kdResult.k[zoneEndIndex];
+                                const dValue = kdResult.d[zoneEndIndex];
+                                const rsiValue = rsi5[zoneEndIndex];
+                                const macdValue = macdResult.dif[zoneEndIndex];
+
+                                const kdOK = (!zoneMarkingState.highComposite.useKD) ||
+                                             (kValue !== null && dValue !== null &&
+                                              kValue > zoneMarkingState.highKd.threshold &&
+                                              dValue > zoneMarkingState.highKd.threshold);
+                                const rsiOK = (!zoneMarkingState.highComposite.useRSI) ||
+                                              (rsiValue !== null && rsiValue > zoneMarkingState.highRsi.threshold);
+                                const macdOK = (!zoneMarkingState.highComposite.useMACD) ||
+                                               (macdValue !== null && macdValue > zoneMarkingState.highMacd.threshold);
+
+                                console.log(`🟣 高檔區 #${highPostZoneMarkers.data.length + 1} [${resampledData[zoneEndIndex].date}]:`, {
+                                    'K': kValue?.toFixed(1), 'D': dValue?.toFixed(1), 'KD✓': kdOK,
+                                    'RSI': rsiValue?.toFixed(1), 'RSI✓': rsiOK,
+                                    'MACD': macdValue?.toFixed(1), 'MACD✓': macdOK,
+                                    '全符合': kdOK && rsiOK && macdOK
+                                });
+
+                                highPostZoneMarkers.data.push([
+                                    nextIndex,  // x: 索引位置
+                                    nextCandle.close,  // y: 收盤價
+                                    nextCandle.date,  // 額外資料：日期
+                                    nextCandle.close  // 額外資料：收盤價（用於標籤）
+                                ]);
+                            }
                             inZone = false;
                         }
                     }
@@ -1957,6 +1996,7 @@
             console.log(`  🟠 KD 高檔區: ${highKdMarkAreas.length} 個`);
             console.log(`  🔴 RSI 高檔區: ${highRsiMarkAreas.length} 個`);
             console.log(`  🟥 MACD 高檔區: ${highMacdMarkAreas.length} 個`);
+            console.log(`  🟣 高檔後標記點: ${highPostZoneMarkers.data.length} 個`);
             console.log('─────────────────────────────────');
 
             return {
@@ -1965,6 +2005,7 @@
                 macd: { data: macdMarkAreas, lines: macdMarkLines },
                 composite: { data: compositeMarkAreas, lines: compositeMarkLines },
                 postZoneMarkers,
+                highPostZoneMarkers,  // 高檔區後的標記點
                 // 高檔區域標記
                 highKd: { data: highKdMarkAreas, lines: highKdMarkLines },
                 highRsi: { data: highRsiMarkAreas, lines: highRsiMarkLines },
@@ -2011,6 +2052,7 @@
             // 生成標記區域
             const markAreas = generateMarkAreas(currentChartData);
             console.log('✅ markAreas.postZoneMarkers:', markAreas.postZoneMarkers);
+            console.log('✅ markAreas.highPostZoneMarkers:', markAreas.highPostZoneMarkers);
 
             chartTitleEl.innerHTML = `📈 台灣加權指數歷史回測 (Beta 版) <span class="badge">Real Data</span>`;
 
@@ -2125,6 +2167,51 @@
                             const closePrice = params.value[1];
                             const date = params.value[2];
                             return `<strong>低檔反彈收盤</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}`;
+                        }
+                    },
+                    z: 10
+                },
+                {
+                    name: '高檔回落收盤',
+                    type: 'scatter',
+                    data: markAreas.highPostZoneMarkers.data,
+                    symbolSize: 16,
+                    itemStyle: {
+                        color: '#9b59b6',
+                        borderColor: '#fff',
+                        borderWidth: 2.5,
+                        shadowBlur: 4,
+                        shadowColor: 'rgba(155, 89, 182, 0.5)'
+                    },
+                    emphasis: {
+                        scale: 1.4,
+                        itemStyle: {
+                            color: '#8e44ad',
+                            shadowBlur: 8,
+                            shadowColor: 'rgba(142, 68, 173, 0.8)'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'bottom',
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            return closePrice.toLocaleString();
+                        },
+                        fontSize: 11,
+                        fontWeight: 'bold',
+                        color: '#9b59b6',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        padding: [3, 6],
+                        borderRadius: 3,
+                        borderColor: '#9b59b6',
+                        borderWidth: 1
+                    },
+                    tooltip: {
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            const date = params.value[2];
+                            return `<strong>高檔回落收盤</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}`;
                         }
                     },
                     z: 10
