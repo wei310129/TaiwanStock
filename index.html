@@ -345,7 +345,7 @@
         <button class="btn" data-period="bi-weekly">雙周線</button>
         <button class="btn" data-period="tri-weekly">三周線</button>
         <button class="btn" data-period="monthly">月線</button>
-        <button class="panel-control-btn" id="mainPanelToggle">⚙️ 開啟控制面板</button>
+        <button class="panel-control-btn" id="mainPanelToggle">⚙️ 開啟低檔區域控制面板</button>
         <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="macd" checked> MACD
         </label>
@@ -365,10 +365,10 @@
     <button class="panel-toggle" id="panelToggle">⚙️</button>
     <div class="panel-content">
         <div class="panel-section">
-            <h3>🔧 區域標記總開關</h3>
+            <h3>低檔區域標記</h3>
             <div class="zone-checkbox">
                 <label class="toggle-switch">
-                    <input type="checkbox" id="masterToggle" checked>
+                    <input type="checkbox" id="masterToggle">
                     <span class="toggle-slider"></span>
                 </label>
                 <label for="masterToggle" style="font-size: 1em; font-weight: 500;">開啟所有低檔標記</label>
@@ -736,10 +736,10 @@
 
             // 更新主按鈕狀態
             if (isOpen) {
-                mainPanelToggle.textContent = '⚙️ 關閉控制面板';
+                mainPanelToggle.textContent = '⚙️ 關閉低檔區域控制面板';
                 mainPanelToggle.classList.add('panel-open');
             } else {
-                mainPanelToggle.textContent = '⚙️ 開啟控制面板';
+                mainPanelToggle.textContent = '⚙️ 開啟低檔區域控制面板';
                 mainPanelToggle.classList.remove('panel-open');
             }
         }
@@ -747,7 +747,7 @@
         // 關閉面板的函數
         function closePanel() {
             floatingPanel.classList.remove('open');
-            mainPanelToggle.textContent = '⚙️ 開啟控制面板';
+            mainPanelToggle.textContent = '⚙️ 開啟低檔區域控制面板';
             mainPanelToggle.classList.remove('panel-open');
         }
 
@@ -780,7 +780,7 @@
 
         // 區域標記狀態管理
         let zoneMarkingState = {
-            masterEnabled: true,
+            masterEnabled: false,  // 預設關閉低檔標記
             kd: { enabled: true, threshold: 30 },
             rsi: { enabled: true, threshold: 30 },
             macd: { enabled: true, threshold: 0 },
@@ -1382,7 +1382,7 @@
             const markAreas = generateMarkAreas(currentChartData);
             console.log('✅ markAreas.postZoneMarkers:', markAreas.postZoneMarkers);
 
-            chartTitleEl.innerHTML = `📈 台灣加權指數 ${periodName} <span class="badge">Real Data</span>`;
+            chartTitleEl.innerHTML = `📈 台灣加權指數歷史回測 (Beta 版) <span class="badge">Real Data</span>`;
 
             statusEl.innerHTML = `
                 統計範圍：<b>${dailyData[0].date}</b> 至 <b>${dailyData[dailyData.length-1].date}</b><br>
