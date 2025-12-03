@@ -984,22 +984,22 @@
                 if (s.name === currentChartData.periodName) {
                     // K線圖的複合標記
                     s.markArea = newMarkAreas.composite;
-                    s.markLine = { data: newMarkAreas.composite.lines, symbol: 'none' };
+                    s.markLine = { data: newMarkAreas.composite.lines, symbol: 'none', label: { show: false } };
                 } else if (s.name === '低檔反彈收盤') {
                     // 🎯 橘色標記點（散點圖）
                     s.data = newMarkAreas.postZoneMarkers.data;
                 } else if (s.name === 'K(9)') {
                     // KD 的標記
                     s.markArea = newMarkAreas.kd;
-                    s.markLine = { data: newMarkAreas.kd.lines, symbol: 'none' };
+                    s.markLine = { data: newMarkAreas.kd.lines, symbol: 'none', label: { show: false } };
                 } else if (s.name === 'RSI(5T)') {
                     // RSI 的標記
                     s.markArea = newMarkAreas.rsi;
-                    s.markLine = { data: newMarkAreas.rsi.lines, symbol: 'none' };
+                    s.markLine = { data: newMarkAreas.rsi.lines, symbol: 'none', label: { show: false } };
                 } else if (s.name === 'DIF') {
                     // MACD 的標記
                     s.markArea = newMarkAreas.macd;
-                    s.markLine = { data: newMarkAreas.macd.lines, symbol: 'none' };
+                    s.markLine = { data: newMarkAreas.macd.lines, symbol: 'none', label: { show: false } };
                 }
             });
 
@@ -1418,7 +1418,7 @@
                     itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
                     large: true,
                     markArea: markAreas.composite,
-                    markLine: { data: markAreas.composite.lines, symbol: 'none' }
+                    markLine: { data: markAreas.composite.lines, symbol: 'none', label: { show: false } }
                 },
                 {
                     name: '低檔反彈收盤',
@@ -1488,7 +1488,7 @@
                         { name: 'MACD', itemStyle: { color: '#00D5FA' } }
                     );
                     series.push(
-                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none', markArea: markAreas.macd, markLine: { data: markAreas.macd.lines, symbol: 'none' } },
+                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none', markArea: markAreas.macd, markLine: { data: markAreas.macd.lines, symbol: 'none', label: { show: false } } },
                         { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                         { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
                     );
@@ -1498,7 +1498,7 @@
                         { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
                     );
                     series.push(
-                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none', markArea: markAreas.kd, markLine: { data: markAreas.kd.lines, symbol: 'none' } },
+                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none', markArea: markAreas.kd, markLine: { data: markAreas.kd.lines, symbol: 'none', label: { show: false } } },
                         { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
@@ -1519,7 +1519,7 @@
                         { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
                     );
                     series.push(
-                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none', markArea: markAreas.rsi, markLine: { data: markAreas.rsi.lines, symbol: 'none' } },
+                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none', markArea: markAreas.rsi, markLine: { data: markAreas.rsi.lines, symbol: 'none', label: { show: false } } },
                         { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
                         {
                             name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
