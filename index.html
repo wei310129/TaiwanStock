@@ -1006,6 +1006,25 @@
             myChart.setOption(option);
         }
 
+        // 只切換指標顯示/隱藏，不重新渲染圖表（保持 dataZoom 狀態）
+        function toggleIndicatorVisibility() {
+            if (!currentChartData) return;
+
+            // 獲取當前的 dataZoom 狀態
+            const currentOption = myChart.getOption();
+            const currentDataZoom = currentOption.dataZoom;
+
+            // 完全重繪圖表（因為需要調整 grid 和 axis）
+            updateChart(currentPeriod);
+
+            // 恢復之前的 dataZoom 狀態
+            setTimeout(() => {
+                myChart.setOption({
+                    dataZoom: currentDataZoom
+                });
+            }, 0);
+        }
+
         function generateMarkAreas(data) {
             const { resampledData, kdResult, rsi5, macdResult, periodName } = data;
 
@@ -1020,6 +1039,11 @@
             }
 
             const postZoneMarkers = { data: [] };
+
+            // 🔍 檢查：如果所有技術線圖都關閉，不生成複合標記
+            const hasAnyIndicator = zoneMarkingState.composite.useKD ||
+                                   zoneMarkingState.composite.useRSI ||
+                                   zoneMarkingState.composite.useMACD;
 
             // KD 低檔區域標記（K 和 D 都低於閾值才標記）
             const kdMarkAreas = [];
@@ -1189,22 +1213,25 @@
             // K線區複合標記 (所有選中條件都滿足的區域)
             const compositeMarkAreas = [];
             const compositeMarkLines = [];
-            let inZone = false;
-            let zoneStart = null;
-            let zoneStartIndex = null;
 
-            for (let i = 0; i < resampledData.length; i++) {
-                let allConditionsMet = true;
+            // 🔍 只有在至少有一個指標啟用時才進行掃描
+            if (hasAnyIndicator) {
+                let inZone = false;
+                let zoneStart = null;
+                let zoneStartIndex = null;
 
-                // 檢查 KD 條件（K 和 D 都必須低於閾值）
-                if (zoneMarkingState.composite.useKD) {
-                    const kValue = kdResult.k[i];
-                    const dValue = kdResult.d[i];
-                    if (kValue === null || dValue === null ||
-                        kValue >= zoneMarkingState.kd.threshold || dValue >= zoneMarkingState.kd.threshold) {
-                        allConditionsMet = false;
+                for (let i = 0; i < resampledData.length; i++) {
+                    let allConditionsMet = true;
+
+                    // 檢查 KD 條件（K 和 D 都必須低於閾值）
+                    if (zoneMarkingState.composite.useKD) {
+                        const kValue = kdResult.k[i];
+                        const dValue = kdResult.d[i];
+                        if (kValue === null || dValue === null ||
+                            kValue >= zoneMarkingState.kd.threshold || dValue >= zoneMarkingState.kd.threshold) {
+                            allConditionsMet = false;
+                        }
                     }
-                }
 
                 // 檢查 RSI 條件
                 if (zoneMarkingState.composite.useRSI) {
@@ -1296,6 +1323,7 @@
                     ]);
                 }
             }
+            } // 結束 hasAnyIndicator 檢查
 
             // 除錯日誌
             console.log('📊 區域標記統計 ─────────────────');
@@ -1614,7 +1642,7 @@
                     }
                 }
 
-                updateChart(currentPeriod);
+                toggleIndicatorVisibility();
             });
         });
 
