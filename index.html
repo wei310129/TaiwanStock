@@ -70,25 +70,7 @@
             box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             z-index: 1000;
             min-width: 300px;
-            max-width: 400px;
-            max-height: calc(100vh - 120px);
-            overflow-y: auto;
-            overflow-x: hidden;
             display: none;
-        }
-        .floating-panel::-webkit-scrollbar {
-            width: 8px;
-        }
-        .floating-panel::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-        .floating-panel::-webkit-scrollbar-thumb {
-            background: #3498db;
-            border-radius: 4px;
-        }
-        .floating-panel::-webkit-scrollbar-thumb:hover {
-            background: #2980b9;
         }
         .floating-panel.show { display: block; }
         .floating-panel h3 {
@@ -212,41 +194,6 @@
             height: 20px;
             margin-right: 10px;
         }
-        .preset-section {
-            margin-bottom: 15px;
-            padding: 10px;
-            background: #e3f2fd;
-            border-radius: 6px;
-        }
-        .preset-section label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-            color: #1976d2;
-        }
-        .preset-buttons {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-        }
-        .preset-btn {
-            background: white;
-            border: 2px solid #3498db;
-            color: #3498db;
-            padding: 8px 12px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9em;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        .preset-btn:hover {
-            background: #e3f2fd;
-        }
-        .preset-btn.active {
-            background: #3498db;
-            color: white;
-        }
     </style>
 </head>
 <body>
@@ -287,38 +234,14 @@
         </label>
     </div>
 
-    <div class="preset-section">
-        <label>快速配置</label>
-        <div class="preset-buttons">
-            <button class="preset-btn active" data-preset="1">配置 1</button>
-            <button class="preset-btn" data-preset="2">配置 2</button>
-            <button class="preset-btn" data-preset="3">配置 3</button>
-            <button class="preset-btn" data-preset="4">配置 4</button>
-        </div>
-    </div>
-
-    <div class="panel-section">
-        <label>MACD 低檔閾值</label>
-        <div class="slider-container">
-            <div class="slider-wrapper">
-                <input type="range" id="macdThreshold" value="-185" min="-1000" max="500" step="5">
-                <div class="slider-limits">
-                    <span>-1000</span>
-                    <span>500</span>
-                </div>
-            </div>
-            <span class="slider-value" id="macdValue">-185</span>
-        </div>
-    </div>
-
     <div class="panel-section">
         <label>KD 低檔閾值</label>
         <div class="slider-container">
             <div class="slider-wrapper">
-                <input type="range" id="kdThreshold" value="20" min="0" max="80" step="1">
+                <input type="range" id="kdThreshold" value="20" min="0" max="100" step="1">
                 <div class="slider-limits">
                     <span>0</span>
-                    <span>80</span>
+                    <span>100</span>
                 </div>
             </div>
             <span class="slider-value" id="kdValue">20</span>
@@ -329,13 +252,27 @@
         <label>RSI 低檔閾值</label>
         <div class="slider-container">
             <div class="slider-wrapper">
-                <input type="range" id="rsiThreshold" value="20" min="0" max="80" step="1">
+                <input type="range" id="rsiThreshold" value="20" min="0" max="100" step="1">
                 <div class="slider-limits">
                     <span>0</span>
-                    <span>80</span>
+                    <span>100</span>
                 </div>
             </div>
             <span class="slider-value" id="rsiValue">20</span>
+        </div>
+    </div>
+
+    <div class="panel-section">
+        <label>MACD 低檔閾值</label>
+        <div class="slider-container">
+            <div class="slider-wrapper">
+                <input type="range" id="macdThreshold" value="-185" min="-500" max="0" step="5">
+                <div class="slider-limits">
+                    <span>-500</span>
+                    <span>0</span>
+                </div>
+            </div>
+            <span class="slider-value" id="macdValue">-185</span>
         </div>
     </div>
 
@@ -642,30 +579,11 @@
             rsi: true
         };
 
-        // 預設配置模板（4組配置）
-        const defaultPresets = {
-            1: { macd: -185, kd: 20, rsi: 20, klineUseKd: true, klineUseMacd: true, klineUseRsi: true },
-            2: { macd: -250, kd: 25, rsi: 25, klineUseKd: true, klineUseMacd: true, klineUseRsi: false },
-            3: { macd: -150, kd: 15, rsi: 15, klineUseKd: true, klineUseMacd: false, klineUseRsi: true },
-            4: { macd: -300, kd: 30, rsi: 30, klineUseKd: false, klineUseMacd: true, klineUseRsi: true }
-        };
-
-        // 每個週期的配置儲存（5個週期 x 4組配置）
-        let periodPresets = {
-            'daily': JSON.parse(JSON.stringify(defaultPresets)),
-            'weekly': JSON.parse(JSON.stringify(defaultPresets)),
-            'bi-weekly': JSON.parse(JSON.stringify(defaultPresets)),
-            'tri-weekly': JSON.parse(JSON.stringify(defaultPresets)),
-            'monthly': JSON.parse(JSON.stringify(defaultPresets))
-        };
-
-        let currentPreset = 1; // 當前選中的配置編號
-
         // 標記閾值配置
         let thresholdConfig = {
-            macd: -185,
             kd: 20,
             rsi: 20,
+            macd: -185,
             masterEnabled: true,
             klineUseKd: true,
             klineUseMacd: true,
@@ -686,7 +604,6 @@
         const useKdForKline = document.getElementById('useKdForKline');
         const useMacdForKline = document.getElementById('useMacdForKline');
         const useRsiForKline = document.getElementById('useRsiForKline');
-        const presetButtons = document.querySelectorAll('.preset-btn');
 
         openPanelBtn.addEventListener('click', () => {
             controlPanel.classList.add('show');
@@ -694,68 +611,6 @@
 
         closePanelBtn.addEventListener('click', () => {
             controlPanel.classList.remove('show');
-        });
-
-        // 點擊視窗外自動收合
-        document.addEventListener('click', (e) => {
-            if (controlPanel.classList.contains('show')) {
-                if (!controlPanel.contains(e.target) && !openPanelBtn.contains(e.target)) {
-                    controlPanel.classList.remove('show');
-                }
-            }
-        });
-
-        // 載入指定配置
-        function loadPreset(presetNumber) {
-            const preset = periodPresets[currentPeriod][presetNumber];
-
-            thresholdConfig.macd = preset.macd;
-            thresholdConfig.kd = preset.kd;
-            thresholdConfig.rsi = preset.rsi;
-            thresholdConfig.klineUseKd = preset.klineUseKd;
-            thresholdConfig.klineUseMacd = preset.klineUseMacd;
-            thresholdConfig.klineUseRsi = preset.klineUseRsi;
-
-            // 更新UI
-            macdThresholdInput.value = preset.macd;
-            kdThresholdInput.value = preset.kd;
-            rsiThresholdInput.value = preset.rsi;
-            useKdForKline.checked = preset.klineUseKd;
-            useMacdForKline.checked = preset.klineUseMacd;
-            useRsiForKline.checked = preset.klineUseRsi;
-
-            macdValueDisplay.textContent = preset.macd;
-            kdValueDisplay.textContent = preset.kd;
-            rsiValueDisplay.textContent = preset.rsi;
-
-            currentPreset = presetNumber;
-
-            // 更新按鈕狀態
-            presetButtons.forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.preset == presetNumber);
-            });
-
-            updateChartMarkAreas();
-        }
-
-        // 儲存當前配置到指定預設
-        function saveCurrentPreset() {
-            periodPresets[currentPeriod][currentPreset] = {
-                macd: thresholdConfig.macd,
-                kd: thresholdConfig.kd,
-                rsi: thresholdConfig.rsi,
-                klineUseKd: thresholdConfig.klineUseKd,
-                klineUseMacd: thresholdConfig.klineUseMacd,
-                klineUseRsi: thresholdConfig.klineUseRsi
-            };
-        }
-
-        // 預設配置按鈕事件
-        presetButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const presetNum = parseInt(btn.dataset.preset);
-                loadPreset(presetNum);
-            });
         });
 
         // 監聽閾值變化 - 只更新標記，不重新計算技術指標
@@ -772,9 +627,6 @@
             kdValueDisplay.textContent = thresholdConfig.kd;
             rsiValueDisplay.textContent = thresholdConfig.rsi;
             macdValueDisplay.textContent = thresholdConfig.macd;
-
-            // 儲存到當前預設配置
-            saveCurrentPreset();
 
             // 只更新圖表的 markArea，不重新渲染整個圖表
             updateChartMarkAreas();
@@ -1173,10 +1025,7 @@
             button.addEventListener('click', () => {
                 const period = button.dataset.period;
                 if (period !== currentPeriod) {
-                    currentPeriod = period;
                     updateChart(period);
-                    // 切換週期時載入該週期的當前配置
-                    loadPreset(currentPreset);
                 }
             });
         });
