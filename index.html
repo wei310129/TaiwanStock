@@ -382,14 +382,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="macdThresholdRange" class="macd-range" min="-1000" max="500" step="10" value="0">
+                            <input type="range" id="macdThresholdRange" class="macd-range" min="-1000" max="500" step="5" value="0">
                         </div>
                         <div class="range-labels macd-labels">
                             <span>-1000</span>
                             <span>500</span>
                         </div>
                     </div>
-                    <input type="number" id="macdThreshold" min="-1000" max="500" step="10" value="0">
+                    <input type="number" id="macdThreshold" min="-1000" max="500" step="5" value="0">
                 </div>
             </div>
         </div>
@@ -401,14 +401,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="80" step="5" value="30">
+                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="80" step="1" value="30">
                         </div>
                         <div class="range-labels">
                             <span>0</span>
                             <span>80</span>
                         </div>
                     </div>
-                    <input type="number" id="kdThreshold" min="0" max="80" step="5" value="30">
+                    <input type="number" id="kdThreshold" min="0" max="80" step="1" value="30">
                 </div>
             </div>
         </div>
@@ -420,14 +420,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="80" step="5" value="30">
+                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="80" step="1" value="30">
                         </div>
                         <div class="range-labels rsi-labels">
                             <span>0</span>
                             <span>80</span>
                         </div>
                     </div>
-                    <input type="number" id="rsiThreshold" min="0" max="80" step="5" value="30">
+                    <input type="number" id="rsiThreshold" min="0" max="80" step="1" value="30">
                 </div>
             </div>
         </div>
@@ -835,8 +835,8 @@
             // 確保值在範圍內且為整數
             if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
-            // 調整為步進值的倍數
-            value = Math.round(value / 5) * 5;
+            // 調整為整數
+            value = Math.round(value);
             kdThresholdInput.value = value;
             kdThresholdRange.value = value;
             zoneMarkingState.kd.threshold = value;
@@ -848,7 +848,7 @@
             let value = parseInt(kdThresholdInput.value);
             if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
-            value = Math.round(value / 5) * 5;
+            value = Math.round(value);
             kdThresholdInput.value = value;
             kdThresholdRange.value = value;
             zoneMarkingState.kd.threshold = value;
@@ -872,8 +872,8 @@
             // 確保值在範圍內且為整數
             if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
-            // 調整為步進值的倍數
-            value = Math.round(value / 5) * 5;
+            // 調整為整數
+            value = Math.round(value);
             rsiThresholdInput.value = value;
             rsiThresholdRange.value = value;
             zoneMarkingState.rsi.threshold = value;
@@ -885,7 +885,7 @@
             let value = parseInt(rsiThresholdInput.value);
             if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
-            value = Math.round(value / 5) * 5;
+            value = Math.round(value);
             rsiThresholdInput.value = value;
             rsiThresholdRange.value = value;
             zoneMarkingState.rsi.threshold = value;
@@ -909,8 +909,8 @@
             // 確保值在範圍內且為整數
             if (isNaN(value)) value = 0;
             value = Math.max(-1000, Math.min(500, value));
-            // 調整為步進值的倍數
-            value = Math.round(value / 10) * 10;
+            // 調整為步進值的倍數 (5)
+            value = Math.round(value / 5) * 5;
             macdThresholdInput.value = value;
             macdThresholdRange.value = value;
             zoneMarkingState.macd.threshold = value;
@@ -922,7 +922,7 @@
             let value = parseInt(macdThresholdInput.value);
             if (isNaN(value)) value = 0;
             value = Math.max(-1000, Math.min(500, value));
-            value = Math.round(value / 10) * 10;
+            value = Math.round(value / 5) * 5;
             macdThresholdInput.value = value;
             macdThresholdRange.value = value;
             zoneMarkingState.macd.threshold = value;
