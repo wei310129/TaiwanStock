@@ -382,14 +382,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="macdThresholdRange" class="macd-range" min="-1000" max="500" step="10" value="300">
+                            <input type="range" id="macdThresholdRange" class="macd-range" min="-1000" max="500" step="10" value="0">
                         </div>
                         <div class="range-labels macd-labels">
                             <span>-1000</span>
                             <span>500</span>
                         </div>
                     </div>
-                    <input type="number" id="macdThreshold" min="-1000" max="500" step="10" value="300">
+                    <input type="number" id="macdThreshold" min="-1000" max="500" step="10" value="0">
                 </div>
             </div>
         </div>
@@ -401,14 +401,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="80" step="5" value="60">
+                            <input type="range" id="kdThresholdRange" class="kd-range" min="0" max="80" step="5" value="30">
                         </div>
                         <div class="range-labels">
                             <span>0</span>
                             <span>80</span>
                         </div>
                     </div>
-                    <input type="number" id="kdThreshold" min="0" max="80" step="5" value="60">
+                    <input type="number" id="kdThreshold" min="0" max="80" step="5" value="30">
                 </div>
             </div>
         </div>
@@ -420,14 +420,14 @@
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
-                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="80" step="5" value="60">
+                            <input type="range" id="rsiThresholdRange" class="rsi-range" min="0" max="80" step="5" value="30">
                         </div>
                         <div class="range-labels rsi-labels">
                             <span>0</span>
                             <span>80</span>
                         </div>
                     </div>
-                    <input type="number" id="rsiThreshold" min="0" max="80" step="5" value="60">
+                    <input type="number" id="rsiThreshold" min="0" max="80" step="5" value="30">
                 </div>
             </div>
         </div>
@@ -781,9 +781,9 @@
         // 區域標記狀態管理
         let zoneMarkingState = {
             masterEnabled: true,
-            kd: { enabled: true, threshold: 60 },
-            rsi: { enabled: true, threshold: 60 },
-            macd: { enabled: true, threshold: 300 },
+            kd: { enabled: true, threshold: 30 },
+            rsi: { enabled: true, threshold: 30 },
+            macd: { enabled: true, threshold: 0 },
             composite: {
                 useKD: true,
                 useRSI: true,
@@ -833,7 +833,7 @@
         kdThresholdInput.addEventListener('input', () => {
             let value = parseInt(kdThresholdInput.value);
             // 確保值在範圍內且為整數
-            if (isNaN(value)) value = 60;
+            if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
             // 調整為步進值的倍數
             value = Math.round(value / 5) * 5;
@@ -846,7 +846,7 @@
         kdThresholdInput.addEventListener('blur', () => {
             // 失去焦點時確保值有效
             let value = parseInt(kdThresholdInput.value);
-            if (isNaN(value)) value = 60;
+            if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
             value = Math.round(value / 5) * 5;
             kdThresholdInput.value = value;
@@ -870,7 +870,7 @@
         rsiThresholdInput.addEventListener('input', () => {
             let value = parseInt(rsiThresholdInput.value);
             // 確保值在範圍內且為整數
-            if (isNaN(value)) value = 60;
+            if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
             // 調整為步進值的倍數
             value = Math.round(value / 5) * 5;
@@ -883,7 +883,7 @@
         rsiThresholdInput.addEventListener('blur', () => {
             // 失去焦點時確保值有效
             let value = parseInt(rsiThresholdInput.value);
-            if (isNaN(value)) value = 60;
+            if (isNaN(value)) value = 30;
             value = Math.max(0, Math.min(80, value));
             value = Math.round(value / 5) * 5;
             rsiThresholdInput.value = value;
@@ -907,7 +907,7 @@
         macdThresholdInput.addEventListener('input', () => {
             let value = parseInt(macdThresholdInput.value);
             // 確保值在範圍內且為整數
-            if (isNaN(value)) value = 300;
+            if (isNaN(value)) value = 0;
             value = Math.max(-1000, Math.min(500, value));
             // 調整為步進值的倍數
             value = Math.round(value / 10) * 10;
@@ -920,7 +920,7 @@
         macdThresholdInput.addEventListener('blur', () => {
             // 失去焦點時確保值有效
             let value = parseInt(macdThresholdInput.value);
-            if (isNaN(value)) value = 300;
+            if (isNaN(value)) value = 0;
             value = Math.max(-1000, Math.min(500, value));
             value = Math.round(value / 10) * 10;
             macdThresholdInput.value = value;
@@ -984,15 +984,22 @@
                 if (s.name === currentChartData.periodName) {
                     // K線圖的複合標記
                     s.markArea = newMarkAreas.composite;
+                    s.markLine = { data: newMarkAreas.composite.lines, symbol: 'none' };
+                } else if (s.name === '低檔反彈收盤') {
+                    // 🎯 橘色標記點（散點圖）
+                    s.data = newMarkAreas.postZoneMarkers.data;
                 } else if (s.name === 'K(9)') {
                     // KD 的標記
                     s.markArea = newMarkAreas.kd;
+                    s.markLine = { data: newMarkAreas.kd.lines, symbol: 'none' };
                 } else if (s.name === 'RSI(5T)') {
                     // RSI 的標記
                     s.markArea = newMarkAreas.rsi;
+                    s.markLine = { data: newMarkAreas.rsi.lines, symbol: 'none' };
                 } else if (s.name === 'DIF') {
                     // MACD 的標記
                     s.markArea = newMarkAreas.macd;
+                    s.markLine = { data: newMarkAreas.macd.lines, symbol: 'none' };
                 }
             });
 
@@ -1003,48 +1010,81 @@
             const { resampledData, kdResult, rsi5, macdResult, periodName } = data;
 
             if (!zoneMarkingState.masterEnabled) {
-                return { kd: { data: [] }, rsi: { data: [] }, macd: { data: [] }, composite: { data: [] } };
+                return {
+                    kd: { data: [], lines: [] },
+                    rsi: { data: [], lines: [] },
+                    macd: { data: [], lines: [] },
+                    composite: { data: [], lines: [] },
+                    postZoneMarkers: { data: [] }
+                };
             }
 
-            // KD 低檔區域標記 (同步複合標記開關)
+            const postZoneMarkers = { data: [] };
+
+            // KD 低檔區域標記（K 和 D 都低於閾值才標記）
             const kdMarkAreas = [];
+            const kdMarkLines = [];
             if (indicatorVisible.kd && zoneMarkingState.composite.useKD) {
                 let inZone = false;
                 let zoneStart = null;
+                let zoneStartIndex = null;
 
                 for (let i = 0; i < kdResult.k.length; i++) {
                     const kValue = kdResult.k[i];
                     const dValue = kdResult.d[i];
 
                     if (kValue !== null && dValue !== null) {
-                        const isLow = kValue < zoneMarkingState.kd.threshold || dValue < zoneMarkingState.kd.threshold;
+                        // K 和 D 都必須低於閾值（交集）
+                        const isLow = kValue < zoneMarkingState.kd.threshold && dValue < zoneMarkingState.kd.threshold;
 
                         if (isLow && !inZone) {
                             inZone = true;
                             zoneStart = resampledData[i].date;
+                            zoneStartIndex = i;
                         } else if (!isLow && inZone) {
-                            kdMarkAreas.push([
-                                { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
-                                { xAxis: resampledData[i - 1].date }
-                            ]);
+                            const zoneEndIndex = i - 1;
+                            // 判斷是單根K棒還是區域
+                            if (zoneStartIndex === zoneEndIndex) {
+                                // 單根K棒：使用垂直線
+                                kdMarkLines.push({
+                                    xAxis: zoneStart,
+                                    lineStyle: { color: 'rgba(255, 215, 0, 0.25)', width: 2, type: 'solid' }
+                                });
+                            } else {
+                                // 多根K棒：使用區域
+                                kdMarkAreas.push([
+                                    { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
+                                    { xAxis: resampledData[zoneEndIndex].date }
+                                ]);
+                            }
                             inZone = false;
                         }
                     }
                 }
 
                 if (inZone) {
-                    kdMarkAreas.push([
-                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
-                        { xAxis: resampledData[resampledData.length - 1].date }
-                    ]);
+                    const zoneEndIndex = resampledData.length - 1;
+                    if (zoneStartIndex === zoneEndIndex) {
+                        kdMarkLines.push({
+                            xAxis: zoneStart,
+                            lineStyle: { color: 'rgba(255, 215, 0, 0.25)', width: 2, type: 'solid' }
+                        });
+                    } else {
+                        kdMarkAreas.push([
+                            { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 215, 0, 0.25)' } },
+                            { xAxis: resampledData[zoneEndIndex].date }
+                        ]);
+                    }
                 }
             }
 
-            // RSI 低檔區域標記 (同步複合標記開關)
+            // RSI 低檔區域標記
             const rsiMarkAreas = [];
+            const rsiMarkLines = [];
             if (indicatorVisible.rsi && zoneMarkingState.composite.useRSI) {
                 let inZone = false;
                 let zoneStart = null;
+                let zoneStartIndex = null;
 
                 for (let i = 0; i < rsi5.length; i++) {
                     const rsiValue = rsi5[i];
@@ -1055,29 +1095,50 @@
                         if (isLow && !inZone) {
                             inZone = true;
                             zoneStart = resampledData[i].date;
+                            zoneStartIndex = i;
                         } else if (!isLow && inZone) {
-                            rsiMarkAreas.push([
-                                { xAxis: zoneStart, itemStyle: { color: 'rgba(147, 112, 219, 0.15)' } },
-                                { xAxis: resampledData[i - 1].date }
-                            ]);
+                            const zoneEndIndex = i - 1;
+                            if (zoneStartIndex === zoneEndIndex) {
+                                // 單根K棒：使用垂直線
+                                rsiMarkLines.push({
+                                    xAxis: zoneStart,
+                                    lineStyle: { color: 'rgba(147, 112, 219, 0.15)', width: 2, type: 'solid' }
+                                });
+                            } else {
+                                // 多根K棒：使用區域
+                                rsiMarkAreas.push([
+                                    { xAxis: zoneStart, itemStyle: { color: 'rgba(147, 112, 219, 0.15)' } },
+                                    { xAxis: resampledData[zoneEndIndex].date }
+                                ]);
+                            }
                             inZone = false;
                         }
                     }
                 }
 
                 if (inZone) {
-                    rsiMarkAreas.push([
-                        { xAxis: zoneStart, itemStyle: { color: 'rgba(147, 112, 219, 0.15)' } },
-                        { xAxis: resampledData[resampledData.length - 1].date }
-                    ]);
+                    const zoneEndIndex = resampledData.length - 1;
+                    if (zoneStartIndex === zoneEndIndex) {
+                        rsiMarkLines.push({
+                            xAxis: zoneStart,
+                            lineStyle: { color: 'rgba(147, 112, 219, 0.15)', width: 2, type: 'solid' }
+                        });
+                    } else {
+                        rsiMarkAreas.push([
+                            { xAxis: zoneStart, itemStyle: { color: 'rgba(147, 112, 219, 0.15)' } },
+                            { xAxis: resampledData[zoneEndIndex].date }
+                        ]);
+                    }
                 }
             }
 
-            // MACD 低檔區域標記 (同步複合標記開關)
+            // MACD 低檔區域標記
             const macdMarkAreas = [];
+            const macdMarkLines = [];
             if (indicatorVisible.macd && zoneMarkingState.composite.useMACD) {
                 let inZone = false;
                 let zoneStart = null;
+                let zoneStartIndex = null;
 
                 for (let i = 0; i < macdResult.dif.length; i++) {
                     const difValue = macdResult.dif[i];
@@ -1088,38 +1149,59 @@
                         if (isLow && !inZone) {
                             inZone = true;
                             zoneStart = resampledData[i].date;
+                            zoneStartIndex = i;
                         } else if (!isLow && inZone) {
-                            macdMarkAreas.push([
-                                { xAxis: zoneStart, itemStyle: { color: 'rgba(0, 213, 250, 0.15)' } },
-                                { xAxis: resampledData[i - 1].date }
-                            ]);
+                            const zoneEndIndex = i - 1;
+                            if (zoneStartIndex === zoneEndIndex) {
+                                // 單根K棒：使用垂直線
+                                macdMarkLines.push({
+                                    xAxis: zoneStart,
+                                    lineStyle: { color: 'rgba(0, 213, 250, 0.15)', width: 2, type: 'solid' }
+                                });
+                            } else {
+                                // 多根K棒：使用區域
+                                macdMarkAreas.push([
+                                    { xAxis: zoneStart, itemStyle: { color: 'rgba(0, 213, 250, 0.15)' } },
+                                    { xAxis: resampledData[zoneEndIndex].date }
+                                ]);
+                            }
                             inZone = false;
                         }
                     }
                 }
 
                 if (inZone) {
-                    macdMarkAreas.push([
-                        { xAxis: zoneStart, itemStyle: { color: 'rgba(0, 213, 250, 0.15)' } },
-                        { xAxis: resampledData[resampledData.length - 1].date }
-                    ]);
+                    const zoneEndIndex = resampledData.length - 1;
+                    if (zoneStartIndex === zoneEndIndex) {
+                        macdMarkLines.push({
+                            xAxis: zoneStart,
+                            lineStyle: { color: 'rgba(0, 213, 250, 0.15)', width: 2, type: 'solid' }
+                        });
+                    } else {
+                        macdMarkAreas.push([
+                            { xAxis: zoneStart, itemStyle: { color: 'rgba(0, 213, 250, 0.15)' } },
+                            { xAxis: resampledData[zoneEndIndex].date }
+                        ]);
+                    }
                 }
             }
 
             // K線區複合標記 (所有選中條件都滿足的區域)
             const compositeMarkAreas = [];
+            const compositeMarkLines = [];
             let inZone = false;
             let zoneStart = null;
+            let zoneStartIndex = null;
 
             for (let i = 0; i < resampledData.length; i++) {
                 let allConditionsMet = true;
 
-                // 檢查 KD 條件
+                // 檢查 KD 條件（K 和 D 都必須低於閾值）
                 if (zoneMarkingState.composite.useKD) {
                     const kValue = kdResult.k[i];
                     const dValue = kdResult.d[i];
                     if (kValue === null || dValue === null ||
-                        (kValue >= zoneMarkingState.kd.threshold && dValue >= zoneMarkingState.kd.threshold)) {
+                        kValue >= zoneMarkingState.kd.threshold || dValue >= zoneMarkingState.kd.threshold) {
                         allConditionsMet = false;
                     }
                 }
@@ -1143,27 +1225,93 @@
                 if (allConditionsMet && !inZone) {
                     inZone = true;
                     zoneStart = resampledData[i].date;
+                    zoneStartIndex = i;
                 } else if (!allConditionsMet && inZone) {
-                    compositeMarkAreas.push([
-                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
-                        { xAxis: resampledData[i - 1].date }
-                    ]);
+                    const zoneEndIndex = i - 1;
+
+                    // 判斷是單根K棒還是區域
+                    if (zoneStartIndex === zoneEndIndex) {
+                        // 單根K棒：使用垂直線
+                        compositeMarkLines.push({
+                            xAxis: zoneStart,
+                            lineStyle: { color: 'rgba(255, 107, 107, 0.15)', width: 3, type: 'solid' }
+                        });
+                    } else {
+                        // 多根K棒：使用區域
+                        compositeMarkAreas.push([
+                            { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
+                            { xAxis: resampledData[zoneEndIndex].date }
+                        ]);
+                    }
+
+                    // 記錄低檔區結束後的下一根K棒收盤價
+                    const nextIndex = i;
+                    if (nextIndex < resampledData.length) {
+                        const nextCandle = resampledData[nextIndex];
+
+                        // 🔍 除錯：檢查低檔區最後一根K棒的指標值
+                        const kValue = kdResult.k[zoneEndIndex];
+                        const dValue = kdResult.d[zoneEndIndex];
+                        const rsiValue = rsi5[zoneEndIndex];
+                        const macdValue = macdResult.dif[zoneEndIndex];
+
+                        const kdOK = (!zoneMarkingState.composite.useKD) ||
+                                     (kValue !== null && dValue !== null &&
+                                      kValue < zoneMarkingState.kd.threshold &&
+                                      dValue < zoneMarkingState.kd.threshold);
+                        const rsiOK = (!zoneMarkingState.composite.useRSI) ||
+                                      (rsiValue !== null && rsiValue < zoneMarkingState.rsi.threshold);
+                        const macdOK = (!zoneMarkingState.composite.useMACD) ||
+                                       (macdValue !== null && macdValue < zoneMarkingState.macd.threshold);
+
+                        console.log(`🎯 #${postZoneMarkers.data.length + 1} [${resampledData[zoneEndIndex].date}]:`, {
+                            'K': kValue?.toFixed(1), 'D': dValue?.toFixed(1), 'KD✓': kdOK,
+                            'RSI': rsiValue?.toFixed(1), 'RSI✓': rsiOK,
+                            'MACD': macdValue?.toFixed(1), 'MACD✓': macdOK,
+                            '全符合': kdOK && rsiOK && macdOK
+                        });
+
+                        postZoneMarkers.data.push([
+                            nextIndex,  // x: 索引位置
+                            nextCandle.close,  // y: 收盤價
+                            nextCandle.date,  // 額外資料：日期
+                            nextCandle.close  // 額外資料：收盤價（用於標籤）
+                        ]);
+                    }
                     inZone = false;
                 }
             }
 
             if (inZone) {
-                compositeMarkAreas.push([
-                    { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
-                    { xAxis: resampledData[resampledData.length - 1].date }
-                ]);
+                const zoneEndIndex = resampledData.length - 1;
+                if (zoneStartIndex === zoneEndIndex) {
+                    compositeMarkLines.push({
+                        xAxis: zoneStart,
+                        lineStyle: { color: 'rgba(255, 107, 107, 0.15)', width: 3, type: 'solid' }
+                    });
+                } else {
+                    compositeMarkAreas.push([
+                        { xAxis: zoneStart, itemStyle: { color: 'rgba(255, 107, 107, 0.15)' } },
+                        { xAxis: resampledData[zoneEndIndex].date }
+                    ]);
+                }
             }
 
+            // 除錯日誌
+            console.log('📊 區域標記統計 ─────────────────');
+            console.log(`  🔴 複合低檔區: ${compositeMarkAreas.length} 個`);
+            console.log(`  🟡 KD 低檔區: ${kdMarkAreas.length} 個`);
+            console.log(`  🟣 RSI 低檔區: ${rsiMarkAreas.length} 個`);
+            console.log(`  🔵 MACD 低檔區: ${macdMarkAreas.length} 個`);
+            console.log(`  🎯 反彈標記點: ${postZoneMarkers.data.length} 個`);
+            console.log('─────────────────────────────────');
+
             return {
-                kd: { data: kdMarkAreas },
-                rsi: { data: rsiMarkAreas },
-                macd: { data: macdMarkAreas },
-                composite: { data: compositeMarkAreas }
+                kd: { data: kdMarkAreas, lines: kdMarkLines },
+                rsi: { data: rsiMarkAreas, lines: rsiMarkLines },
+                macd: { data: macdMarkAreas, lines: macdMarkLines },
+                composite: { data: compositeMarkAreas, lines: compositeMarkLines },
+                postZoneMarkers
             };
         }
 
@@ -1204,6 +1352,8 @@
 
             // 生成標記區域
             const markAreas = generateMarkAreas(currentChartData);
+            console.log('✅ markAreas.postZoneMarkers:', markAreas.postZoneMarkers);
+
             chartTitleEl.innerHTML = `📈 台灣加權指數 ${periodName} <span class="badge">Real Data</span>`;
 
             statusEl.innerHTML = `
@@ -1267,7 +1417,53 @@
                     name: periodName, type: 'candlestick', data: resampledData.map(d => d.values),
                     itemStyle: { color: '#eb5454', color0: '#47b262', borderColor: '#eb5454', borderColor0: '#47b262' },
                     large: true,
-                    markArea: markAreas.composite
+                    markArea: markAreas.composite,
+                    markLine: { data: markAreas.composite.lines, symbol: 'none' }
+                },
+                {
+                    name: '低檔反彈收盤',
+                    type: 'scatter',
+                    data: markAreas.postZoneMarkers.data,
+                    symbolSize: 16,
+                    itemStyle: {
+                        color: '#ff6600',
+                        borderColor: '#fff',
+                        borderWidth: 2.5,
+                        shadowBlur: 4,
+                        shadowColor: 'rgba(255, 102, 0, 0.5)'
+                    },
+                    emphasis: {
+                        scale: 1.4,
+                        itemStyle: {
+                            color: '#ff4400',
+                            shadowBlur: 8,
+                            shadowColor: 'rgba(255, 68, 0, 0.8)'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            return closePrice.toLocaleString();
+                        },
+                        fontSize: 11,
+                        fontWeight: 'bold',
+                        color: '#ff6600',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        padding: [3, 6],
+                        borderRadius: 3,
+                        borderColor: '#ff6600',
+                        borderWidth: 1
+                    },
+                    tooltip: {
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            const date = params.value[2];
+                            return `<strong>低檔反彈收盤</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}`;
+                        }
+                    },
+                    z: 10
                 },
                 { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                 { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
@@ -1292,7 +1488,7 @@
                         { name: 'MACD', itemStyle: { color: '#00D5FA' } }
                     );
                     series.push(
-                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none', markArea: markAreas.macd },
+                        { name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none', markArea: markAreas.macd, markLine: { data: markAreas.macd.lines, symbol: 'none' } },
                         { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
                         { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
                     );
@@ -1302,7 +1498,7 @@
                         { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
                     );
                     series.push(
-                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none', markArea: markAreas.kd },
+                        { name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none', markArea: markAreas.kd, markLine: { data: markAreas.kd.lines, symbol: 'none' } },
                         { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
@@ -1323,7 +1519,7 @@
                         { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
                     );
                     series.push(
-                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none', markArea: markAreas.rsi },
+                        { name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none', markArea: markAreas.rsi, markLine: { data: markAreas.rsi.lines, symbol: 'none' } },
                         { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
                         {
                             name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
