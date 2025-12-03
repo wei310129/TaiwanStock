@@ -61,9 +61,11 @@
             max-height: 80vh;
             overflow-y: auto;
             overflow-x: hidden;
+            display: none;
         }
         .floating-panel.open {
             right: 0;
+            display: block;
         }
         .panel-toggle {
             position: absolute;
@@ -426,9 +428,9 @@
     <div id="chart"></div>
 </div>
 
-<!-- 浮動控制面板 -->
-<div class="floating-panel" id="floatingPanel">
-    <button class="panel-toggle" id="panelToggle">⚙️</button>
+<!-- 高檔區域浮動控制面板 -->
+<div class="floating-panel" id="highPricePanel">
+    <button class="panel-toggle" id="highPanelToggle">⚙️</button>
     <div class="panel-content">
         <div class="panel-section">
             <h3>高檔區域標記</h3>
@@ -522,7 +524,13 @@
                 <label for="highCompositeRSI">採用 RSI 條件</label>
             </div>
         </div>
+    </div>
+</div>
 
+<!-- 低檔區域浮動控制面板 -->
+<div class="floating-panel" id="lowPricePanel">
+    <button class="panel-toggle" id="lowPanelToggle">⚙️</button>
+    <div class="panel-content">
         <div class="panel-section">
             <h3>低檔區域標記</h3>
             <div class="zone-checkbox">
@@ -885,89 +893,86 @@
         const controlButtons = document.querySelectorAll('.btn');
 
         // 浮動面板控制
-        const floatingPanel = document.getElementById('floatingPanel');
-        const panelToggle = document.getElementById('panelToggle');
+        const highPricePanel = document.getElementById('highPricePanel');
+        const lowPricePanel = document.getElementById('lowPricePanel');
+        const highPanelToggle = document.getElementById('highPanelToggle');
+        const lowPanelToggle = document.getElementById('lowPanelToggle');
+        const highPriceAreaBookmark = document.getElementById('highPriceAreaBookmark');
         const lowPriceAreaBookmark = document.getElementById('lowPriceAreaBookmark');
         const sidebar = document.querySelector('.sidebar');
 
-        // 切換面板狀態的函數
-        function togglePanel() {
-            const isOpen = floatingPanel.classList.toggle('open');
-
-            // 更新側邊欄位置
-            if (isOpen) {
-                sidebar.classList.add('panel-open');
-            } else {
-                // 關閉時移除所有書籤的 active 狀態
-                lowPriceAreaBookmark.classList.remove('active');
-                const highPriceBookmark = document.getElementById('highPriceAreaBookmark');
-                if (highPriceBookmark) {
-                    highPriceBookmark.classList.remove('active');
-                }
-                sidebar.classList.remove('panel-open');
-            }
-        }
-
-        // 關閉面板的函數
-        function closePanel() {
-            floatingPanel.classList.remove('open');
-            lowPriceAreaBookmark.classList.remove('active');
-            const highPriceBookmark = document.getElementById('highPriceAreaBookmark');
-            if (highPriceBookmark) {
-                highPriceBookmark.classList.remove('active');
-            }
+        // 關閉所有面板
+        function closeAllPanels() {
+            highPricePanel.classList.remove('open');
+            lowPricePanel.classList.remove('open');
             sidebar.classList.remove('panel-open');
+            highPriceAreaBookmark.classList.remove('active');
+            lowPriceAreaBookmark.classList.remove('active');
         }
 
-        // 綁定書籤和面板切換按鈕到同一個切換函數
-        panelToggle.addEventListener('click', (e) => {
-            e.stopPropagation(); // 防止事件冒泡
-            togglePanel();
-        });
-        lowPriceAreaBookmark.addEventListener('click', (e) => {
-            e.stopPropagation(); // 防止事件冒泡
-            // 確保面板打開
-            if (!floatingPanel.classList.contains('open')) {
-                floatingPanel.classList.add('open');
+        // 切換高檔區域面板
+        function toggleHighPanel() {
+            const wasOpen = highPricePanel.classList.contains('open');
+            closeAllPanels();
+            if (!wasOpen) {
+                highPricePanel.classList.add('open');
                 sidebar.classList.add('panel-open');
+                highPriceAreaBookmark.classList.add('active');
             }
-            // 找到低檔區域標記的位置並滾動
-            const panelContent = document.querySelector('.panel-content');
-            const panelSections = panelContent.querySelectorAll('.panel-section h3');
-            for (let section of panelSections) {
-                if (section.textContent.includes('低檔區域標記')) {
-                    const lowPriceSectionElement = section.closest('.panel-section');
-                    if (lowPriceSectionElement) {
-                        panelContent.scrollTo({
-                            top: lowPriceSectionElement.offsetTop - 10,
-                            behavior: 'smooth'
-                        });
-                        break;
-                    }
-                }
+        }
+
+        // 切換低檔區域面板
+        function toggleLowPanel() {
+            const wasOpen = lowPricePanel.classList.contains('open');
+            closeAllPanels();
+            if (!wasOpen) {
+                lowPricePanel.classList.add('open');
+                sidebar.classList.add('panel-open');
+                lowPriceAreaBookmark.classList.add('active');
             }
-            // 高亮效果
-            lowPriceAreaBookmark.classList.add('active');
-            const highPriceBookmark = document.getElementById('highPriceAreaBookmark');
-            if (highPriceBookmark) {
-                highPriceBookmark.classList.remove('active');
-            }
+        }
+
+        // 綁定高檔區域書籤和面板切換按鈕
+        highPanelToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleHighPanel();
+        });
+
+        highPriceAreaBookmark.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleHighPanel();
+        });
+
+        // 綁定低檔區域書籤和面板切換按鈕
+        lowPanelToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLowPanel();
+        });
+
+        lowPriceAreaBookmark.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleLowPanel();
         });
 
         // 點擊面板外部關閉面板
         document.addEventListener('click', (e) => {
-            const isClickInsidePanel = floatingPanel.contains(e.target);
-            const isClickOnLowBookmark = lowPriceAreaBookmark.contains(e.target);
-            const isPanelOpen = floatingPanel.classList.contains('open');
+            const isClickInsideHighPanel = highPricePanel.contains(e.target);
+            const isClickInsideLowPanel = lowPricePanel.contains(e.target);
+            const isClickOnSidebar = sidebar.contains(e.target);
+            const isAnyPanelOpen = highPricePanel.classList.contains('open') || lowPricePanel.classList.contains('open');
 
-            // 如果面板是開啟的，且點擊不在面板內，也不在任何書籤上，則關閉面板
-            if (isPanelOpen && !isClickInsidePanel && !isClickOnLowBookmark && !sidebar.contains(e.target)) {
-                closePanel();
+            // 如果有面板是開啟的，且點擊不在任何面板內，也不在側邊欄上，則關閉所有面板
+            if (isAnyPanelOpen && !isClickInsideHighPanel && !isClickInsideLowPanel && !isClickOnSidebar) {
+                closeAllPanels();
             }
         });
 
         // 防止點擊面板內部時關閉面板
-        floatingPanel.addEventListener('click', (e) => {
+        highPricePanel.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        lowPricePanel.addEventListener('click', (e) => {
             e.stopPropagation();
         });
 
@@ -2292,26 +2297,6 @@
             });
         });
 
-        // 書籤點擊事件：滾動到對應控制區域
-        const highPriceAreaBookmark = document.getElementById('highPriceAreaBookmark');
-        const panelContent = document.querySelector('.panel-content');
-
-        highPriceAreaBookmark.addEventListener('click', (e) => {
-            e.stopPropagation(); // 防止事件冒泡
-            // 確保面板打開
-            if (!floatingPanel.classList.contains('open')) {
-                floatingPanel.classList.add('open');
-                sidebar.classList.add('panel-open');
-            }
-            // 滾動到高檔區域標記（面板頂部）
-            panelContent.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            // 高亮效果
-            highPriceAreaBookmark.classList.add('active');
-            lowPriceAreaBookmark.classList.remove('active');
-        });
 
         updateChart(currentPeriod);
         window.addEventListener('resize', myChart.resize);
