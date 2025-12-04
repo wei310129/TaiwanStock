@@ -396,6 +396,10 @@
 
 <!-- 右側書籤側邊欄 -->
 <div class="sidebar">
+    <div class="sidebar-bookmark" id="macdReversalBookmark">
+        <span class="sidebar-bookmark-icon">🔄</span>
+        <span class="sidebar-bookmark-text">MACD反轉</span>
+    </div>
     <div class="sidebar-bookmark" id="highPriceAreaBookmark">
         <span class="sidebar-bookmark-icon">📈</span>
         <span class="sidebar-bookmark-text">高檔區域</span>
@@ -426,6 +430,109 @@
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
     <div id="chart"></div>
+</div>
+
+<!-- MACD反轉浮動控制面板 -->
+<div class="floating-panel" id="macdReversalPanel">
+    <button class="panel-toggle" id="macdReversalPanelToggle">⚙️</button>
+    <div class="panel-content">
+        <div class="panel-section">
+            <h3>🔄 MACD反轉標記</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="macdReversalMasterToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="macdReversalMasterToggle" style="font-size: 1em; font-weight: 500;">顯示MACD反轉點</label>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>🔴 MACD負值反轉</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="macdNegativeReversalToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="macdNegativeReversalToggle">顯示紅色反轉點（負值轉正）</label>
+            </div>
+            <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
+                標記 MACD 從負值區轉為正值的反轉點
+            </p>
+        </div>
+
+        <div class="panel-section">
+            <h3>🟢 MACD正值反轉</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="macdPositiveReversalToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="macdPositiveReversalToggle">顯示綠色反轉點（正值轉負）</label>
+            </div>
+            <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
+                標記 MACD 從正值區轉為負值的反轉點
+            </p>
+        </div>
+
+        <div class="panel-section">
+            <h3>🔴 賣點標記設定</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="macdSellToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="macdSellToggle">顯示賣點標記（深紅色）</label>
+            </div>
+            <div class="range-input">
+                <label>賣點閾值（D-M正值反轉後低於此值）:</label>
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="macdSellThresholdRange" min="-1000" max="1000" step="5" value="0">
+                        </div>
+                        <div class="range-labels">
+                            <span>-1000</span>
+                            <span>1000</span>
+                        </div>
+                    </div>
+                    <input type="number" id="macdSellThreshold" min="-1000" max="1000" step="5" value="0">
+                </div>
+            </div>
+            <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
+                當 MACD D-M 從正值區向下反轉，且反轉後的值低於閾值時標記
+            </p>
+        </div>
+
+        <div class="panel-section">
+            <h3>🟢 買點標記設定</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="macdBuyToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="macdBuyToggle">顯示買點標記（墨綠色）</label>
+            </div>
+            <div class="range-input">
+                <label>買點閾值（D-M負值反轉後高於此值）:</label>
+                <div class="range-control">
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <input type="range" id="macdBuyThresholdRange" min="-1000" max="1000" step="5" value="0">
+                        </div>
+                        <div class="range-labels">
+                            <span>-1000</span>
+                            <span>1000</span>
+                        </div>
+                    </div>
+                    <input type="number" id="macdBuyThreshold" min="-1000" max="1000" step="5" value="0">
+                </div>
+            </div>
+            <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
+                當 MACD D-M 從負值區向上反轉，且反轉後的值高於閾值時標記
+            </p>
+        </div>
+    </div>
 </div>
 
 <!-- 高檔區域浮動控制面板 -->
@@ -893,21 +1000,37 @@
         const controlButtons = document.querySelectorAll('.btn');
 
         // 浮動面板控制
+        const macdReversalPanel = document.getElementById('macdReversalPanel');
         const highPricePanel = document.getElementById('highPricePanel');
         const lowPricePanel = document.getElementById('lowPricePanel');
+        const macdReversalPanelToggle = document.getElementById('macdReversalPanelToggle');
         const highPanelToggle = document.getElementById('highPanelToggle');
         const lowPanelToggle = document.getElementById('lowPanelToggle');
+        const macdReversalBookmark = document.getElementById('macdReversalBookmark');
         const highPriceAreaBookmark = document.getElementById('highPriceAreaBookmark');
         const lowPriceAreaBookmark = document.getElementById('lowPriceAreaBookmark');
         const sidebar = document.querySelector('.sidebar');
 
         // 關閉所有面板
         function closeAllPanels() {
+            macdReversalPanel.classList.remove('open');
             highPricePanel.classList.remove('open');
             lowPricePanel.classList.remove('open');
             sidebar.classList.remove('panel-open');
+            macdReversalBookmark.classList.remove('active');
             highPriceAreaBookmark.classList.remove('active');
             lowPriceAreaBookmark.classList.remove('active');
+        }
+
+        // 切換MACD反轉面板
+        function toggleMacdReversalPanel() {
+            const wasOpen = macdReversalPanel.classList.contains('open');
+            closeAllPanels();
+            if (!wasOpen) {
+                macdReversalPanel.classList.add('open');
+                sidebar.classList.add('panel-open');
+                macdReversalBookmark.classList.add('active');
+            }
         }
 
         // 切換高檔區域面板
@@ -931,6 +1054,17 @@
                 lowPriceAreaBookmark.classList.add('active');
             }
         }
+
+        // 綁定MACD反轉書籤和面板切換按鈕
+        macdReversalPanelToggle.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMacdReversalPanel();
+        });
+
+        macdReversalBookmark.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMacdReversalPanel();
+        });
 
         // 綁定高檔區域書籤和面板切換按鈕
         highPanelToggle.addEventListener('click', (e) => {
@@ -956,18 +1090,23 @@
 
         // 點擊面板外部關閉面板
         document.addEventListener('click', (e) => {
+            const isClickInsideMacdReversalPanel = macdReversalPanel.contains(e.target);
             const isClickInsideHighPanel = highPricePanel.contains(e.target);
             const isClickInsideLowPanel = lowPricePanel.contains(e.target);
             const isClickOnSidebar = sidebar.contains(e.target);
-            const isAnyPanelOpen = highPricePanel.classList.contains('open') || lowPricePanel.classList.contains('open');
+            const isAnyPanelOpen = macdReversalPanel.classList.contains('open') || highPricePanel.classList.contains('open') || lowPricePanel.classList.contains('open');
 
             // 如果有面板是開啟的，且點擊不在任何面板內，也不在側邊欄上，則關閉所有面板
-            if (isAnyPanelOpen && !isClickInsideHighPanel && !isClickInsideLowPanel && !isClickOnSidebar) {
+            if (isAnyPanelOpen && !isClickInsideMacdReversalPanel && !isClickInsideHighPanel && !isClickInsideLowPanel && !isClickOnSidebar) {
                 closeAllPanels();
             }
         });
 
         // 防止點擊面板內部時關閉面板
+        macdReversalPanel.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
         highPricePanel.addEventListener('click', (e) => {
             e.stopPropagation();
         });
@@ -996,6 +1135,19 @@
                 useKD: true,
                 useRSI: true,
                 useMACD: true
+            },
+            // MACD反轉標記
+            macdReversal: {
+                masterEnabled: true,  // 預設開啟MACD反轉標記
+                showNegative: true,   // 顯示負值反轉（紅色）
+                showPositive: true    // 顯示正值反轉（綠色）
+            },
+            // MACD買賣點標記
+            macdBuySell: {
+                sellEnabled: true,    // 預設開啟賣點標記
+                buyEnabled: true,     // 預設開啟買點標記
+                sellThreshold: 0,     // 賣點閾值（正值反轉）
+                buyThreshold: 0       // 買點閾值（負值反轉）
             }
         };
 
@@ -1325,6 +1477,106 @@
             updateChartMarkingsOnly();
         });
 
+        // === MACD反轉控制 ===
+        const macdReversalMasterToggle = document.getElementById('macdReversalMasterToggle');
+        const macdNegativeReversalToggle = document.getElementById('macdNegativeReversalToggle');
+        const macdPositiveReversalToggle = document.getElementById('macdPositiveReversalToggle');
+
+        macdReversalMasterToggle.addEventListener('change', () => {
+            zoneMarkingState.macdReversal.masterEnabled = macdReversalMasterToggle.checked;
+            updateChartMarkingsOnly();
+        });
+
+        macdNegativeReversalToggle.addEventListener('change', () => {
+            zoneMarkingState.macdReversal.showNegative = macdNegativeReversalToggle.checked;
+            updateChartMarkingsOnly();
+        });
+
+        macdPositiveReversalToggle.addEventListener('change', () => {
+            zoneMarkingState.macdReversal.showPositive = macdPositiveReversalToggle.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // === MACD買賣點控制 ===
+        const macdSellToggle = document.getElementById('macdSellToggle');
+        const macdBuyToggle = document.getElementById('macdBuyToggle');
+        const macdSellThresholdRange = document.getElementById('macdSellThresholdRange');
+        const macdSellThresholdInput = document.getElementById('macdSellThreshold');
+        const macdBuyThresholdRange = document.getElementById('macdBuyThresholdRange');
+        const macdBuyThresholdInput = document.getElementById('macdBuyThreshold');
+
+        // 賣點開關
+        macdSellToggle.addEventListener('change', () => {
+            zoneMarkingState.macdBuySell.sellEnabled = macdSellToggle.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // 買點開關
+        macdBuyToggle.addEventListener('change', () => {
+            zoneMarkingState.macdBuySell.buyEnabled = macdBuyToggle.checked;
+            updateChartMarkingsOnly();
+        });
+
+        // 賣點閾值控制
+        macdSellThresholdRange.addEventListener('input', () => {
+            const value = parseInt(macdSellThresholdRange.value);
+            macdSellThresholdInput.value = value;
+            zoneMarkingState.macdBuySell.sellThreshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        macdSellThresholdInput.addEventListener('input', () => {
+            let value = parseInt(macdSellThresholdInput.value);
+            if (isNaN(value)) value = 0;
+            value = Math.max(-1000, Math.min(1000, value));
+            value = Math.round(value / 5) * 5;
+            macdSellThresholdInput.value = value;
+            macdSellThresholdRange.value = value;
+            zoneMarkingState.macdBuySell.sellThreshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        macdSellThresholdInput.addEventListener('blur', () => {
+            let value = parseInt(macdSellThresholdInput.value);
+            if (isNaN(value)) value = 0;
+            value = Math.max(-1000, Math.min(1000, value));
+            value = Math.round(value / 5) * 5;
+            macdSellThresholdInput.value = value;
+            macdSellThresholdRange.value = value;
+            zoneMarkingState.macdBuySell.sellThreshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        // 買點閾值控制
+        macdBuyThresholdRange.addEventListener('input', () => {
+            const value = parseInt(macdBuyThresholdRange.value);
+            macdBuyThresholdInput.value = value;
+            zoneMarkingState.macdBuySell.buyThreshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        macdBuyThresholdInput.addEventListener('input', () => {
+            let value = parseInt(macdBuyThresholdInput.value);
+            if (isNaN(value)) value = 0;
+            value = Math.max(-1000, Math.min(1000, value));
+            value = Math.round(value / 5) * 5;
+            macdBuyThresholdInput.value = value;
+            macdBuyThresholdRange.value = value;
+            zoneMarkingState.macdBuySell.buyThreshold = value;
+            updateChartMarkingsOnly();
+        });
+
+        macdBuyThresholdInput.addEventListener('blur', () => {
+            let value = parseInt(macdBuyThresholdInput.value);
+            if (isNaN(value)) value = 0;
+            value = Math.max(-1000, Math.min(1000, value));
+            value = Math.round(value / 5) * 5;
+            macdBuyThresholdInput.value = value;
+            macdBuyThresholdRange.value = value;
+            zoneMarkingState.macdBuySell.buyThreshold = value;
+            updateChartMarkingsOnly();
+        });
+
         // 儲存當前圖表數據，供標記更新使用
         let currentChartData = null;
 
@@ -1354,10 +1606,20 @@
                     s.data = newMarkAreas.highPostZoneMarkers.data;
                 } else if (s.name === 'MACD負值反轉') {
                     // 🔴 紅色MACD反轉點（散點圖）
-                    s.data = newMarkAreas.macdReversalMarkers.red;
+                    s.data = (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showNegative)
+                        ? newMarkAreas.macdReversalMarkers.red
+                        : [];
                 } else if (s.name === 'MACD正值反轉') {
                     // 🟢 綠色MACD反轉點（散點圖）
-                    s.data = newMarkAreas.macdReversalMarkers.green;
+                    s.data = (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showPositive)
+                        ? newMarkAreas.macdReversalMarkers.green
+                        : [];
+                } else if (s.name === '買點') {
+                    // 🔴 深紅色買點（散點圖）
+                    s.data = zoneMarkingState.macdBuySell.buyEnabled ? newMarkAreas.buySellMarkers.buy : [];
+                } else if (s.name === '賣點') {
+                    // 🟢 墨綠色賣點（散點圖）
+                    s.data = zoneMarkingState.macdBuySell.sellEnabled ? newMarkAreas.buySellMarkers.sell : [];
                 } else if (s.name === 'K(9)') {
                     // KD 的標記（包含低檔和高檔）
                     s.markArea = {
@@ -1993,6 +2255,7 @@
 
             // === MACD D-M 反轉點檢測 ===
             const macdReversalMarkers = { red: [], green: [] };
+            const buySellMarkers = { buy: [], sell: [] };
             const dmValues = macdResult.dm;
 
             let lastTrend = null; // 'decreasing' 或 'increasing' 或 null
@@ -2016,7 +2279,7 @@
                     if (lastTrend !== null && currentTrend !== null && lastTrend !== currentTrend) {
                         // 趨勢改變了
                         if (currentTrend === 'increasing' && prevDM < 0) {
-                            // 從向下轉為向上，且在負值區域 -> 紅色點（買入信號）
+                            // 從向下轉為向上，且在負值區域 -> 紅色點（MACD反轉信號）
                             macdReversalMarkers.red.push([
                                 i,  // x: 索引位置（當前K棒，反轉開始）
                                 resampledData[i].close,  // y: 收盤價
@@ -2024,8 +2287,20 @@
                                 resampledData[i].close,  // 額外資料：收盤價
                                 currDM.toFixed(2)  // 額外資料：DM值
                             ]);
+
+                            // 檢查是否符合買點條件
+                            // D-M負值反轉後高於買點閾值 -> 買點（墨綠色）
+                            if (currDM > zoneMarkingState.macdBuySell.buyThreshold) {
+                                buySellMarkers.buy.push([
+                                    i,
+                                    resampledData[i].close,
+                                    resampledData[i].date,
+                                    resampledData[i].close,
+                                    currDM.toFixed(2)
+                                ]);
+                            }
                         } else if (currentTrend === 'decreasing' && prevDM > 0) {
-                            // 從向上轉為向下，且在正值區域 -> 綠色點（賣出信號）
+                            // 從向上轉為向下，且在正值區域 -> 綠色點（MACD反轉信號）
                             macdReversalMarkers.green.push([
                                 i,  // x: 索引位置（當前K棒，反轉開始）
                                 resampledData[i].close,  // y: 收盤價
@@ -2033,6 +2308,18 @@
                                 resampledData[i].close,  // 額外資料：收盤價
                                 currDM.toFixed(2)  // 額外資料：DM值
                             ]);
+
+                            // 檢查是否符合賣點條件
+                            // D-M正值反轉後低於賣點閾值 -> 賣點（深紅色）
+                            if (currDM < zoneMarkingState.macdBuySell.sellThreshold) {
+                                buySellMarkers.sell.push([
+                                    i,
+                                    resampledData[i].close,
+                                    resampledData[i].date,
+                                    resampledData[i].close,
+                                    currDM.toFixed(2)
+                                ]);
+                            }
                         }
                     }
 
@@ -2057,6 +2344,8 @@
             console.log(`  🟣 高檔後標記點: ${highPostZoneMarkers.data.length} 個`);
             console.log(`  🔴 MACD負值反轉點: ${macdReversalMarkers.red.length} 個`);
             console.log(`  🟢 MACD正值反轉點: ${macdReversalMarkers.green.length} 個`);
+            console.log(`  🔴 買點標記: ${buySellMarkers.buy.length} 個`);
+            console.log(`  🟢 賣點標記: ${buySellMarkers.sell.length} 個`);
             console.log('─────────────────────────────────');
 
             return {
@@ -2067,6 +2356,7 @@
                 postZoneMarkers,
                 highPostZoneMarkers,  // 高檔區後的標記點
                 macdReversalMarkers,  // MACD D-M 反轉點
+                buySellMarkers,       // 買賣點標記
                 // 高檔區域標記
                 highKd: { data: highKdMarkAreas, lines: highKdMarkLines },
                 highRsi: { data: highRsiMarkAreas, lines: highRsiMarkLines },
@@ -2280,7 +2570,9 @@
                 {
                     name: 'MACD負值反轉',
                     type: 'scatter',
-                    data: markAreas.macdReversalMarkers.red,
+                    data: (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showNegative)
+                        ? markAreas.macdReversalMarkers.red
+                        : [],
                     symbolSize: 12,
                     itemStyle: {
                         color: '#e74c3c',
@@ -2326,7 +2618,9 @@
                 {
                     name: 'MACD正值反轉',
                     type: 'scatter',
-                    data: markAreas.macdReversalMarkers.green,
+                    data: (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showPositive)
+                        ? markAreas.macdReversalMarkers.green
+                        : [],
                     symbolSize: 12,
                     itemStyle: {
                         color: '#27ae60',
@@ -2368,6 +2662,98 @@
                         }
                     },
                     z: 11
+                },
+                {
+                    name: '買點',
+                    type: 'scatter',
+                    data: zoneMarkingState.macdBuySell.buyEnabled ? markAreas.buySellMarkers.buy : [],
+                    symbolSize: 14,
+                    itemStyle: {
+                        color: '#1a5f1a',  // 墨綠色
+                        borderColor: '#fff',
+                        borderWidth: 2.5,
+                        shadowBlur: 4,
+                        shadowColor: 'rgba(26, 95, 26, 0.6)'
+                    },
+                    emphasis: {
+                        scale: 1.4,
+                        itemStyle: {
+                            color: '#0f4f0f',
+                            shadowBlur: 8,
+                            shadowColor: 'rgba(26, 95, 26, 0.9)'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            return `買點\n${closePrice.toLocaleString()}`;
+                        },
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        color: '#1a5f1a',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        padding: [3, 6],
+                        borderRadius: 3,
+                        borderColor: '#1a5f1a',
+                        borderWidth: 1.5
+                    },
+                    tooltip: {
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            const date = params.value[2];
+                            const dmValue = params.value[4];
+                            return `<strong style="color: #1a5f1a;">買點</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                        }
+                    },
+                    z: 12
+                },
+                {
+                    name: '賣點',
+                    type: 'scatter',
+                    data: zoneMarkingState.macdBuySell.sellEnabled ? markAreas.buySellMarkers.sell : [],
+                    symbolSize: 14,
+                    itemStyle: {
+                        color: '#8b0000',  // 深紅色
+                        borderColor: '#fff',
+                        borderWidth: 2.5,
+                        shadowBlur: 4,
+                        shadowColor: 'rgba(139, 0, 0, 0.6)'
+                    },
+                    emphasis: {
+                        scale: 1.4,
+                        itemStyle: {
+                            color: '#a00000',
+                            shadowBlur: 8,
+                            shadowColor: 'rgba(139, 0, 0, 0.9)'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'bottom',
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            return `賣點\n${closePrice.toLocaleString()}`;
+                        },
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        color: '#8b0000',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        padding: [3, 6],
+                        borderRadius: 3,
+                        borderColor: '#8b0000',
+                        borderWidth: 1.5
+                    },
+                    tooltip: {
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            const date = params.value[2];
+                            const dmValue = params.value[4];
+                            return `<strong style="color: #8b0000;">賣點</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                        }
+                    },
+                    z: 12
                 },
                 { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                 { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
