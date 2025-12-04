@@ -1328,10 +1328,10 @@
         const compositeRSI = document.getElementById('compositeRSI');
         const compositeMACD = document.getElementById('compositeMACD');
 
-        // 獲取對應的面板區塊
-        const kdPanelSection = document.querySelector('.panel-section[data-indicator="kd"]');
-        const rsiPanelSection = document.querySelector('.panel-section[data-indicator="rsi"]');
-        const macdPanelSection = document.querySelector('.panel-section[data-indicator="macd"]');
+        // 獲取對應的面板區塊（限定在低檔區域面板內）
+        const kdPanelSection = lowPricePanel.querySelector('.panel-section[data-indicator="kd"]');
+        const rsiPanelSection = lowPricePanel.querySelector('.panel-section[data-indicator="rsi"]');
+        const macdPanelSection = lowPricePanel.querySelector('.panel-section[data-indicator="macd"]');
 
         compositeKD.addEventListener('change', () => {
             zoneMarkingState.composite.useKD = compositeKD.checked;
@@ -2978,6 +2978,11 @@
                     buyThreshold: 0
                 },
                 masterEnabled: false,
+                composite: {
+                    useMACD: false,
+                    useKD: false,
+                    useRSI: false
+                },
                 highMasterEnabled: true,
                 highMacd: {
                     enabled: true,
@@ -3116,6 +3121,41 @@
             const masterToggle = document.getElementById('masterToggle');
             masterToggle.checked = config.masterEnabled !== undefined ? config.masterEnabled : false;
             zoneMarkingState.masterEnabled = masterToggle.checked;
+
+            // 6. 設定低檔區域複合條件
+            if (config.composite) {
+                const compositeMACD = document.getElementById('compositeMACD');
+                const compositeKD = document.getElementById('compositeKD');
+                const compositeRSI = document.getElementById('compositeRSI');
+
+                const lowMacdPanelSection = lowPricePanel.querySelector('.panel-section[data-indicator="macd"]');
+                const lowKdPanelSection = lowPricePanel.querySelector('.panel-section[data-indicator="kd"]');
+                const lowRsiPanelSection = lowPricePanel.querySelector('.panel-section[data-indicator="rsi"]');
+
+                compositeMACD.checked = config.composite.useMACD;
+                zoneMarkingState.composite.useMACD = config.composite.useMACD;
+                if (config.composite.useMACD) {
+                    lowMacdPanelSection.classList.remove('hidden');
+                } else {
+                    lowMacdPanelSection.classList.add('hidden');
+                }
+
+                compositeKD.checked = config.composite.useKD;
+                zoneMarkingState.composite.useKD = config.composite.useKD;
+                if (config.composite.useKD) {
+                    lowKdPanelSection.classList.remove('hidden');
+                } else {
+                    lowKdPanelSection.classList.add('hidden');
+                }
+
+                compositeRSI.checked = config.composite.useRSI;
+                zoneMarkingState.composite.useRSI = config.composite.useRSI;
+                if (config.composite.useRSI) {
+                    lowRsiPanelSection.classList.remove('hidden');
+                } else {
+                    lowRsiPanelSection.classList.add('hidden');
+                }
+            }
 
             // 只在週期未改變時更新標記（週期改變時 updateChart 已經完整渲染了）
             if (!needFullUpdate) {
