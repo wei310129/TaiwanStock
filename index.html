@@ -15,7 +15,16 @@
         #chart { width: 100%; height: 900px; }
         .status { margin-bottom: 15px; color: #7f8c8d; font-size: 0.95em; font-family: monospace; }
         .badge { background: #28a745; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.8em; margin-left: 10px;}
-        .controls { margin-bottom: 20px; }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .controls > * {
+            flex-shrink: 0;
+        }
         .btn {
             background: #e9ecef;
             border: 1px solid #ced4da;
@@ -54,6 +63,7 @@
             font-size: 0.95em;
             color: #2c3e50;
             font-weight: 500;
+            white-space: nowrap;
         }
         .config-dropdown {
             margin-left: 8px;
@@ -73,6 +83,59 @@
         .config-dropdown:focus {
             border-color: #2980b9;
             box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        .config-notes {
+            display: inline-block;
+            margin-left: 15px;
+            padding: 12px 16px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            font-size: 0.9em;
+            color: #856404;
+            min-width: 400px;
+            max-width: 700px;
+            max-height: 200px;
+            line-height: 1.6;
+            vertical-align: top;
+            overflow-y: auto;
+            overflow-x: hidden;
+            word-wrap: break-word;
+            white-space: normal;
+        }
+        .config-notes h4 {
+            margin: 0 0 8px 0;
+            font-size: 1em;
+            color: #856404;
+            font-weight: 600;
+        }
+        .config-notes ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .config-notes li {
+            margin: 5px 0;
+            font-size: 1em;
+            word-wrap: break-word;
+            white-space: normal;
+            line-height: 1.5;
+        }
+        .config-notes.hidden {
+            display: none;
+        }
+        .config-notes::-webkit-scrollbar {
+            width: 8px;
+        }
+        .config-notes::-webkit-scrollbar-track {
+            background: #f0e5c9;
+            border-radius: 3px;
+        }
+        .config-notes::-webkit-scrollbar-thumb {
+            background: #ffc107;
+            border-radius: 3px;
+        }
+        .config-notes::-webkit-scrollbar-thumb:hover {
+            background: #e0a800;
         }
         .floating-panel {
             position: fixed;
@@ -461,6 +524,10 @@
                 <option value="easyMonthly">輕鬆月放</option>
             </select>
         </label>
+        <div id="configNotes" class="config-notes hidden">
+            <h4>📋 使用注意事項</h4>
+            <ol id="configNotesList"></ol>
+        </div>
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
     <div id="chart"></div>
@@ -2745,6 +2812,10 @@
                     const configDropdown = document.getElementById('configDropdown');
                     configDropdown.value = '';
 
+                    // 隱藏注意事項
+                    const configNotes = document.getElementById('configNotes');
+                    configNotes.classList.add('hidden');
+
                     updateChart(period);
                 }
             });
@@ -2799,6 +2870,11 @@
             easyMonthly: {
                 name: '輕鬆月放',
                 period: 'monthly',
+                notes: [
+                    '原則上在綠色點出現時買進、紫色點出現時賣出',
+                    '若綠色點跌破盤整也要自行賣出',
+                    '若想最大化收益，可從自行預測綠點的出現來提早買在谷底'
+                ],
                 macdBuySell: {
                     masterEnabled: true,
                     sellEnabled: false,
@@ -2987,10 +3063,30 @@
 
         // 配置下拉選單事件監聽
         const configDropdown = document.getElementById('configDropdown');
+        const configNotes = document.getElementById('configNotes');
+        const configNotesList = document.getElementById('configNotesList');
+
         configDropdown.addEventListener('change', (e) => {
             const selectedConfig = e.target.value;
             if (selectedConfig) {
                 applyConfiguration(selectedConfig);
+
+                // 顯示注意事項
+                const config = configPresets[selectedConfig];
+                if (config && config.notes && config.notes.length > 0) {
+                    configNotesList.innerHTML = '';
+                    config.notes.forEach(note => {
+                        const li = document.createElement('li');
+                        li.textContent = note;
+                        configNotesList.appendChild(li);
+                    });
+                    configNotes.classList.remove('hidden');
+                } else {
+                    configNotes.classList.add('hidden');
+                }
+            } else {
+                // 清除選擇時隱藏注意事項
+                configNotes.classList.add('hidden');
             }
         });
 
