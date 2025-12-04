@@ -47,6 +47,33 @@
             margin-right: 6px;
             cursor: pointer;
         }
+        .config-dropdown-label {
+            display: inline-flex;
+            align-items: center;
+            margin-left: 20px;
+            font-size: 0.95em;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .config-dropdown {
+            margin-left: 8px;
+            padding: 6px 12px;
+            border: 2px solid #3498db;
+            border-radius: 6px;
+            background: white;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.2s;
+            outline: none;
+        }
+        .config-dropdown:hover {
+            border-color: #2980b9;
+            background: #f8f9fa;
+        }
+        .config-dropdown:focus {
+            border-color: #2980b9;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
         .floating-panel {
             position: fixed;
             top: 50%;
@@ -427,6 +454,13 @@
         <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="rsi" checked> RSI
         </label>
+        <label class="config-dropdown-label">
+            推薦配置：
+            <select id="configDropdown" class="config-dropdown">
+                <option value="">-- 請選擇配置 --</option>
+                <option value="easyMonthly">輕鬆月放</option>
+            </select>
+        </label>
     </div>
     <div class="status" id="status">系統狀態：初始化...</div>
     <div id="chart"></div>
@@ -448,21 +482,7 @@
         </div>
 
         <div class="panel-section">
-            <h3>🟢 MACD負值反轉</h3>
-            <div class="zone-checkbox">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="macdNegativeReversalToggle" checked>
-                    <span class="toggle-slider"></span>
-                </label>
-                <label for="macdNegativeReversalToggle">顯示綠色反轉點（負值轉正）</label>
-            </div>
-            <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
-                標記 MACD 從負值區轉為正值的反轉點
-            </p>
-        </div>
-
-        <div class="panel-section">
-            <h3>🔴 MACD正值反轉</h3>
+            <h3>🔴 MACD高點反轉</h3>
             <div class="zone-checkbox">
                 <label class="toggle-switch">
                     <input type="checkbox" id="macdPositiveReversalToggle" checked>
@@ -472,6 +492,20 @@
             </div>
             <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
                 標記 MACD 從正值區轉為負值的反轉點
+            </p>
+        </div>
+
+        <div class="panel-section">
+            <h3>🟢 MACD低點反轉</h3>
+            <div class="zone-checkbox">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="macdNegativeReversalToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+                <label for="macdNegativeReversalToggle">顯示綠色反轉點（負值轉正）</label>
+            </div>
+            <p style="font-size: 0.85em; color: #666; margin: 8px 0 0 0; line-height: 1.4;">
+                標記 MACD 從負值區轉為正值的反轉點
             </p>
         </div>
 
@@ -1604,13 +1638,13 @@
                 } else if (s.name === '高檔回落收盤') {
                     // 🟣 紫色標記點（散點圖）
                     s.data = newMarkAreas.highPostZoneMarkers.data;
-                } else if (s.name === 'MACD負值反轉') {
-                    // 🟢 綠色MACD負值反轉點（散點圖）
+                } else if (s.name === 'MACD低點反轉') {
+                    // 🟢 綠色MACD低點反轉點（散點圖）
                     s.data = (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showNegative)
                         ? newMarkAreas.macdReversalMarkers.green
                         : [];
-                } else if (s.name === 'MACD正值反轉') {
-                    // 🔴 紅色MACD正值反轉點（散點圖）
+                } else if (s.name === 'MACD高點反轉') {
+                    // 🔴 紅色MACD高點反轉點（散點圖）
                     s.data = (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showPositive)
                         ? newMarkAreas.macdReversalMarkers.red
                         : [];
@@ -2281,7 +2315,7 @@
                     if (lastTrend !== null && currentTrend !== null && lastTrend !== currentTrend) {
                         // 趨勢改變了
                         if (currentTrend === 'increasing' && prevDM < 0) {
-                            // 從向下轉為向上，且在負值區域 -> 綠色點（MACD負值反轉信號）
+                            // 從向下轉為向上，且在負值區域 -> 綠色點（MACD低點反轉信號）
                             macdReversalMarkers.green.push([
                                 i,  // x: 索引位置（當前K棒，反轉開始）
                                 resampledData[i].close,  // y: 收盤價
@@ -2302,7 +2336,7 @@
                                 ]);
                             }
                         } else if (currentTrend === 'decreasing' && prevDM > 0) {
-                            // 從向上轉為向下，且在正值區域 -> 紅色點（MACD正值反轉信號）
+                            // 從向上轉為向下，且在正值區域 -> 紅色點（MACD高點反轉信號）
                             macdReversalMarkers.red.push([
                                 i,  // x: 索引位置（當前K棒，反轉開始）
                                 resampledData[i].close,  // y: 收盤價
@@ -2344,8 +2378,8 @@
             console.log(`  🔴 RSI 高檔區: ${highRsiMarkAreas.length} 個`);
             console.log(`  🟥 MACD 高檔區: ${highMacdMarkAreas.length} 個`);
             console.log(`  🟣 高檔後標記點: ${highPostZoneMarkers.data.length} 個`);
-            console.log(`  🟢 MACD負值反轉點: ${macdReversalMarkers.green.length} 個`);
-            console.log(`  🔴 MACD正值反轉點: ${macdReversalMarkers.red.length} 個`);
+            console.log(`  🟢 MACD低點反轉點: ${macdReversalMarkers.green.length} 個`);
+            console.log(`  🔴 MACD高點反轉點: ${macdReversalMarkers.red.length} 個`);
             console.log(`  🔴 買點標記: ${buySellMarkers.buy.length} 個`);
             console.log(`  🟢 賣點標記: ${buySellMarkers.sell.length} 個`);
             console.log('─────────────────────────────────');
@@ -2570,7 +2604,7 @@
                     z: 10
                 },
                 {
-                    name: 'MACD負值反轉',
+                    name: 'MACD低點反轉',
                     type: 'scatter',
                     data: (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showNegative)
                         ? markAreas.macdReversalMarkers.green
@@ -2612,13 +2646,13 @@
                             const closePrice = params.value[1];
                             const date = params.value[2];
                             const dmValue = params.value[4];
-                            return `<strong>MACD負值反轉</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                            return `<strong>MACD低點反轉</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
                         }
                     },
                     z: 11
                 },
                 {
-                    name: 'MACD正值反轉',
+                    name: 'MACD高點反轉',
                     type: 'scatter',
                     data: (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdReversal.showPositive)
                         ? markAreas.macdReversalMarkers.red
@@ -2660,7 +2694,7 @@
                             const closePrice = params.value[1];
                             const date = params.value[2];
                             const dmValue = params.value[4];
-                            return `<strong>MACD正值反轉</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                            return `<strong>MACD高點反轉</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
                         }
                     },
                     z: 11
@@ -2927,6 +2961,152 @@
             });
         });
 
+        // 配置預設管理
+        const configPresets = {
+            easyMonthly: {
+                name: '輕鬆月放',
+                period: 'monthly',
+                macdReversal: {
+                    masterEnabled: true,
+                    showNegative: false,
+                    showPositive: false
+                },
+                macdBuySell: {
+                    sellEnabled: false,
+                    buyEnabled: true,
+                    sellThreshold: 0,
+                    buyThreshold: 0
+                },
+                masterEnabled: true,
+                highMasterEnabled: true,
+                highMacd: {
+                    enabled: true,
+                    threshold: 400
+                },
+                highKd: {
+                    enabled: true,
+                    threshold: 76
+                },
+                highComposite: {
+                    useMACD: true,
+                    useKD: true,
+                    useRSI: false
+                }
+            }
+        };
+
+        // 應用配置
+        function applyConfiguration(configKey) {
+            if (!configKey || !configPresets[configKey]) return;
+
+            const config = configPresets[configKey];
+
+            // 1. 切換K線尺度
+            if (config.period && config.period !== currentPeriod) {
+                updateChart(config.period);
+            }
+
+            // 2. 設定MACD反轉標記
+            if (config.macdReversal) {
+                const macdReversalMasterToggle = document.getElementById('macdReversalMasterToggle');
+                const macdNegativeReversalToggle = document.getElementById('macdNegativeReversalToggle');
+                const macdPositiveReversalToggle = document.getElementById('macdPositiveReversalToggle');
+
+                macdReversalMasterToggle.checked = config.macdReversal.masterEnabled;
+                zoneMarkingState.macdReversal.masterEnabled = config.macdReversal.masterEnabled;
+
+                macdNegativeReversalToggle.checked = config.macdReversal.showNegative;
+                zoneMarkingState.macdReversal.showNegative = config.macdReversal.showNegative;
+
+                macdPositiveReversalToggle.checked = config.macdReversal.showPositive;
+                zoneMarkingState.macdReversal.showPositive = config.macdReversal.showPositive;
+            }
+
+            // 3. 設定MACD買賣點標記（高點閥值和低點閥值）
+            if (config.macdBuySell) {
+                const macdSellToggle = document.getElementById('macdSellToggle');
+                const macdBuyToggle = document.getElementById('macdBuyToggle');
+                const macdSellThreshold = document.getElementById('macdSellThreshold');
+                const macdSellThresholdRange = document.getElementById('macdSellThresholdRange');
+                const macdBuyThreshold = document.getElementById('macdBuyThreshold');
+                const macdBuyThresholdRange = document.getElementById('macdBuyThresholdRange');
+
+                macdSellToggle.checked = config.macdBuySell.sellEnabled;
+                zoneMarkingState.macdBuySell.sellEnabled = config.macdBuySell.sellEnabled;
+
+                macdBuyToggle.checked = config.macdBuySell.buyEnabled;
+                zoneMarkingState.macdBuySell.buyEnabled = config.macdBuySell.buyEnabled;
+
+                macdSellThreshold.value = config.macdBuySell.sellThreshold;
+                macdSellThresholdRange.value = config.macdBuySell.sellThreshold;
+                zoneMarkingState.macdBuySell.sellThreshold = config.macdBuySell.sellThreshold;
+
+                macdBuyThreshold.value = config.macdBuySell.buyThreshold;
+                macdBuyThresholdRange.value = config.macdBuySell.buyThreshold;
+                zoneMarkingState.macdBuySell.buyThreshold = config.macdBuySell.buyThreshold;
+            }
+
+            // 4. 設定高檔區域標記
+            const highMasterToggle = document.getElementById('highMasterToggle');
+            highMasterToggle.checked = config.highMasterEnabled !== undefined ? config.highMasterEnabled : false;
+            zoneMarkingState.highMasterEnabled = highMasterToggle.checked;
+
+            if (config.highMacd) {
+                const highMacdThreshold = document.getElementById('highMacdThreshold');
+                const highMacdThresholdRange = document.getElementById('highMacdThresholdRange');
+                highMacdThreshold.value = config.highMacd.threshold;
+                highMacdThresholdRange.value = config.highMacd.threshold;
+                zoneMarkingState.highMacd.threshold = config.highMacd.threshold;
+            }
+
+            if (config.highKd) {
+                const highKdThreshold = document.getElementById('highKdThreshold');
+                const highKdThresholdRange = document.getElementById('highKdThresholdRange');
+                highKdThreshold.value = config.highKd.threshold;
+                highKdThresholdRange.value = config.highKd.threshold;
+                zoneMarkingState.highKd.threshold = config.highKd.threshold;
+            }
+
+            if (config.highRsi) {
+                const highRsiThreshold = document.getElementById('highRsiThreshold');
+                const highRsiThresholdRange = document.getElementById('highRsiThresholdRange');
+                highRsiThreshold.value = config.highRsi.threshold;
+                highRsiThresholdRange.value = config.highRsi.threshold;
+                zoneMarkingState.highRsi.threshold = config.highRsi.threshold;
+            }
+
+            if (config.highComposite) {
+                const highCompositeMACD = document.getElementById('highCompositeMACD');
+                const highCompositeKD = document.getElementById('highCompositeKD');
+                const highCompositeRSI = document.getElementById('highCompositeRSI');
+
+                highCompositeMACD.checked = config.highComposite.useMACD;
+                zoneMarkingState.highComposite.useMACD = config.highComposite.useMACD;
+
+                highCompositeKD.checked = config.highComposite.useKD;
+                zoneMarkingState.highComposite.useKD = config.highComposite.useKD;
+
+                highCompositeRSI.checked = config.highComposite.useRSI;
+                zoneMarkingState.highComposite.useRSI = config.highComposite.useRSI;
+            }
+
+            // 5. 設定低檔區域標記
+            const masterToggle = document.getElementById('masterToggle');
+            masterToggle.checked = config.masterEnabled !== undefined ? config.masterEnabled : false;
+            zoneMarkingState.masterEnabled = masterToggle.checked;
+
+            // 更新圖表
+            updateChartMarkingsOnly();
+        }
+
+        // 配置下拉選單事件監聽
+        const configDropdown = document.getElementById('configDropdown');
+        configDropdown.addEventListener('change', (e) => {
+            const selectedConfig = e.target.value;
+            if (selectedConfig) {
+                applyConfiguration(selectedConfig);
+            }
+        });
 
         updateChart(currentPeriod);
         window.addEventListener('resize', myChart.resize);
