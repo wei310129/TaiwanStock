@@ -2741,6 +2741,10 @@
             button.addEventListener('click', () => {
                 const period = button.dataset.period;
                 if (period !== currentPeriod) {
+                    // 重置推薦配置下拉選單為預設值
+                    const configDropdown = document.getElementById('configDropdown');
+                    configDropdown.value = '';
+
                     updateChart(period);
                 }
             });
