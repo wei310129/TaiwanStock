@@ -1352,6 +1352,12 @@
                 } else if (s.name === '高檔回落收盤') {
                     // 🟣 紫色標記點（散點圖）
                     s.data = newMarkAreas.highPostZoneMarkers.data;
+                } else if (s.name === 'MACD負值反轉') {
+                    // 🔴 紅色MACD反轉點（散點圖）
+                    s.data = newMarkAreas.macdReversalMarkers.red;
+                } else if (s.name === 'MACD正值反轉') {
+                    // 🟢 綠色MACD反轉點（散點圖）
+                    s.data = newMarkAreas.macdReversalMarkers.green;
                 } else if (s.name === 'K(9)') {
                     // KD 的標記（包含低檔和高檔）
                     s.markArea = {
@@ -1985,6 +1991,58 @@
                 }
             }
 
+            // === MACD D-M 反轉點檢測 ===
+            const macdReversalMarkers = { red: [], green: [] };
+            const dmValues = macdResult.dm;
+
+            let lastTrend = null; // 'decreasing' 或 'increasing' 或 null
+
+            for (let i = 1; i < dmValues.length; i++) {
+                const prevDM = dmValues[i - 1];
+                const currDM = dmValues[i];
+
+                // 確保值存在
+                if (prevDM !== null && currDM !== null) {
+                    let currentTrend = null;
+
+                    // 判斷當前趨勢
+                    if (currDM > prevDM) {
+                        currentTrend = 'increasing'; // 向上（負向減少或正向增加）
+                    } else if (currDM < prevDM) {
+                        currentTrend = 'decreasing'; // 向下（負向增加或正向減少）
+                    }
+
+                    // 檢測趨勢反轉
+                    if (lastTrend !== null && currentTrend !== null && lastTrend !== currentTrend) {
+                        // 趨勢改變了
+                        if (currentTrend === 'increasing' && prevDM < 0) {
+                            // 從向下轉為向上，且在負值區域 -> 紅色點（買入信號）
+                            macdReversalMarkers.red.push([
+                                i,  // x: 索引位置（當前K棒，反轉開始）
+                                resampledData[i].close,  // y: 收盤價
+                                resampledData[i].date,  // 額外資料：日期
+                                resampledData[i].close,  // 額外資料：收盤價
+                                currDM.toFixed(2)  // 額外資料：DM值
+                            ]);
+                        } else if (currentTrend === 'decreasing' && prevDM > 0) {
+                            // 從向上轉為向下，且在正值區域 -> 綠色點（賣出信號）
+                            macdReversalMarkers.green.push([
+                                i,  // x: 索引位置（當前K棒，反轉開始）
+                                resampledData[i].close,  // y: 收盤價
+                                resampledData[i].date,  // 額外資料：日期
+                                resampledData[i].close,  // 額外資料：收盤價
+                                currDM.toFixed(2)  // 額外資料：DM值
+                            ]);
+                        }
+                    }
+
+                    // 更新趨勢狀態
+                    if (currentTrend !== null) {
+                        lastTrend = currentTrend;
+                    }
+                }
+            }
+
             // 除錯日誌
             console.log('📊 區域標記統計 ─────────────────');
             console.log(`  🔴 複合低檔區: ${compositeMarkAreas.length} 個`);
@@ -1997,6 +2055,8 @@
             console.log(`  🔴 RSI 高檔區: ${highRsiMarkAreas.length} 個`);
             console.log(`  🟥 MACD 高檔區: ${highMacdMarkAreas.length} 個`);
             console.log(`  🟣 高檔後標記點: ${highPostZoneMarkers.data.length} 個`);
+            console.log(`  🔴 MACD負值反轉點: ${macdReversalMarkers.red.length} 個`);
+            console.log(`  🟢 MACD正值反轉點: ${macdReversalMarkers.green.length} 個`);
             console.log('─────────────────────────────────');
 
             return {
@@ -2006,6 +2066,7 @@
                 composite: { data: compositeMarkAreas, lines: compositeMarkLines },
                 postZoneMarkers,
                 highPostZoneMarkers,  // 高檔區後的標記點
+                macdReversalMarkers,  // MACD D-M 反轉點
                 // 高檔區域標記
                 highKd: { data: highKdMarkAreas, lines: highKdMarkLines },
                 highRsi: { data: highRsiMarkAreas, lines: highRsiMarkLines },
@@ -2215,6 +2276,98 @@
                         }
                     },
                     z: 10
+                },
+                {
+                    name: 'MACD負值反轉',
+                    type: 'scatter',
+                    data: markAreas.macdReversalMarkers.red,
+                    symbolSize: 12,
+                    itemStyle: {
+                        color: '#e74c3c',
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        shadowBlur: 3,
+                        shadowColor: 'rgba(231, 76, 60, 0.5)'
+                    },
+                    emphasis: {
+                        scale: 1.3,
+                        itemStyle: {
+                            color: '#c0392b',
+                            shadowBlur: 6,
+                            shadowColor: 'rgba(192, 57, 43, 0.8)'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'top',
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            return closePrice.toLocaleString();
+                        },
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        color: '#e74c3c',
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        padding: [2, 5],
+                        borderRadius: 3,
+                        borderColor: '#e74c3c',
+                        borderWidth: 1
+                    },
+                    tooltip: {
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            const date = params.value[2];
+                            const dmValue = params.value[4];
+                            return `<strong>MACD負值反轉</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                        }
+                    },
+                    z: 11
+                },
+                {
+                    name: 'MACD正值反轉',
+                    type: 'scatter',
+                    data: markAreas.macdReversalMarkers.green,
+                    symbolSize: 12,
+                    itemStyle: {
+                        color: '#27ae60',
+                        borderColor: '#fff',
+                        borderWidth: 2,
+                        shadowBlur: 3,
+                        shadowColor: 'rgba(39, 174, 96, 0.5)'
+                    },
+                    emphasis: {
+                        scale: 1.3,
+                        itemStyle: {
+                            color: '#229954',
+                            shadowBlur: 6,
+                            shadowColor: 'rgba(34, 153, 84, 0.8)'
+                        }
+                    },
+                    label: {
+                        show: true,
+                        position: 'bottom',
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            return closePrice.toLocaleString();
+                        },
+                        fontSize: 10,
+                        fontWeight: 'bold',
+                        color: '#27ae60',
+                        backgroundColor: 'rgba(255, 255, 255, 0.85)',
+                        padding: [2, 5],
+                        borderRadius: 3,
+                        borderColor: '#27ae60',
+                        borderWidth: 1
+                    },
+                    tooltip: {
+                        formatter: (params) => {
+                            const closePrice = params.value[1];
+                            const date = params.value[2];
+                            const dmValue = params.value[4];
+                            return `<strong>MACD正值反轉</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                        }
+                    },
+                    z: 11
                 },
                 { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
                 { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
