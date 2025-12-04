@@ -3001,8 +3001,11 @@
 
             const config = configPresets[configKey];
 
-            // 1. 切換K線尺度
-            if (config.period && config.period !== currentPeriod) {
+            // 記錄是否需要重新渲染圖表
+            const needFullUpdate = config.period && config.period !== currentPeriod;
+
+            // 1. 切換K線尺度（如果週期不同）
+            if (needFullUpdate) {
                 updateChart(config.period);
             }
 
@@ -3114,8 +3117,10 @@
             masterToggle.checked = config.masterEnabled !== undefined ? config.masterEnabled : false;
             zoneMarkingState.masterEnabled = masterToggle.checked;
 
-            // 更新圖表
-            updateChartMarkingsOnly();
+            // 只在週期未改變時更新標記（週期改變時 updateChart 已經完整渲染了）
+            if (!needFullUpdate) {
+                updateChartMarkingsOnly();
+            }
         }
 
         // 配置下拉選單事件監聽
