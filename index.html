@@ -440,7 +440,7 @@
             <h3>🔄 MACD反轉標記</h3>
             <div class="zone-checkbox">
                 <label class="toggle-switch">
-                    <input type="checkbox" id="macdReversalMasterToggle" checked>
+                    <input type="checkbox" id="macdReversalMasterToggle">
                     <span class="toggle-slider"></span>
                 </label>
                 <label for="macdReversalMasterToggle" style="font-size: 1em; font-weight: 500;">顯示MACD反轉點</label>
@@ -1138,7 +1138,7 @@
             },
             // MACD反轉標記
             macdReversal: {
-                masterEnabled: true,  // 預設開啟MACD反轉標記
+                masterEnabled: false,  // 預設關閉MACD反轉標記
                 showNegative: true,   // 顯示負值反轉（紅色）
                 showPositive: true    // 顯示正值反轉（綠色）
             },
@@ -1616,10 +1616,12 @@
                         : [];
                 } else if (s.name === '買點') {
                     // 🔴 深紅色買點（散點圖）
-                    s.data = zoneMarkingState.macdBuySell.buyEnabled ? newMarkAreas.buySellMarkers.buy : [];
+                    s.data = (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdBuySell.buyEnabled)
+                        ? newMarkAreas.buySellMarkers.buy : [];
                 } else if (s.name === '賣點') {
                     // 🟢 墨綠色賣點（散點圖）
-                    s.data = zoneMarkingState.macdBuySell.sellEnabled ? newMarkAreas.buySellMarkers.sell : [];
+                    s.data = (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdBuySell.sellEnabled)
+                        ? newMarkAreas.buySellMarkers.sell : [];
                 } else if (s.name === 'K(9)') {
                     // KD 的標記（包含低檔和高檔）
                     s.markArea = {
@@ -2666,7 +2668,8 @@
                 {
                     name: '買點',
                     type: 'scatter',
-                    data: zoneMarkingState.macdBuySell.buyEnabled ? markAreas.buySellMarkers.buy : [],
+                    data: (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdBuySell.buyEnabled)
+                        ? markAreas.buySellMarkers.buy : [],
                     symbolSize: 14,
                     itemStyle: {
                         color: '#1a5f1a',  // 墨綠色
@@ -2712,7 +2715,8 @@
                 {
                     name: '賣點',
                     type: 'scatter',
-                    data: zoneMarkingState.macdBuySell.sellEnabled ? markAreas.buySellMarkers.sell : [],
+                    data: (zoneMarkingState.macdReversal.masterEnabled && zoneMarkingState.macdBuySell.sellEnabled)
+                        ? markAreas.buySellMarkers.sell : [],
                     symbolSize: 14,
                     itemStyle: {
                         color: '#8b0000',  // 深紅色
