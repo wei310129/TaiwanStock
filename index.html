@@ -476,16 +476,16 @@
         </div>
 
         <div class="panel-section">
-            <h3>🔴 賣點標記設定</h3>
+            <h3>🔴 高點閥值標記</h3>
             <div class="zone-checkbox">
                 <label class="toggle-switch">
                     <input type="checkbox" id="macdSellToggle" checked>
                     <span class="toggle-slider"></span>
                 </label>
-                <label for="macdSellToggle">顯示賣點標記（深紅色）</label>
+                <label for="macdSellToggle">顯示高點標記（深紅色）</label>
             </div>
             <div class="range-input">
-                <label>賣點閾值（D-M正值反轉後高於此值）:</label>
+                <label>高點閾值（D-M正值反轉後高於此值）:</label>
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
@@ -505,16 +505,16 @@
         </div>
 
         <div class="panel-section">
-            <h3>🟢 買點標記設定</h3>
+            <h3>🟢 低點閥值標記</h3>
             <div class="zone-checkbox">
                 <label class="toggle-switch">
                     <input type="checkbox" id="macdBuyToggle" checked>
                     <span class="toggle-slider"></span>
                 </label>
-                <label for="macdBuyToggle">顯示買點標記（墨綠色）</label>
+                <label for="macdBuyToggle">顯示低點標記（墨綠色）</label>
             </div>
             <div class="range-input">
-                <label>買點閾值（D-M負值反轉後低於此值）:</label>
+                <label>低點閾值（D-M負值反轉後低於此值）:</label>
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
@@ -2688,7 +2688,7 @@
                         position: 'top',
                         formatter: (params) => {
                             const closePrice = params.value[1];
-                            return `買點\n${closePrice.toLocaleString()}`;
+                            return `低點\n${closePrice.toLocaleString()}`;
                         },
                         fontSize: 10,
                         fontWeight: 'bold',
@@ -2704,7 +2704,7 @@
                             const closePrice = params.value[1];
                             const date = params.value[2];
                             const dmValue = params.value[4];
-                            return `<strong style="color: #1a5f1a;">買點</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                            return `<strong style="color: #1a5f1a;">低點</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
                         }
                     },
                     z: 12
@@ -2734,7 +2734,7 @@
                         position: 'bottom',
                         formatter: (params) => {
                             const closePrice = params.value[1];
-                            return `賣點\n${closePrice.toLocaleString()}`;
+                            return `高點\n${closePrice.toLocaleString()}`;
                         },
                         fontSize: 10,
                         fontWeight: 'bold',
@@ -2750,7 +2750,7 @@
                             const closePrice = params.value[1];
                             const date = params.value[2];
                             const dmValue = params.value[4];
-                            return `<strong style="color: #8b0000;">賣點</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
+                            return `<strong style="color: #8b0000;">高點</strong><br/>日期: ${date}<br/>收盤: ${closePrice.toLocaleString()}<br/>D-M: ${dmValue}`;
                         }
                     },
                     z: 12
