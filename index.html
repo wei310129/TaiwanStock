@@ -2977,7 +2977,7 @@
                     sellThreshold: 0,
                     buyThreshold: 0
                 },
-                masterEnabled: true,
+                masterEnabled: false,
                 highMasterEnabled: true,
                 highMacd: {
                     enabled: true,
@@ -3080,14 +3080,33 @@
                 const highCompositeKD = document.getElementById('highCompositeKD');
                 const highCompositeRSI = document.getElementById('highCompositeRSI');
 
+                const highMacdPanelSection = document.getElementById('highMacdSection');
+                const highKdPanelSection = document.getElementById('highKdSection');
+                const highRsiPanelSection = document.getElementById('highRsiSection');
+
                 highCompositeMACD.checked = config.highComposite.useMACD;
                 zoneMarkingState.highComposite.useMACD = config.highComposite.useMACD;
+                if (config.highComposite.useMACD) {
+                    highMacdPanelSection.classList.remove('hidden');
+                } else {
+                    highMacdPanelSection.classList.add('hidden');
+                }
 
                 highCompositeKD.checked = config.highComposite.useKD;
                 zoneMarkingState.highComposite.useKD = config.highComposite.useKD;
+                if (config.highComposite.useKD) {
+                    highKdPanelSection.classList.remove('hidden');
+                } else {
+                    highKdPanelSection.classList.add('hidden');
+                }
 
                 highCompositeRSI.checked = config.highComposite.useRSI;
                 zoneMarkingState.highComposite.useRSI = config.highComposite.useRSI;
+                if (config.highComposite.useRSI) {
+                    highRsiPanelSection.classList.remove('hidden');
+                } else {
+                    highRsiPanelSection.classList.add('hidden');
+                }
             }
 
             // 5. 設定低檔區域標記
