@@ -137,6 +137,9 @@
         .config-notes::-webkit-scrollbar-thumb:hover {
             background: #e0a800;
         }
+        .floating-panel, .sidebar {
+            display: none !important;
+        }
         .floating-panel {
             position: fixed;
             top: 50%;
@@ -151,7 +154,7 @@
             max-height: 80vh;
             overflow-y: auto;
             overflow-x: hidden;
-            display: none;
+            /* display: none; */ /* Replaced by the rule above */
         }
         .floating-panel.open {
             right: 0;
@@ -427,6 +430,7 @@
         }
 
         /* 附著在控制面板旁的書籤側邊欄 */
+        /*
         .sidebar {
             position: fixed;
             right: 0;
@@ -480,6 +484,7 @@
         .sidebar:hover .sidebar-bookmark-text {
             opacity: 1;
         }
+        */
     </style>
 </head>
 <body>
@@ -2459,15 +2464,34 @@
 
             const indicatorCount = visibleIndicators.length;
             const indicatorHeight = 11.5; // 每個指標高度百分比
-            const spacingBetweenCharts = 2.5; // 圖表之間的間距百分比
+            const spacingBetweenCharts = 6; // 圖表之間的間距百分比
             const totalSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
             const kLineHeight = 86 - (indicatorCount * indicatorHeight) - totalSpacing - 3; // K線圖高度(留3%給dataZoom)
 
             // 建立網格配置
             const grids = [{ left: '80px', right: '5%', top: '12%', height: `${kLineHeight}%` }];
+            
+            let lastDataIndex = resampledData.length - 1;
+            const lastCandle = resampledData[lastDataIndex];
+            const lastMa5 = ma5[lastDataIndex]?.toFixed(2) || 'N/A';
+            const lastMa10 = ma10[lastDataIndex]?.toFixed(2) || 'N/A';
+            const lastMa20 = ma20[lastDataIndex]?.toFixed(2) || 'N/A';
+            const lastMa60 = ma60[lastDataIndex]?.toFixed(2) || 'N/A';
+
             const titles = [
                 { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
-                { text: 'K線', left: '90px', top: '12%', textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } }
+                {
+                    left: '90px',
+                    top: '9%',
+                    text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|MA5:} {val|${lastMa5}}  {label|MA10:} {val|${lastMa10}}  {label|MA20:} {val|${lastMa20}}  {label|MA60:} {val|${lastMa60}}`,
+                    textStyle: {
+                        rich: {
+                            name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                            label: { fontSize: 12, color: '#555' },
+                            val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                        }
+                    }
+                }
             ];
 
             let currentTop = 12 + kLineHeight + spacingBetweenCharts; // 當前位置
@@ -2483,10 +2507,60 @@
                 }
             }];
             const xAxisIndices = [0];
-
+            const titleShiftTop =
             visibleIndicators.forEach((indicator, idx) => {
                 grids.push({ left: '80px', right: '5%', top: `${currentTop}%`, height: `${indicatorHeight}%` });
-                titles.push({ text: indicator.toUpperCase(), left: '90px', top: `${currentTop}%`, textStyle: { fontSize: 14, fontWeight: 'bold', color: '#333' } });
+                
+                // Modified Title Section
+                if (indicator === 'macd') {
+                    const lastDif = macdResult.dif[lastDataIndex]?.toFixed(2) || 'N/A';
+                    const lastMacd = macdResult.macd[lastDataIndex]?.toFixed(2) || 'N/A';
+                    const lastDm = macdResult.dm[lastDataIndex]?.toFixed(2) || 'N/A';
+                    titles.push({
+                        left: '90px',
+                        top: `${currentTop - 3}%`,
+                        text: `{name|MACD}   {label|DIF:} {val|${lastDif}}   {label|MACD:} {val|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
+                        textStyle: {
+                            rich: {
+                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                                label: { fontSize: 12, color: '#555' },
+                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                            }
+                        }
+                    });
+                } else if (indicator === 'kd') {
+                    const lastK = kdResult.k[lastDataIndex]?.toFixed(2) || 'N/A';
+                    const lastD = kdResult.d[lastDataIndex]?.toFixed(2) || 'N/A';
+                    titles.push({
+                        left: '90px',
+                        top: `${currentTop - 3}%`,
+                        text: `{name|KD}   {label|K(9):} {val|${lastK}}   {label|D(9):} {val|${lastD}}`,
+                        textStyle: {
+                            rich: {
+                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                                label: { fontSize: 12, color: '#555' },
+                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                            }
+                        }
+                    });
+                } else if (indicator === 'rsi') {
+                    const lastRsi5 = rsi5[lastDataIndex]?.toFixed(2) || 'N/A';
+                    const lastRsi10 = rsi10[lastDataIndex]?.toFixed(2) || 'N/A';
+                    titles.push({
+                        left: '90px',
+                        top: `${currentTop - 3}%`,
+                        text: `{name|RSI}   {label|RSI(5T):} {val|${lastRsi5}}   {label|RSI(10T):} {val|${lastRsi10}}`,
+                        textStyle: {
+                            rich: {
+                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                                label: { fontSize: 12, color: '#555' },
+                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                            }
+                        }
+                    });
+                }
+                // End of Modified Title Section
+
                 xAxisConfigs.push({ type: 'category', gridIndex: gridIndex, data: resampledData.map(d => d.date), axisLabel: { show: false } });
                 xAxisIndices.push(gridIndex);
 
