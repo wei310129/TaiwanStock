@@ -1234,6 +1234,7 @@
         statusEl.innerHTML = `系統狀態：真實資料載入成功，請選擇時間週期。`;
 
         let currentPeriod = 'daily';
+        let lastClickedIndex = null; // 用於追蹤點擊的K棒，實現十字線切換
         let indicatorVisible = {
             macd: true,
             kd: true,
@@ -2395,6 +2396,7 @@
 
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
+            lastClickedIndex = null; // 重置點擊狀態
             currentPeriod = periodType;
 
             controlButtons.forEach(btn => {
@@ -2783,6 +2785,23 @@
                 }
             });
 
+            // 為每個網格添加一個用於十字線的系列
+            grids.forEach((grid, idx) => {
+                series.push({
+                    name: `crosshair-${idx}`,
+                    type: 'line',
+                    xAxisIndex: idx,
+                    yAxisIndex: idx,
+                    data: [],
+                    markLine: {
+                        silent: true,
+                        animation: false,
+                        symbol: ['none', 'none'],
+                        data: []
+                    }
+                });
+            });
+
             const option = {
                 title: titles,
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
@@ -3092,6 +3111,84 @@
         });
 
         updateChart(currentPeriod);
+
+        myChart.on('click', function (params) {
+            let hLine, vLine;
+            let seriesUpdate = [];
+
+            if (params.seriesType === 'candlestick' && currentChartData) {
+                const dataIndex = params.dataIndex;
+
+                if (lastClickedIndex === dataIndex) {
+                    // 再次點擊同一個K棒，取消十字線
+                    lastClickedIndex = null;
+                } else {
+                    lastClickedIndex = dataIndex;
+                    const clickedData = currentChartData.resampledData[dataIndex];
+                    const closePrice = clickedData.close;
+                    const date = clickedData.date;
+
+                    // 水平線
+                    hLine = {
+                        yAxis: closePrice,
+                        lineStyle: { color: '#2f3e4d', type: 'solid', width: 1 },
+                        label: {
+                            show: true,
+                            position: 'start', // 顯示在左側
+                            formatter: closePrice.toLocaleString(),
+                            color: '#fff',
+                            backgroundColor: '#2f3e4d',
+                            padding: [4, 8],
+                            borderRadius: 4,
+                            fontSize: 12,
+                        }
+                    };
+
+                    // 垂直線
+                    vLine = {
+                        xAxis: date,
+                        lineStyle: { color: '#2f3e4d', type: 'solid', width: 1 },
+                        label: {
+                            show: true,
+                            position: 'end',
+                            formatter: function() {
+                                if (date.includes('~')) {
+                                    return date.split('~')[0].trim() + '\n' + date.split('~')[1].trim();
+                                }
+                                return date;
+                            },
+                            color: '#fff',
+                            backgroundColor: '#2f3e4d',
+                            padding: [4, 8],
+                            borderRadius: 4,
+                            fontSize: 12,
+                        }
+                    };
+                }
+            } else {
+                // 點擊圖表其他地方，取消十字線
+                lastClickedIndex = null;
+            }
+
+            const gridCount = myChart.getOption().grid.length;
+            for (let i = 0; i < gridCount; i++) {
+                let markLineData = [];
+                if (lastClickedIndex !== null) {
+                    if (i === 0) { // 主圖
+                        markLineData = [hLine, vLine];
+                    } else { // 指標圖
+                        markLineData = [vLine];
+                    }
+                }
+                seriesUpdate.push({
+                    name: `crosshair-${i}`,
+                    markLine: { data: markLineData }
+                });
+            }
+            
+            myChart.setOption({ series: seriesUpdate });
+        });
+
         window.addEventListener('resize', myChart.resize);
     }
 
