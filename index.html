@@ -2850,7 +2850,6 @@
                 },
                 label: {
                     show: true,
-                    position: 'top',
                     formatter: (params) => params.value[1].toLocaleString(),
                     fontSize: 11,
                     fontWeight: 'bold',
@@ -3280,7 +3279,7 @@
             const dotData = [];
             const seriesUpdate = [];
 
-            multiCrosshairPoints.forEach(dataIndex => {
+            multiCrosshairPoints.forEach((dataIndex, i) => {
                 const data = currentChartData.resampledData[dataIndex];
                 markLineData.push({
                     xAxis: data.date,
@@ -3294,10 +3293,16 @@
                         borderRadius: 4,
                     }
                 });
-                dotData.push([data.date, data.close]);
+                dotData.push({
+                    value: [data.date, data.close],
+                    label: {
+                        position: i % 2 === 0 ? 'top' : 'bottom'
+                    }
+                });
             });
 
             if (multiCrosshairPoints.length > 1) {
+                let lastLabelPosition = null;
                 for (let i = 1; i < multiCrosshairPoints.length; i++) {
                     const prevIndex = multiCrosshairPoints[i - 1];
                     const currentIndex = multiCrosshairPoints[i];
@@ -3310,6 +3315,14 @@
                     const sign = priceDiff >= 0 ? '+' : '';
 
                     const labelText = `${sign}${priceDiff.toFixed(2)}\n(${sign}${percentDiff.toFixed(2)}%)`;
+
+                    // Start with MACD-like logic: 'bottom' for up, 'top' for down
+                    let labelPosition = priceDiff >= 0 ? 'bottom' : 'top';
+
+                    // If the position is the same as the last one, flip it to avoid overlap
+                    if (labelPosition === lastLabelPosition) {
+                        labelPosition = labelPosition === 'top' ? 'bottom' : 'top';
+                    }
 
                     markAreaData.push([
                         {
@@ -3331,6 +3344,7 @@
                             xAxis: currentData.date
                         }
                     ]);
+                    lastLabelPosition = labelPosition;
                 }
             }
 
