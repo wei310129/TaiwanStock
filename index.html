@@ -2836,6 +2836,33 @@
                 });
             });
 
+            // 多點十字線的標記點系列
+            series.push({
+                name: 'multiCrosshairDots',
+                type: 'scatter',
+                xAxisIndex: 0,
+                yAxisIndex: 0,
+                symbolSize: 8,
+                itemStyle: {
+                    color: '#000',
+                    borderColor: '#fff',
+                    borderWidth: 1
+                },
+                label: {
+                    show: true,
+                    position: 'top',
+                    formatter: (params) => params.value[1].toLocaleString(),
+                    fontSize: 11,
+                    fontWeight: 'bold',
+                    color: '#000',
+                    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                    padding: [2, 4],
+                    borderRadius: 3
+                },
+                data: [],
+                z: 15
+            });
+
             const option = {
                 title: titles,
                 tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
@@ -3250,6 +3277,7 @@
         function renderMultiCrosshairs() {
             const markLineData = [];
             const markAreaData = [];
+            const dotData = [];
             const seriesUpdate = [];
 
             multiCrosshairPoints.forEach(dataIndex => {
@@ -3266,6 +3294,7 @@
                         borderRadius: 4,
                     }
                 });
+                dotData.push([data.date, data.close]);
             });
 
             if (multiCrosshairPoints.length > 1) {
@@ -3313,6 +3342,11 @@
                     markArea: i === 0 ? { data: markAreaData } : { data: [] }
                 });
             }
+            
+            seriesUpdate.push({
+                name: 'multiCrosshairDots',
+                data: dotData
+            });
             
             myChart.setOption({ series: seriesUpdate });
         }
