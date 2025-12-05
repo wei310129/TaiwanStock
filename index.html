@@ -1083,6 +1083,19 @@
         const myChart = echarts.init(chartDom);
         const controlButtons = document.querySelectorAll('.btn');
 
+        const LINE_COLORS = {
+            MA5: '#FFBF00',
+            MA10: '#8A2BE2',
+            MA20: '#32CD32',
+            MA60: '#FF1493',
+            DIF: '#DA6EE8',
+            MACD: '#00D5FA',
+            K: '#FF6B6B',
+            D: '#4ECDC4',
+            RSI5: '#FF8C00',
+            RSI10: '#9370DB'
+        };
+
         // 浮動面板控制
         const macdReversalPanel = document.getElementById('macdReversalPanel');
         const highPricePanel = document.getElementById('highPricePanel');
@@ -2488,13 +2501,21 @@
                 {
                     left: '90px',
                     top: '9%',
-                    text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%} {label|MA5:} {val|${lastMa5}} {label|MA10:} {val|${lastMa10}} {label|MA20:} {val|${lastMa20}} {label|MA60:} {val|${lastMa60}}`,
+                    text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${lastMa5}}  {labelMA10|MA10:} {valMA10|${lastMa10}}  {labelMA20|MA20:} {valMA20|${lastMa20}}  {labelMA60|MA60:} {valMA60|${lastMa60}}`,
                     textStyle: {
                         rich: {
                             name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                             label: { fontSize: 12, color: '#555' },
                             val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                            change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] }
+                            change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] },
+                            labelMA5: { fontSize: 12, color: LINE_COLORS.MA5 },
+                            valMA5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: [0, 10, 0, 2] },
+                            labelMA10: { fontSize: 12, color: LINE_COLORS.MA10 },
+                            valMA10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: [0, 10, 0, 2] },
+                            labelMA20: { fontSize: 12, color: LINE_COLORS.MA20 },
+                            valMA20: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: [0, 10, 0, 2] },
+                            labelMA60: { fontSize: 12, color: LINE_COLORS.MA60 },
+                            valMA60: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: [0, 10, 0, 2] }
                         }
                     }
                 }
@@ -2525,12 +2546,16 @@
                     titles.push({
                         left: '90px',
                         top: `${currentTop - 3}%`,
-                        text: `{name|MACD}   {label|DIF:} {val|${lastDif}}   {label|MACD:} {val|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
+                        text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${lastDif}}   {labelMACD|MACD:} {valMACD|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
                         textStyle: {
                             rich: {
                                 name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                                 label: { fontSize: 12, color: '#555' },
-                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
+                                labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
+                                valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
+                                labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
+                                valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
                             }
                         }
                     });
@@ -2540,12 +2565,14 @@
                     titles.push({
                         left: '90px',
                         top: `${currentTop - 3}%`,
-                        text: `{name|KD}   {label|K(9):} {val|${lastK}}   {label|D(9):} {val|${lastD}}`,
+                        text: `{name|KD}   {labelK|K(9):} {valK|${lastK}}   {labelD|D(9):} {valD|${lastD}}`,
                         textStyle: {
                             rich: {
                                 name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                label: { fontSize: 12, color: '#555' },
-                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                labelK: { fontSize: 12, color: LINE_COLORS.K },
+                                valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
+                                labelD: { fontSize: 12, color: LINE_COLORS.D },
+                                valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
                             }
                         }
                     });
@@ -2555,12 +2582,14 @@
                     titles.push({
                         left: '90px',
                         top: `${currentTop - 3}%`,
-                        text: `{name|RSI}   {label|RSI(5T):} {val|${lastRsi5}}   {label|RSI(10T):} {val|${lastRsi10}}`,
+                        text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${lastRsi5}}   {labelRSI10|RSI(10T):} {valRSI10|${lastRsi10}}`,
                         textStyle: {
                             rich: {
                                 name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                label: { fontSize: 12, color: '#555' },
-                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
+                                valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
+                                labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
+                                valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
                             }
                         }
                     });
@@ -2780,17 +2809,17 @@
                     },
                     z: 12
                 },
-                { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: '#FFBF00' }, symbol: 'none' },
-                { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: '#8A2BE2' }, symbol: 'none' },
-                { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: '#32CD32' }, symbol: 'none' },
-                { name: 'MA60', type: 'line', data: ma60, smooth: true, lineStyle: { width: 1.5, color: '#FF1493' }, symbol: 'none' }
+                { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA5 }, symbol: 'none' },
+                { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA10 }, symbol: 'none' },
+                { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA20 }, symbol: 'none' },
+                { name: 'MA60', type: 'line', data: ma60, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA60 }, symbol: 'none' }
             ];
 
             const legendData = [
-                { name: 'MA5', itemStyle: { color: '#FFBF00' } },
-                { name: 'MA10', itemStyle: { color: '#8A2BE2' } },
-                { name: 'MA20', itemStyle: { color: '#32CD32' } },
-                { name: 'MA60', itemStyle: { color: '#FF1493' } }
+                { name: 'MA5', itemStyle: { color: LINE_COLORS.MA5 } },
+                { name: 'MA10', itemStyle: { color: LINE_COLORS.MA10 } },
+                { name: 'MA20', itemStyle: { color: LINE_COLORS.MA20 } },
+                { name: 'MA60', itemStyle: { color: LINE_COLORS.MA60 } }
             ];
 
             // 根據可見性添加指標系列
@@ -2799,32 +2828,32 @@
 
                 if (indicator === 'macd') {
                     legendData.push(
-                        { name: 'DIF', itemStyle: { color: '#DA6EE8' } },
-                        { name: 'MACD', itemStyle: { color: '#00D5FA' } }
+                        { name: 'DIF', itemStyle: { color: LINE_COLORS.DIF } },
+                        { name: 'MACD', itemStyle: { color: LINE_COLORS.MACD } }
                     );
                     series.push(
                         {
                             name: 'DIF', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
-                            data: macdResult.dif, lineStyle: { color: '#DA6EE8', width: 1.5 }, symbol: 'none',
+                            data: macdResult.dif, lineStyle: { color: LINE_COLORS.DIF, width: 1.5 }, symbol: 'none',
                             markArea: { data: [...markAreas.macd.data, ...markAreas.highMacd.data] },
                             markLine: { data: [...markAreas.macd.lines, ...markAreas.highMacd.lines], symbol: 'none', label: { show: false } }
                         },
-                        { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: '#00D5FA', width: 1.5 }, symbol: 'none' },
+                        { name: 'MACD', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.macd, lineStyle: { color: LINE_COLORS.MACD, width: 1.5 }, symbol: 'none' },
                         { name: 'D-M', type: 'bar', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: macdResult.dm, itemStyle: { color: (p) => p.value > 0 ? '#eb5454' : '#47b262' } }
                     );
                 } else if (indicator === 'kd') {
                     legendData.push(
-                        { name: 'K(9)', itemStyle: { color: '#FF6B6B' } },
-                        { name: 'D(9)', itemStyle: { color: '#4ECDC4' } }
+                        { name: 'K(9)', itemStyle: { color: LINE_COLORS.K } },
+                        { name: 'D(9)', itemStyle: { color: LINE_COLORS.D } }
                     );
                     series.push(
                         {
                             name: 'K(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
-                            data: kdResult.k, lineStyle: { color: '#FF6B6B', width: 1.5 }, symbol: 'none',
+                            data: kdResult.k, lineStyle: { color: LINE_COLORS.K, width: 1.5 }, symbol: 'none',
                             markArea: { data: [...markAreas.kd.data, ...markAreas.highKd.data] },
                             markLine: { data: [...markAreas.kd.lines, ...markAreas.highKd.lines], symbol: 'none', label: { show: false } }
                         },
-                        { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4' }, symbol: 'none' },
+                        { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: LINE_COLORS.D }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
                             data: new Array(resampledData.length).fill(80),
@@ -2840,17 +2869,17 @@
                     );
                 } else if (indicator === 'rsi') {
                     legendData.push(
-                        { name: 'RSI(5T)', itemStyle: { color: '#FF8C00' } },
-                        { name: 'RSI(10T)', itemStyle: { color: '#9370DB' } }
+                        { name: 'RSI(5T)', itemStyle: { color: LINE_COLORS.RSI5 } },
+                        { name: 'RSI(10T)', itemStyle: { color: LINE_COLORS.RSI10 } }
                     );
                     series.push(
                         {
                             name: 'RSI(5T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
-                            data: rsi5, lineStyle: { color: '#FF8C00', width: 2 }, symbol: 'none',
+                            data: rsi5, lineStyle: { color: LINE_COLORS.RSI5, width: 2 }, symbol: 'none',
                             markArea: { data: [...markAreas.rsi.data, ...markAreas.highRsi.data] },
                             markLine: { data: [...markAreas.rsi.lines, ...markAreas.highRsi.lines], symbol: 'none', label: { show: false } }
                         },
-                        { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: '#9370DB', width: 2 }, symbol: 'none' },
+                        { name: 'RSI(10T)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: rsi10, lineStyle: { color: LINE_COLORS.RSI10, width: 2 }, symbol: 'none' },
                         {
                             name: 'RSI超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
                             data: new Array(resampledData.length).fill(80),
@@ -3018,13 +3047,21 @@
                     {
                         left: '90px',
                         top: '9%',
-                        text: `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {label|MA5:} {val|${ma5Value}}  {label|MA10:} {val|${ma10Value}}  {label|MA20:} {val|${ma20Value}}  {label|MA60:} {val|${ma60Value}}`,
+                        text: `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${ma5Value}}  {labelMA10|MA10:} {valMA10|${ma10Value}}  {labelMA20|MA20:} {valMA20|${ma20Value}}  {labelMA60|MA60:} {valMA60|${ma60Value}}`,
                         textStyle: {
                             rich: {
                                 name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                                 label: { fontSize: 12, color: '#555' },
                                 val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] }
+                                change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] },
+                                labelMA5: { fontSize: 12, color: LINE_COLORS.MA5 },
+                                valMA5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: [0, 10, 0, 2] },
+                                labelMA10: { fontSize: 12, color: LINE_COLORS.MA10 },
+                                valMA10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: [0, 10, 0, 2] },
+                                labelMA20: { fontSize: 12, color: LINE_COLORS.MA20 },
+                                valMA20: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: [0, 10, 0, 2] },
+                                labelMA60: { fontSize: 12, color: LINE_COLORS.MA60 },
+                                valMA60: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: [0, 10, 0, 2] }
                             }
                         }
                     }
@@ -3040,12 +3077,16 @@
                         newTitles.push({
                             left: '90px',
                             top: `${currentTitleTop - 3}%`,
-                            text: `{name|MACD}   {label|DIF:} {val|${difValue}}   {label|MACD:} {val|${macdValue}}   {label|D-M:} {val|${dmValue}}`,
+                            text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${difValue}}   {labelMACD|MACD:} {valMACD|${macdValue}}   {label|D-M:} {val|${dmValue}}`,
                             textStyle: {
                                 rich: {
                                     name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                                     label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
+                                    labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
+                                    valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
+                                    labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
+                                    valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
                                 }
                             }
                         });
@@ -3055,12 +3096,14 @@
                         newTitles.push({
                             left: '90px',
                             top: `${currentTitleTop - 3}%`,
-                            text: `{name|KD}   {label|K(9):} {val|${kValue}}   {label|D(9):} {val|${dValue}}`,
+                            text: `{name|KD}   {labelK|K(9):} {valK|${kValue}}   {labelD|D(9):} {valD|${dValue}}`,
                             textStyle: {
                                 rich: {
                                     name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                    labelK: { fontSize: 12, color: LINE_COLORS.K },
+                                    valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
+                                    labelD: { fontSize: 12, color: LINE_COLORS.D },
+                                    valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
                                 }
                             }
                         });
@@ -3070,12 +3113,14 @@
                         newTitles.push({
                             left: '90px',
                             top: `${currentTitleTop - 3}%`,
-                            text: `{name|RSI}   {label|RSI(5T):} {val|${rsi5Value}}   {label|RSI(10T):} {val|${rsi10Value}}`,
+                            text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${rsi5Value}}   {labelRSI10|RSI(10T):} {valRSI10|${rsi10Value}}`,
                             textStyle: {
                                 rich: {
                                     name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                    labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
+                                    valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
+                                    labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
+                                    valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
                                 }
                             }
                         });
@@ -3113,13 +3158,21 @@
                     {
                         left: '90px',
                         top: '9%',
-                        text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {label|MA5:} {val|${lastMa5}}  {label|MA10:} {val|${lastMa10}}  {label|MA20:} {val|${lastMa20}}  {label|MA60:} {val|${lastMa60}}`,
+                        text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${lastMa5}}  {labelMA10|MA10:} {valMA10|${lastMa10}}  {labelMA20|MA20:} {valMA20|${lastMa20}}  {labelMA60|MA60:} {valMA60|${lastMa60}}`,
                         textStyle: {
                             rich: {
                                 name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                                 label: { fontSize: 12, color: '#555' },
                                 val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] }
+                                change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] },
+                                labelMA5: { fontSize: 12, color: LINE_COLORS.MA5 },
+                                valMA5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: [0, 10, 0, 2] },
+                                labelMA10: { fontSize: 12, color: LINE_COLORS.MA10 },
+                                valMA10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: [0, 10, 0, 2] },
+                                labelMA20: { fontSize: 12, color: LINE_COLORS.MA20 },
+                                valMA20: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: [0, 10, 0, 2] },
+                                labelMA60: { fontSize: 12, color: LINE_COLORS.MA60 },
+                                valMA60: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: [0, 10, 0, 2] }
                             }
                         }
                     }
@@ -3134,12 +3187,16 @@
                         resetTitles.push({
                             left: '90px',
                             top: `${currentTitleTop - 3}%`,
-                            text: `{name|MACD}   {label|DIF:} {val|${lastDif}}   {label|MACD:} {val|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
+                            text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${lastDif}}   {labelMACD|MACD:} {valMACD|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
                             textStyle: {
                                 rich: {
                                     name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                                     label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
+                                    labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
+                                    valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
+                                    labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
+                                    valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
                                 }
                             }
                         });
@@ -3149,12 +3206,14 @@
                         resetTitles.push({
                             left: '90px',
                             top: `${currentTitleTop - 3}%`,
-                            text: `{name|KD}   {label|K(9):} {val|${lastK}}   {label|D(9):} {val|${lastD}}`,
+                            text: `{name|KD}   {labelK|K(9):} {valK|${lastK}}   {labelD|D(9):} {valD|${lastD}}`,
                             textStyle: {
                                 rich: {
                                     name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                    labelK: { fontSize: 12, color: LINE_COLORS.K },
+                                    valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
+                                    labelD: { fontSize: 12, color: LINE_COLORS.D },
+                                    valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
                                 }
                             }
                         });
@@ -3164,12 +3223,14 @@
                         resetTitles.push({
                             left: '90px',
                             top: `${currentTitleTop - 3}%`,
-                            text: `{name|RSI}   {label|RSI(5T):} {val|${lastRsi5}}   {label|RSI(10T):} {val|${lastRsi10}}`,
+                            text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${lastRsi5}}   {labelRSI10|RSI(10T):} {valRSI10|${lastRsi10}}`,
                             textStyle: {
                                 rich: {
                                     name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                                    labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
+                                    valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
+                                    labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
+                                    valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
                                 }
                             }
                         });
@@ -3677,16 +3738,16 @@
             }
             myChart.setOption({ series: seriesUpdate });
         });
-        
+
         const multiCrosshairToggle = document.getElementById('multiCrosshairToggle');
         const clearMultiCrosshairsBtn = document.getElementById('clearMultiCrosshairsBtn');
 
         multiCrosshairToggle.addEventListener('change', function() {
             isMultiCrosshairMode = this.checked;
             clearMultiCrosshairsBtn.style.display = this.checked ? 'inline-block' : 'none';
-            
+
             if (isMultiCrosshairMode) {
-                clearCrosshairBtn.click(); 
+                clearCrosshairBtn.click();
             } else {
                 clearMultiCrosshairsBtn.click();
             }
