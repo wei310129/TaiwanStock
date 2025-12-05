@@ -2482,7 +2482,8 @@
 
             const indicatorCount = visibleIndicators.length;
             const indicatorHeight = 11.5; // 每個指標高度百分比
-            const spacingBetweenCharts = 6; // 圖表之間的間距百分比
+            // 根據周期類型調整間距：非日線周期的十字線標籤會換行，需要更大間距
+            const spacingBetweenCharts = (periodType === 'day') ? 6 : 8; // 圖表之間的間距百分比
             const totalSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
             const kLineHeight = 86 - (indicatorCount * indicatorHeight) - totalSpacing - 3; // K線圖高度(留3%給dataZoom)
 
@@ -3084,7 +3085,9 @@
                 }
             ];
 
-            let currentTitleTop = 12 + parseFloat(kLineHeight) + 6;
+            // 根據周期類型動態計算間距
+            const spacingBetweenCharts = (currentPeriod === 'daily') ? 6 : 8;
+            let currentTitleTop = 12 + parseFloat(kLineHeight) + spacingBetweenCharts;
             const visibleIndicators = [];
             if (indicatorVisible.macd) visibleIndicators.push('macd');
             if (indicatorVisible.kd) visibleIndicators.push('kd');
@@ -3146,7 +3149,7 @@
                         }
                     });
                 }
-                currentTitleTop += 11.5 + 6;
+                currentTitleTop += 11.5 + spacingBetweenCharts;
             });
 
             myChart.setOption({
