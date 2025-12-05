@@ -3282,23 +3282,27 @@
                     const color = priceDiff >= 0 ? '#eb5454' : '#47b262';
                     const sign = priceDiff >= 0 ? '+' : '';
 
-                    const labelText = `${sign}${priceDiff.toFixed(2)}\n(${sign}${percentDiff.toFixed(2)}%)`;
+                    const labelText = `${sign}${priceDiff.toFixed(2)} (${sign}${percentDiff.toFixed(2)}%)`;
 
                     markAreaData.push([
                         {
                             xAxis: prevData.date,
-                            y: '2%',
-                            itemStyle: { color: 'transparent' },
+                            itemStyle: {
+                                color: 'rgba(0,0,0,0)' // Transparent area
+                            },
                             label: {
                                 show: true,
-                                position: 'inside',
                                 formatter: labelText,
                                 color: color,
                                 fontSize: 12,
                                 fontWeight: 'bold',
+                                position: 'top',
+                                distance: 15
                             }
                         },
-                        { xAxis: currentData.date }
+                        {
+                            xAxis: currentData.date
+                        }
                     ]);
                 }
             }
@@ -3332,11 +3336,10 @@
             isMultiCrosshairMode = this.checked;
             clearMultiCrosshairsBtn.style.display = this.checked ? 'inline-block' : 'none';
             
-            // 清除另一種模式的標記
             if (isMultiCrosshairMode) {
-                clearCrosshairBtn.click(); // 清除單點十字線
+                clearCrosshairBtn.click(); 
             } else {
-                clearMultiCrosshairsBtn.click(); // 清除多點十字線
+                clearMultiCrosshairsBtn.click();
             }
         });
 
