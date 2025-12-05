@@ -3497,7 +3497,7 @@
                 vLine = {
                     xAxis: date,
                     lineStyle: { color: '#2f3e4d', type: 'solid', width: 1 },
-                    label: { show: true, position: 'end', formatter: () => date.includes('~') ? date.replace(' ~ ', '\n') : date, color: '#fff', backgroundColor: '#2f3e4d', padding: [4, 8], borderRadius: 4, fontSize: 12 }
+                    label: { show: true, position: 'start', formatter: () => date.includes('~') ? date.replace(' ~ ', '\n') : date, color: '#fff', backgroundColor: '#2f3e4d', padding: [4, 8], borderRadius: 4, fontSize: 12 }
                 };
             }
 
@@ -3558,7 +3558,7 @@
                     xAxis: data.date,
                     label: {
                         show: true,
-                        position: 'end',
+                        position: 'start',
                         formatter: () => data.date.includes('~') ? data.date.replace(' ~ ', '\n') : data.date,
                         color: '#fff',
                         backgroundColor: '#333',
