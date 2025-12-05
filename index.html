@@ -102,6 +102,7 @@
             overflow-x: hidden;
             word-wrap: break-word;
             white-space: normal;
+            box-sizing: border-box;
         }
         .config-notes h4 {
             margin: 0 0 8px 0;
@@ -479,6 +480,100 @@
         }
         .sidebar:hover .sidebar-bookmark-text {
             opacity: 1;
+        }
+
+        /* 手機版響應式設計 */
+        @media screen and (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .controls {
+                gap: 8px;
+            }
+
+            .config-dropdown-label {
+                margin-left: 0;
+                flex-basis: 100%;
+                margin-top: 8px;
+            }
+
+            .config-notes {
+                display: block;
+                margin-left: 0;
+                margin-top: 10px;
+                min-width: 0;
+                width: 100%;
+                max-width: 100%;
+                font-size: 0.85em;
+            }
+
+            .config-notes li {
+                font-size: 0.95em;
+                word-break: break-word;
+                overflow-wrap: break-word;
+            }
+
+            #chart {
+                height: 500px;
+            }
+
+            .floating-panel {
+                width: 280px;
+                right: -280px;
+            }
+
+            .sidebar.panel-open {
+                right: 280px;
+            }
+        }
+
+        @media screen and (max-width: 480px) {
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.85em;
+                margin-right: 4px;
+            }
+
+            .indicator-checkbox {
+                font-size: 0.85em;
+                margin-right: 10px;
+            }
+
+            .config-notes {
+                padding: 10px 12px;
+                font-size: 0.8em;
+            }
+
+            .config-notes h4 {
+                font-size: 0.95em;
+            }
+
+            .config-notes li {
+                font-size: 0.9em;
+                margin: 4px 0;
+            }
+
+            #chart {
+                height: 400px;
+            }
+
+            .floating-panel {
+                width: 250px;
+                right: -250px;
+            }
+
+            .sidebar {
+                width: 40px;
+            }
+
+            .sidebar.panel-open {
+                right: 250px;
+            }
         }
     </style>
 </head>
