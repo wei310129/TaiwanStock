@@ -2405,7 +2405,6 @@
             console.time(`UpdateChart-${periodType}`);
             lastClickedIndex = null; // 重置點擊狀態
             multiCrosshairPoints = []; // 清空多點標記
-            renderMultiCrosshairs(); // 清除畫面
             currentPeriod = periodType;
 
             controlButtons.forEach(btn => {
@@ -2794,8 +2793,9 @@
                 }
             });
 
-            // 為每個網格添加一個用於十字線的系列
+            // 為每個網格添加十字線系列
             grids.forEach((grid, idx) => {
+                // 單點十字線
                 series.push({
                     name: `crosshair-${idx}`,
                     type: 'line',
@@ -2809,34 +2809,31 @@
                         data: []
                     }
                 });
-            });
-            
-            // 多點十字線的系列
-            series.push({
-                name: 'multiCrosshairLines',
-                type: 'line',
-                data: [],
-                markLine: {
-                    silent: true,
-                    symbol: 'none',
-                    animation: false,
-                    lineStyle: {
-                        type: 'solid',
-                        width: 1,
-                        color: '#333'
+                // 多點十字線
+                series.push({
+                    name: `multi-crosshair-${idx}`,
+                    type: 'line',
+                    xAxisIndex: idx,
+                    yAxisIndex: idx,
+                    data: [],
+                    markLine: {
+                        silent: true,
+                        symbol: 'none',
+                        animation: false,
+                        lineStyle: {
+                            type: 'solid',
+                            width: 1,
+                            color: '#333'
+                        },
+                        data: []
                     },
-                    data: []
-                }
-            });
-            series.push({
-                name: 'multiCrosshairLabels',
-                type: 'line',
-                data: [],
-                markArea: {
-                    silent: true,
-                    animation: false,
-                    data: []
-                }
+                    // 只有主圖(idx=0)需要顯示漲跌幅標籤
+                    markArea: idx === 0 ? {
+                        silent: true,
+                        animation: false,
+                        data: []
+                    } : undefined
+                });
             });
 
             const option = {
@@ -3253,6 +3250,7 @@
         function renderMultiCrosshairs() {
             const markLineData = [];
             const markAreaData = [];
+            const seriesUpdate = [];
 
             multiCrosshairPoints.forEach(dataIndex => {
                 const data = currentChartData.resampledData[dataIndex];
@@ -3307,12 +3305,16 @@
                 }
             }
 
-            myChart.setOption({
-                series: [
-                    { name: 'multiCrosshairLines', markLine: { data: markLineData } },
-                    { name: 'multiCrosshairLabels', markArea: { data: markAreaData } }
-                ]
-            });
+            const gridCount = myChart.getOption().grid.length;
+            for (let i = 0; i < gridCount; i++) {
+                seriesUpdate.push({
+                    name: `multi-crosshair-${i}`,
+                    markLine: { data: markLineData },
+                    markArea: i === 0 ? { data: markAreaData } : { data: [] }
+                });
+            }
+            
+            myChart.setOption({ series: seriesUpdate });
         }
 
         const clearCrosshairBtn = document.getElementById('clearCrosshairBtn');
