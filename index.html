@@ -3282,7 +3282,7 @@
                     const color = priceDiff >= 0 ? '#eb5454' : '#47b262';
                     const sign = priceDiff >= 0 ? '+' : '';
 
-                    const labelText = `${sign}${priceDiff.toFixed(2)} (${sign}${percentDiff.toFixed(2)}%)`;
+                    const labelText = `${sign}${priceDiff.toFixed(2)}\n(${sign}${percentDiff.toFixed(2)}%)`;
 
                     markAreaData.push([
                         {
@@ -3297,7 +3297,7 @@
                                 fontSize: 12,
                                 fontWeight: 'bold',
                                 position: 'top',
-                                distance: 15
+                                distance: -30
                             }
                         },
                         {
