@@ -2482,10 +2482,14 @@
 
             const indicatorCount = visibleIndicators.length;
             const indicatorHeight = 11.5; // 每個指標高度百分比
-            // 根據周期類型調整間距：非日線周期的十字線標籤會換行，需要更大間距
-            const spacingBetweenCharts = (periodType === 'day') ? 6 : 8; // 圖表之間的間距百分比
-            const totalSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
-            const kLineHeight = 86 - (indicatorCount * indicatorHeight) - totalSpacing - 3; // K線圖高度(留3%給dataZoom)
+            
+            // [FIX] 根據周期類型調整間距，並修正 'day' 為 'daily'
+            const spacingBetweenCharts = (periodType === 'daily') ? 6 : 8;
+            const totalIndicatorSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
+
+            // [FIX] 重新計算 K 線高度，並為 dataZoom 預留空間
+            const dataZoomSectionHeight = 3 + spacingBetweenCharts; // dataZoom 元件高度(3) + 其頂部間距
+            const kLineHeight = 100 - 12 - (indicatorCount * indicatorHeight) - totalIndicatorSpacing - dataZoomSectionHeight;
 
             // 建立網格配置
             const grids = [{ left: '80px', right: '5%', top: '12%', height: `${kLineHeight}%` }];
@@ -2977,6 +2981,9 @@
                 z: 15
             });
 
+            // [FIX] 動態計算 dataZoom 的 top 位置
+            const dataZoomTop = 100 - dataZoomSectionHeight;
+
             const option = {
                 title: titles,
                 tooltip: {
@@ -2997,7 +3004,7 @@
                 yAxis: yAxisConfigs,
                 dataZoom: [
                     { type: 'inside', xAxisIndex: xAxisIndices, start: 95, end: 100 },
-                    { type: 'slider', xAxisIndex: xAxisIndices, top: '97%', start: 95, end: 100 }
+                    { type: 'slider', xAxisIndex: xAxisIndices, top: `${dataZoomTop}%`, start: 95, end: 100 }
                 ],
                 series: series
             };
