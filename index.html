@@ -517,6 +517,7 @@
         <label class="indicator-checkbox">
             <input type="checkbox" data-indicator="rsi" checked> RSI
         </label>
+        <button id="clearCrosshairBtn" class="btn">清空十字線</button>
         <label class="config-dropdown-label">
             推薦配置：
             <select id="configDropdown" class="config-dropdown">
@@ -2827,7 +2828,7 @@
         controlButtons.forEach(button => {
             button.addEventListener('click', () => {
                 const period = button.dataset.period;
-                if (period !== currentPeriod) {
+                if (period && period !== currentPeriod) {
                     // 重置推薦配置下拉選單為預設值
                     const configDropdown = document.getElementById('configDropdown');
                     configDropdown.value = '';
@@ -3213,6 +3214,19 @@
             myChart.setOption({ series: seriesUpdate });
         });
 
+        const clearCrosshairBtn = document.getElementById('clearCrosshairBtn');
+        clearCrosshairBtn.addEventListener('click', function() {
+            lastClickedIndex = null;
+            let seriesUpdate = [];
+            const gridCount = myChart.getOption().grid.length;
+            for (let i = 0; i < gridCount; i++) {
+                seriesUpdate.push({
+                    name: `crosshair-${i}`,
+                    markLine: { data: [] }
+                });
+            }
+            myChart.setOption({ series: seriesUpdate });
+        });
 
         window.addEventListener('resize', myChart.resize);
     }
