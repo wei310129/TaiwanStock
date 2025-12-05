@@ -2478,17 +2478,23 @@
             const lastMa20 = ma20[lastDataIndex]?.toFixed(2) || 'N/A';
             const lastMa60 = ma60[lastDataIndex]?.toFixed(2) || 'N/A';
 
+            // 計算漲跌幅
+            const changePercent = ((lastCandle.close - lastCandle.open) / lastCandle.open * 100).toFixed(2);
+            const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60'; // 紅漲綠跌
+            const changeSign = changePercent >= 0 ? '+' : '';
+
             const titles = [
                 { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
                 {
                     left: '90px',
                     top: '9%',
-                    text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|MA5:} {val|${lastMa5}}  {label|MA10:} {val|${lastMa10}}  {label|MA20:} {val|${lastMa20}}  {label|MA60:} {val|${lastMa60}}`,
+                    text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%} {label|MA5:} {val|${lastMa5}} {label|MA10:} {val|${lastMa10}} {label|MA20:} {val|${lastMa20}} {label|MA60:} {val|${lastMa60}}`,
                     textStyle: {
                         rich: {
                             name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                             label: { fontSize: 12, color: '#555' },
-                            val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] }
+                            val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
+                            change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] }
                         }
                     }
                 }
