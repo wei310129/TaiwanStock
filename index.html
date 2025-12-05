@@ -2452,6 +2452,11 @@
                 resampledData,
                 kdResult,
                 rsi5,
+                rsi10,
+                ma5,
+                ma10,
+                ma20,
+                ma60,
                 macdResult,
                 periodName: periodName
             };
@@ -3021,116 +3026,7 @@
                     }
                 }
 
-                // 檢查索引是否有效
-                if (dataIndex === null || dataIndex < 0 || dataIndex >= resampledData.length) {
-                    return;
-                }
-
-                // 更新K線數據
-                const candle = resampledData[dataIndex];
-                if (!candle) return;
-
-                const ma5Value = ma5[dataIndex]?.toFixed(2) || 'N/A';
-                const ma10Value = ma10[dataIndex]?.toFixed(2) || 'N/A';
-                const ma20Value = ma20[dataIndex]?.toFixed(2) || 'N/A';
-                const ma60Value = ma60[dataIndex]?.toFixed(2) || 'N/A';
-
-                // 計算漲跌幅
-                const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
-                const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
-                const changeSign = changePercent >= 0 ? '+' : '';
-
-                // 更新標題數組
-                const newTitles = [
-                    { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
-                    {
-                        left: '90px',
-                        top: '9%',
-                        text: `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${ma5Value}}  {labelMA10|MA10:} {valMA10|${ma10Value}}  {labelMA20|MA20:} {valMA20|${ma20Value}}  {labelMA60|MA60:} {valMA60|${ma60Value}}`,
-                        textStyle: {
-                            rich: {
-                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                label: { fontSize: 12, color: '#555' },
-                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] },
-                                labelMA5: { fontSize: 12, color: LINE_COLORS.MA5 },
-                                valMA5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: [0, 10, 0, 2] },
-                                labelMA10: { fontSize: 12, color: LINE_COLORS.MA10 },
-                                valMA10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: [0, 10, 0, 2] },
-                                labelMA20: { fontSize: 12, color: LINE_COLORS.MA20 },
-                                valMA20: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: [0, 10, 0, 2] },
-                                labelMA60: { fontSize: 12, color: LINE_COLORS.MA60 },
-                                valMA60: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: [0, 10, 0, 2] }
-                            }
-                        }
-                    }
-                ];
-
-                // 動態添加指標標題
-                let currentTitleTop = 12 + kLineHeight + spacingBetweenCharts;
-                visibleIndicators.forEach((indicator) => {
-                    if (indicator === 'macd') {
-                        const difValue = macdResult.dif[dataIndex]?.toFixed(2) || 'N/A';
-                        const macdValue = macdResult.macd[dataIndex]?.toFixed(2) || 'N/A';
-                        const dmValue = macdResult.dm[dataIndex]?.toFixed(2) || 'N/A';
-                        newTitles.push({
-                            left: '90px',
-                            top: `${currentTitleTop - 3}%`,
-                            text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${difValue}}   {labelMACD|MACD:} {valMACD|${macdValue}}   {label|D-M:} {val|${dmValue}}`,
-                            textStyle: {
-                                rich: {
-                                    name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                    labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
-                                    valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
-                                    labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
-                                    valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
-                                }
-                            }
-                        });
-                    } else if (indicator === 'kd') {
-                        const kValue = kdResult.k[dataIndex]?.toFixed(2) || 'N/A';
-                        const dValue = kdResult.d[dataIndex]?.toFixed(2) || 'N/A';
-                        newTitles.push({
-                            left: '90px',
-                            top: `${currentTitleTop - 3}%`,
-                            text: `{name|KD}   {labelK|K(9):} {valK|${kValue}}   {labelD|D(9):} {valD|${dValue}}`,
-                            textStyle: {
-                                rich: {
-                                    name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    labelK: { fontSize: 12, color: LINE_COLORS.K },
-                                    valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
-                                    labelD: { fontSize: 12, color: LINE_COLORS.D },
-                                    valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
-                                }
-                            }
-                        });
-                    } else if (indicator === 'rsi') {
-                        const rsi5Value = rsi5[dataIndex]?.toFixed(2) || 'N/A';
-                        const rsi10Value = rsi10[dataIndex]?.toFixed(2) || 'N/A';
-                        newTitles.push({
-                            left: '90px',
-                            top: `${currentTitleTop - 3}%`,
-                            text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${rsi5Value}}   {labelRSI10|RSI(10T):} {valRSI10|${rsi10Value}}`,
-                            textStyle: {
-                                rich: {
-                                    name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
-                                    valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
-                                    labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
-                                    valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
-                                }
-                            }
-                        });
-                    }
-                    currentTitleTop += indicatorHeight + spacingBetweenCharts;
-                });
-
-                // 更新圖表標題
-                myChart.setOption({
-                    title: newTitles
-                }, false);
+                updateTitles(dataIndex);
             });
 
             // 添加滑鼠移出事件，恢復到最後一根K線的數值
@@ -3139,107 +3035,123 @@
                 if (lastClickedIndex !== null) {
                     return;
                 }
+                updateTitles(currentChartData.resampledData.length - 1);
+            });
+        }
 
-                const lastIndex = resampledData.length - 1;
-                const lastCandle = resampledData[lastIndex];
-                const lastMa5 = ma5[lastIndex]?.toFixed(2) || 'N/A';
-                const lastMa10 = ma10[lastIndex]?.toFixed(2) || 'N/A';
-                const lastMa20 = ma20[lastIndex]?.toFixed(2) || 'N/A';
-                const lastMa60 = ma60[lastIndex]?.toFixed(2) || 'N/A';
+        function updateTitles(dataIndex) {
+            if (dataIndex === null || dataIndex < 0 || dataIndex >= currentChartData.resampledData.length) {
+                return;
+            }
 
-                const changePercent = ((lastCandle.close - lastCandle.open) / lastCandle.open * 100).toFixed(2);
-                const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
-                const changeSign = changePercent >= 0 ? '+' : '';
+            const { resampledData, kdResult, rsi5, rsi10, ma5, ma10, ma20, ma60, macdResult, periodName } = currentChartData;
+            const kLineHeight = myChart.getOption().grid[0].height.replace('%', '');
 
-                const resetTitles = [
-                    { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
-                    {
+            const candle = resampledData[dataIndex];
+            if (!candle) return;
+
+            const ma5Value = ma5[dataIndex]?.toFixed(2) || 'N/A';
+            const ma10Value = ma10[dataIndex]?.toFixed(2) || 'N/A';
+            const ma20Value = ma20[dataIndex]?.toFixed(2) || 'N/A';
+            const ma60Value = ma60[dataIndex]?.toFixed(2) || 'N/A';
+
+            const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
+            const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
+            const changeSign = changePercent >= 0 ? '+' : '';
+
+            const newTitles = [
+                { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
+                {
+                    left: '90px',
+                    top: '9%',
+                    text: `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${ma5Value}}  {labelMA10|MA10:} {valMA10|${ma10Value}}  {labelMA20|MA20:} {valMA20|${ma20Value}}  {labelMA60|MA60:} {valMA60|${ma60Value}}`,
+                    textStyle: {
+                        rich: {
+                            name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                            label: { fontSize: 12, color: '#555' },
+                            val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
+                            change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] },
+                            labelMA5: { fontSize: 12, color: LINE_COLORS.MA5 },
+                            valMA5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: [0, 10, 0, 2] },
+                            labelMA10: { fontSize: 12, color: LINE_COLORS.MA10 },
+                            valMA10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: [0, 10, 0, 2] },
+                            labelMA20: { fontSize: 12, color: LINE_COLORS.MA20 },
+                            valMA20: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: [0, 10, 0, 2] },
+                            labelMA60: { fontSize: 12, color: LINE_COLORS.MA60 },
+                            valMA60: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: [0, 10, 0, 2] }
+                        }
+                    }
+                }
+            ];
+
+            let currentTitleTop = 12 + parseFloat(kLineHeight) + 6;
+            const visibleIndicators = [];
+            if (indicatorVisible.macd) visibleIndicators.push('macd');
+            if (indicatorVisible.kd) visibleIndicators.push('kd');
+            if (indicatorVisible.rsi) visibleIndicators.push('rsi');
+
+            visibleIndicators.forEach((indicator) => {
+                if (indicator === 'macd') {
+                    const difValue = macdResult.dif[dataIndex]?.toFixed(2) || 'N/A';
+                    const macdValue = macdResult.macd[dataIndex]?.toFixed(2) || 'N/A';
+                    const dmValue = macdResult.dm[dataIndex]?.toFixed(2) || 'N/A';
+                    newTitles.push({
                         left: '90px',
-                        top: '9%',
-                        text: `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${lastMa5}}  {labelMA10|MA10:} {valMA10|${lastMa10}}  {labelMA20|MA20:} {valMA20|${lastMa20}}  {labelMA60|MA60:} {valMA60|${lastMa60}}`,
+                        top: `${currentTitleTop - 3}%`,
+                        text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${difValue}}   {labelMACD|MACD:} {valMACD|${macdValue}}   {label|D-M:} {val|${dmValue}}`,
                         textStyle: {
                             rich: {
                                 name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
                                 label: { fontSize: 12, color: '#555' },
                                 val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                change: { fontSize: 12, fontWeight: 'bold', color: changeColor, padding: [0, 10, 0, 2] },
-                                labelMA5: { fontSize: 12, color: LINE_COLORS.MA5 },
-                                valMA5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: [0, 10, 0, 2] },
-                                labelMA10: { fontSize: 12, color: LINE_COLORS.MA10 },
-                                valMA10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: [0, 10, 0, 2] },
-                                labelMA20: { fontSize: 12, color: LINE_COLORS.MA20 },
-                                valMA20: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: [0, 10, 0, 2] },
-                                labelMA60: { fontSize: 12, color: LINE_COLORS.MA60 },
-                                valMA60: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: [0, 10, 0, 2] }
+                                labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
+                                valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
+                                labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
+                                valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
                             }
                         }
-                    }
-                ];
-
-                let currentTitleTop = 12 + kLineHeight + spacingBetweenCharts;
-                visibleIndicators.forEach((indicator) => {
-                    if (indicator === 'macd') {
-                        const lastDif = macdResult.dif[lastIndex]?.toFixed(2) || 'N/A';
-                        const lastMacd = macdResult.macd[lastIndex]?.toFixed(2) || 'N/A';
-                        const lastDm = macdResult.dm[lastIndex]?.toFixed(2) || 'N/A';
-                        resetTitles.push({
-                            left: '90px',
-                            top: `${currentTitleTop - 3}%`,
-                            text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${lastDif}}   {labelMACD|MACD:} {valMACD|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
-                            textStyle: {
-                                rich: {
-                                    name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    label: { fontSize: 12, color: '#555' },
-                                    val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                    labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
-                                    valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
-                                    labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
-                                    valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
-                                }
+                    });
+                } else if (indicator === 'kd') {
+                    const kValue = kdResult.k[dataIndex]?.toFixed(2) || 'N/A';
+                    const dValue = kdResult.d[dataIndex]?.toFixed(2) || 'N/A';
+                    newTitles.push({
+                        left: '90px',
+                        top: `${currentTitleTop - 3}%`,
+                        text: `{name|KD}   {labelK|K(9):} {valK|${kValue}}   {labelD|D(9):} {valD|${dValue}}`,
+                        textStyle: {
+                            rich: {
+                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                                labelK: { fontSize: 12, color: LINE_COLORS.K },
+                                valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
+                                labelD: { fontSize: 12, color: LINE_COLORS.D },
+                                valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
                             }
-                        });
-                    } else if (indicator === 'kd') {
-                        const lastK = kdResult.k[lastIndex]?.toFixed(2) || 'N/A';
-                        const lastD = kdResult.d[lastIndex]?.toFixed(2) || 'N/A';
-                        resetTitles.push({
-                            left: '90px',
-                            top: `${currentTitleTop - 3}%`,
-                            text: `{name|KD}   {labelK|K(9):} {valK|${lastK}}   {labelD|D(9):} {valD|${lastD}}`,
-                            textStyle: {
-                                rich: {
-                                    name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    labelK: { fontSize: 12, color: LINE_COLORS.K },
-                                    valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
-                                    labelD: { fontSize: 12, color: LINE_COLORS.D },
-                                    valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
-                                }
+                        }
+                    });
+                } else if (indicator === 'rsi') {
+                    const rsi5Value = rsi5[dataIndex]?.toFixed(2) || 'N/A';
+                    const rsi10Value = rsi10[dataIndex]?.toFixed(2) || 'N/A';
+                    newTitles.push({
+                        left: '90px',
+                        top: `${currentTitleTop - 3}%`,
+                        text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${rsi5Value}}   {labelRSI10|RSI(10T):} {valRSI10|${rsi10Value}}`,
+                        textStyle: {
+                            rich: {
+                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
+                                labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
+                                valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
+                                labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
+                                valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
                             }
-                        });
-                    } else if (indicator === 'rsi') {
-                        const lastRsi5 = rsi5[lastIndex]?.toFixed(2) || 'N/A';
-                        const lastRsi10 = rsi10[lastIndex]?.toFixed(2) || 'N/A';
-                        resetTitles.push({
-                            left: '90px',
-                            top: `${currentTitleTop - 3}%`,
-                            text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${lastRsi5}}   {labelRSI10|RSI(10T):} {valRSI10|${lastRsi10}}`,
-                            textStyle: {
-                                rich: {
-                                    name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                    labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
-                                    valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
-                                    labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
-                                    valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
-                                }
-                            }
-                        });
-                    }
-                    currentTitleTop += indicatorHeight + spacingBetweenCharts;
-                });
-
-                myChart.setOption({
-                    title: resetTitles
-                }, false);
+                        }
+                    });
+                }
+                currentTitleTop += 11.5 + 6;
             });
+
+            myChart.setOption({
+                title: newTitles
+            }, false);
         }
 
         controlButtons.forEach(button => {
@@ -3562,11 +3474,14 @@
             if (dataIndex != null && currentChartData && dataIndex >= 0 && dataIndex < currentChartData.resampledData.length) {
                 if (lastClickedIndex === dataIndex) {
                     lastClickedIndex = null;
+                    updateTitles(currentChartData.resampledData.length - 1);
                 } else {
                     lastClickedIndex = dataIndex;
+                    updateTitles(lastClickedIndex);
                 }
             } else {
                 lastClickedIndex = null;
+                updateTitles(currentChartData.resampledData.length - 1);
             }
 
             if (lastClickedIndex !== null) {
@@ -3735,6 +3650,7 @@
                 });
             }
             myChart.setOption({ series: seriesUpdate });
+            updateTitles(currentChartData.resampledData.length - 1);
         });
 
         const multiCrosshairToggle = document.getElementById('multiCrosshairToggle');
