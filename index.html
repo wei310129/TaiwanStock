@@ -19,7 +19,7 @@
             margin-bottom: 20px;
             display: flex;
             flex-wrap: wrap;
-            align-items: flex-start;
+            align-items: center;
             gap: 10px;
         }
         .controls > * {
@@ -518,6 +518,10 @@
             <input type="checkbox" data-indicator="rsi" checked> RSI
         </label>
         <button id="clearCrosshairBtn" class="btn">清空十字線</button>
+        <label class="indicator-checkbox">
+            <input type="checkbox" id="multiCrosshairToggle"> 多點十字線
+        </label>
+        <button id="clearMultiCrosshairsBtn" class="btn" style="display: none;">清空多點標記</button>
         <label class="config-dropdown-label">
             推薦配置：
             <select id="configDropdown" class="config-dropdown">
@@ -1236,6 +1240,8 @@
 
         let currentPeriod = 'daily';
         let lastClickedIndex = null; // 用於追蹤點擊的K棒，實現十字線切換
+        let isMultiCrosshairMode = false;
+        let multiCrosshairPoints = [];
         let indicatorVisible = {
             macd: true,
             kd: true,
@@ -1696,7 +1702,7 @@
                         data: [...newMarkAreas.macd.data, ...newMarkAreas.highMacd.data]
                     };
                     s.markLine = {
-                        data: [...newMarkAreas.macd.lines, ...newMarkAreas.highMacd.lines],
+                        data: [...newMarkAreas.macd.lines, ...markAreas.highMacd.lines],
                         symbol: 'none',
                         label: { show: false }
                     };
@@ -2398,6 +2404,8 @@
         function updateChart(periodType) {
             console.time(`UpdateChart-${periodType}`);
             lastClickedIndex = null; // 重置點擊狀態
+            multiCrosshairPoints = []; // 清空多點標記
+            renderMultiCrosshairs(); // 清除畫面
             currentPeriod = periodType;
 
             controlButtons.forEach(btn => {
@@ -2737,7 +2745,7 @@
                             markArea: { data: [...markAreas.kd.data, ...markAreas.highKd.data] },
                             markLine: { data: [...markAreas.kd.lines, ...markAreas.highKd.lines], symbol: 'none', label: { show: false } }
                         },
-                        { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4', width: 1.5 }, symbol: 'none' },
+                        { name: 'D(9)', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex, data: kdResult.d, lineStyle: { color: '#4ECDC4' }, symbol: 'none' },
                         {
                             name: 'KD超買', type: 'line', xAxisIndex: axisIndex, yAxisIndex: axisIndex,
                             data: new Array(resampledData.length).fill(80),
@@ -2801,6 +2809,34 @@
                         data: []
                     }
                 });
+            });
+            
+            // 多點十字線的系列
+            series.push({
+                name: 'multiCrosshairLines',
+                type: 'line',
+                data: [],
+                markLine: {
+                    silent: true,
+                    symbol: 'none',
+                    animation: false,
+                    lineStyle: {
+                        type: 'solid',
+                        width: 1,
+                        color: '#333'
+                    },
+                    data: []
+                }
+            });
+            series.push({
+                name: 'multiCrosshairLabels',
+                type: 'line',
+                data: [],
+                markArea: {
+                    silent: true,
+                    animation: false,
+                    data: []
+                }
             });
 
             const option = {
@@ -3114,11 +3150,18 @@
         updateChart(currentPeriod);
 
         myChart.getZr().on('click', function (event) {
+            if (isMultiCrosshairMode) {
+                handleMultiCrosshairClick(event);
+            } else {
+                handleSingleCrosshairClick(event);
+            }
+        });
+
+        function handleSingleCrosshairClick(event) {
             const pointInPixel = [event.offsetX, event.offsetY];
             let dataIndex = null;
             let clickedGridIndex = -1;
 
-            // 查找被點擊的網格
             const grids = myChart.getOption().grid;
             for (let i = 0; i < grids.length; i++) {
                 if (myChart.containPixel({ gridIndex: i }, pointInPixel)) {
@@ -3128,7 +3171,6 @@
             }
 
             if (clickedGridIndex !== -1) {
-                // 將像素座標轉換為邏輯座標 (取得 dataIndex)
                 const pointInGrid = myChart.convertFromPixel({ gridIndex: clickedGridIndex }, pointInPixel);
                 dataIndex = pointInGrid[0];
             }
@@ -3136,83 +3178,138 @@
             let hLine, vLine;
             let seriesUpdate = [];
 
-            // 檢查是否點擊了有效的資料點
             if (dataIndex != null && currentChartData && dataIndex >= 0 && dataIndex < currentChartData.resampledData.length) {
                 if (lastClickedIndex === dataIndex) {
-                    // 再次點擊同一個位置，取消十字線
                     lastClickedIndex = null;
                 } else {
-                    // 點擊新位置，設定十字線
                     lastClickedIndex = dataIndex;
                 }
             } else {
-                // 點擊圖表網格外，取消十字線
                 lastClickedIndex = null;
             }
 
-            // 根據 lastClickedIndex 的狀態準備標記線數據
             if (lastClickedIndex !== null) {
                 const clickedData = currentChartData.resampledData[lastClickedIndex];
                 const closePrice = clickedData.close;
                 const date = clickedData.date;
 
-                // 水平線
                 hLine = {
                     yAxis: closePrice,
                     lineStyle: { color: '#2f3e4d', type: 'solid', width: 1 },
-                    label: {
-                        show: true,
-                        position: 'start', // 顯示在左側
-                        formatter: closePrice.toLocaleString(),
-                        color: '#fff',
-                        backgroundColor: '#2f3e4d',
-                        padding: [4, 8],
-                        borderRadius: 4,
-                        fontSize: 12,
-                    }
+                    label: { show: true, position: 'start', formatter: closePrice.toLocaleString(), color: '#fff', backgroundColor: '#2f3e4d', padding: [4, 8], borderRadius: 4, fontSize: 12 }
                 };
-
-                // 垂直線
                 vLine = {
                     xAxis: date,
                     lineStyle: { color: '#2f3e4d', type: 'solid', width: 1 },
-                    label: {
-                        show: true,
-                        position: 'end',
-                        formatter: function() {
-                            if (date.includes('~')) {
-                                return date.split('~')[0].trim() + '\n' + date.split('~')[1].trim();
-                            }
-                            return date;
-                        },
-                        color: '#fff',
-                        backgroundColor: '#2f3e4d',
-                        padding: [4, 8],
-                        borderRadius: 4,
-                        fontSize: 12,
-                    }
+                    label: { show: true, position: 'end', formatter: () => date.includes('~') ? date.replace(' ~ ', '\n') : date, color: '#fff', backgroundColor: '#2f3e4d', padding: [4, 8], borderRadius: 4, fontSize: 12 }
                 };
             }
 
-            // 更新所有十字線系列
             const gridCount = myChart.getOption().grid.length;
             for (let i = 0; i < gridCount; i++) {
                 let markLineData = [];
                 if (lastClickedIndex !== null) {
-                    if (i === 0) { // 主圖
+                    if (i === 0) {
                         markLineData = [hLine, vLine];
-                    } else { // 指標圖
+                    } else {
                         markLineData = [vLine];
                     }
                 }
-                seriesUpdate.push({
-                    name: `crosshair-${i}`,
-                    markLine: { data: markLineData }
-                });
+                seriesUpdate.push({ name: `crosshair-${i}`, markLine: { data: markLineData } });
             }
-            
             myChart.setOption({ series: seriesUpdate });
-        });
+        }
+
+        function handleMultiCrosshairClick(event) {
+            const pointInPixel = [event.offsetX, event.offsetY];
+            let dataIndex = null;
+            let clickedGridIndex = -1;
+
+            const grids = myChart.getOption().grid;
+            for (let i = 0; i < grids.length; i++) {
+                if (myChart.containPixel({ gridIndex: i }, pointInPixel)) {
+                    clickedGridIndex = i;
+                    break;
+                }
+            }
+
+            if (clickedGridIndex !== -1) {
+                const pointInGrid = myChart.convertFromPixel({ gridIndex: clickedGridIndex }, pointInPixel);
+                dataIndex = pointInGrid[0];
+            }
+
+            if (dataIndex != null && dataIndex >= 0 && dataIndex < currentChartData.resampledData.length) {
+                const indexInPoints = multiCrosshairPoints.indexOf(dataIndex);
+                if (indexInPoints > -1) {
+                    multiCrosshairPoints.splice(indexInPoints, 1);
+                } else {
+                    multiCrosshairPoints.push(dataIndex);
+                }
+                multiCrosshairPoints.sort((a, b) => a - b);
+                renderMultiCrosshairs();
+            }
+        }
+
+        function renderMultiCrosshairs() {
+            const markLineData = [];
+            const markAreaData = [];
+
+            multiCrosshairPoints.forEach(dataIndex => {
+                const data = currentChartData.resampledData[dataIndex];
+                markLineData.push({
+                    xAxis: data.date,
+                    label: {
+                        show: true,
+                        position: 'end',
+                        formatter: () => data.date.includes('~') ? data.date.replace(' ~ ', '\n') : data.date,
+                        color: '#fff',
+                        backgroundColor: '#333',
+                        padding: [4, 8],
+                        borderRadius: 4,
+                    }
+                });
+            });
+
+            if (multiCrosshairPoints.length > 1) {
+                for (let i = 1; i < multiCrosshairPoints.length; i++) {
+                    const prevIndex = multiCrosshairPoints[i - 1];
+                    const currentIndex = multiCrosshairPoints[i];
+                    const prevData = currentChartData.resampledData[prevIndex];
+                    const currentData = currentChartData.resampledData[currentIndex];
+
+                    const priceDiff = currentData.close - prevData.close;
+                    const percentDiff = (priceDiff / prevData.close) * 100;
+                    const color = priceDiff >= 0 ? '#eb5454' : '#47b262';
+                    const sign = priceDiff >= 0 ? '+' : '';
+
+                    const labelText = `${sign}${priceDiff.toFixed(2)}\n(${sign}${percentDiff.toFixed(2)}%)`;
+
+                    markAreaData.push([
+                        {
+                            xAxis: prevData.date,
+                            y: '2%',
+                            itemStyle: { color: 'transparent' },
+                            label: {
+                                show: true,
+                                position: 'inside',
+                                formatter: labelText,
+                                color: color,
+                                fontSize: 12,
+                                fontWeight: 'bold',
+                            }
+                        },
+                        { xAxis: currentData.date }
+                    ]);
+                }
+            }
+
+            myChart.setOption({
+                series: [
+                    { name: 'multiCrosshairLines', markLine: { data: markLineData } },
+                    { name: 'multiCrosshairLabels', markArea: { data: markAreaData } }
+                ]
+            });
+        }
 
         const clearCrosshairBtn = document.getElementById('clearCrosshairBtn');
         clearCrosshairBtn.addEventListener('click', function() {
@@ -3226,6 +3323,26 @@
                 });
             }
             myChart.setOption({ series: seriesUpdate });
+        });
+        
+        const multiCrosshairToggle = document.getElementById('multiCrosshairToggle');
+        const clearMultiCrosshairsBtn = document.getElementById('clearMultiCrosshairsBtn');
+
+        multiCrosshairToggle.addEventListener('change', function() {
+            isMultiCrosshairMode = this.checked;
+            clearMultiCrosshairsBtn.style.display = this.checked ? 'inline-block' : 'none';
+            
+            // 清除另一種模式的標記
+            if (isMultiCrosshairMode) {
+                clearCrosshairBtn.click(); // 清除單點十字線
+            } else {
+                clearMultiCrosshairsBtn.click(); // 清除多點十字線
+            }
+        });
+
+        clearMultiCrosshairsBtn.addEventListener('click', function() {
+            multiCrosshairPoints = [];
+            renderMultiCrosshairs();
         });
 
         window.addEventListener('resize', myChart.resize);
