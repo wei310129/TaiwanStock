@@ -3004,8 +3004,7 @@
             myChart.getZr().off('mousemove'); // 移除 ZRender 層的監聽器
 
             myChart.getZr().on('mousemove', function(event) {
-                // 只在未開啟多點十字線且未點選單點十字線時更新
-                if (isMultiCrosshairMode || lastClickedIndex !== null) {
+                if (lastClickedIndex !== null) {
                     return;
                 }
 
@@ -3137,8 +3136,7 @@
             // 添加滑鼠移出事件，恢復到最後一根K線的數值
             myChart.getZr().off('mouseout');
             myChart.getZr().on('mouseout', function() {
-                // 只在未開啟多點十字線且未點選單點十字線時恢復
-                if (isMultiCrosshairMode || lastClickedIndex !== null) {
+                if (lastClickedIndex !== null) {
                     return;
                 }
 
