@@ -2497,56 +2497,11 @@
             // --- 響應式設定 ---
             const isMobile = window.innerWidth <= 768;
             const gridLeft = isMobile ? '12%' : '80px';
-            const titleLeft = isMobile ? '12%' : '90px';
-            const kLineTitleTop = isMobile ? '10%' : '9%';
-            const indicatorTitleTopOffset = isMobile ? -2.5 : -3;
-            const kLineNameFontSize = isMobile ? 13 : 14;
-            const kLineLabelFontSize = isMobile ? 11 : 12;
-            const kLinePadding = isMobile ? [0, 5, 0, 2] : [0, 10, 0, 2];
-            // --- End of 響應式設定 ---
-
+            
             // 建立網格配置
             const grids = [{ left: gridLeft, right: '5%', top: '12%', height: `${kLineHeight}%` }];
             
-            let lastDataIndex = resampledData.length - 1;
-            const lastCandle = resampledData[lastDataIndex];
-            const lastMa5 = ma5[lastDataIndex]?.toFixed(2) || 'N/A';
-            const lastMa10 = ma10[lastDataIndex]?.toFixed(2) || 'N/A';
-            const lastMa20 = ma20[lastDataIndex]?.toFixed(2) || 'N/A';
-            const lastMa60 = ma60[lastDataIndex]?.toFixed(2) || 'N/A';
-
-            const changePercent = ((lastCandle.close - lastCandle.open) / lastCandle.open * 100).toFixed(2);
-            const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60'; // 紅漲綠跌
-            const changeSign = changePercent >= 0 ? '+' : '';
-
-            const kLineText = isMobile
-                ? `{name|K線} {label|收:} {val|${lastCandle.close}} {change|${changeSign}${changePercent}%}\n{labelMA5|MA5:} {valMA5|${lastMa5}} {labelMA10|MA10:} {valMA10|${lastMa10}}`
-                : `{name|K線}   {label|開:} {val|${lastCandle.open}}  {label|高:} {val|${lastCandle.high}}  {label|低:} {val|${lastCandle.low}}  {label|收:} {val|${lastCandle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${lastMa5}}  {labelMA10|MA10:} {valMA10|${lastMa10}}  {labelMA20|MA20:} {valMA20|${lastMa20}}  {labelMA60|MA60:} {valMA60|${lastMa60}}`;
-
-            const titles = [
-                { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
-                {
-                    left: titleLeft,
-                    top: kLineTitleTop,
-                    text: kLineText,
-                    textStyle: {
-                        rich: {
-                            name: { fontSize: kLineNameFontSize, fontWeight: 'bold', color: '#333' },
-                            label: { fontSize: kLineLabelFontSize, color: '#555' },
-                            val: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: '#2c3e50', padding: kLinePadding },
-                            change: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: changeColor, padding: kLinePadding },
-                            labelMA5: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA5 },
-                            valMA5: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: kLinePadding },
-                            labelMA10: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA10 },
-                            valMA10: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: kLinePadding },
-                            labelMA20: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA20 },
-                            valMA20: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: kLinePadding },
-                            labelMA60: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA60 },
-                            valMA60: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: kLinePadding }
-                        }
-                    }
-                }
-            ];
+            const titles = generateTitles(resampledData.length - 1, kLineHeight);
 
             let currentTop = 12 + kLineHeight + spacingBetweenCharts; // 當前位置
             let gridIndex = 1;
@@ -2565,62 +2520,6 @@
             visibleIndicators.forEach((indicator, idx) => {
                 grids.push({ left: gridLeft, right: '5%', top: `${currentTop}%`, height: `${indicatorHeight}%` });
                 
-                if (indicator === 'macd') {
-                    const lastDif = macdResult.dif[lastDataIndex]?.toFixed(2) || 'N/A';
-                    const lastMacd = macdResult.macd[lastDataIndex]?.toFixed(2) || 'N/A';
-                    const lastDm = macdResult.dm[lastDataIndex]?.toFixed(2) || 'N/A';
-                    titles.push({
-                        left: titleLeft,
-                        top: `${currentTop + indicatorTitleTopOffset}%`,
-                        text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${lastDif}}   {labelMACD|MACD:} {valMACD|${lastMacd}}   {label|D-M:} {val|${lastDm}}`,
-                        textStyle: {
-                            rich: {
-                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                label: { fontSize: 12, color: '#555' },
-                                val: { fontSize: 12, fontWeight: 'bold', color: '#2c3e50', padding: [0, 10, 0, 2] },
-                                labelDIF: { fontSize: 12, color: LINE_COLORS.DIF },
-                                valDIF: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.DIF, padding: [0, 10, 0, 2] },
-                                labelMACD: { fontSize: 12, color: LINE_COLORS.MACD },
-                                valMACD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.MACD, padding: [0, 10, 0, 2] }
-                            }
-                        }
-                    });
-                } else if (indicator === 'kd') {
-                    const lastK = kdResult.k[lastDataIndex]?.toFixed(2) || 'N/A';
-                    const lastD = kdResult.d[lastDataIndex]?.toFixed(2) || 'N/A';
-                    titles.push({
-                        left: titleLeft,
-                        top: `${currentTop + indicatorTitleTopOffset}%`,
-                        text: `{name|KD}   {labelK|K(9):} {valK|${lastK}}   {labelD|D(9):} {valD|${lastD}}`,
-                        textStyle: {
-                            rich: {
-                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                labelK: { fontSize: 12, color: LINE_COLORS.K },
-                                valK: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.K, padding: [0, 10, 0, 2] },
-                                labelD: { fontSize: 12, color: LINE_COLORS.D },
-                                valD: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.D, padding: [0, 10, 0, 2] }
-                            }
-                        }
-                    });
-                } else if (indicator === 'rsi') {
-                    const lastRsi5 = rsi5[lastDataIndex]?.toFixed(2) || 'N/A';
-                    const lastRsi10 = rsi10[lastDataIndex]?.toFixed(2) || 'N/A';
-                    titles.push({
-                        left: titleLeft,
-                        top: `${currentTop + indicatorTitleTopOffset}%`,
-                        text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${lastRsi5}}   {labelRSI10|RSI(10T):} {valRSI10|${lastRsi10}}`,
-                        textStyle: {
-                            rich: {
-                                name: { fontSize: 14, fontWeight: 'bold', color: '#333' },
-                                labelRSI5: { fontSize: 12, color: LINE_COLORS.RSI5 },
-                                valRSI5: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI5, padding: [0, 10, 0, 2] },
-                                labelRSI10: { fontSize: 12, color: LINE_COLORS.RSI10 },
-                                valRSI10: { fontSize: 12, fontWeight: 'bold', color: LINE_COLORS.RSI10, padding: [0, 10, 0, 2] }
-                            }
-                        }
-                    });
-                }
-
                 xAxisConfigs.push({ type: 'category', gridIndex: gridIndex, data: resampledData.map(d => d.date), axisLabel: { show: false } });
                 xAxisIndices.push(gridIndex);
 
@@ -3061,16 +2960,15 @@
             });
         }
 
-        function updateTitles(dataIndex) {
+        function generateTitles(dataIndex, kLineHeight) {
             if (dataIndex === null || dataIndex < 0 || dataIndex >= currentChartData.resampledData.length) {
-                return;
+                dataIndex = currentChartData.resampledData.length - 1;
             }
 
             const { resampledData, kdResult, rsi5, rsi10, ma5, ma10, ma20, ma60, macdResult, periodName } = currentChartData;
-            const kLineHeight = myChart.getOption().grid[0].height.replace('%', '');
 
             const candle = resampledData[dataIndex];
-            if (!candle) return;
+            if (!candle) return [];
 
             const ma5Value = ma5[dataIndex]?.toFixed(2) || 'N/A';
             const ma10Value = ma10[dataIndex]?.toFixed(2) || 'N/A';
@@ -3081,21 +2979,19 @@
             const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
             const changeSign = changePercent >= 0 ? '+' : '';
 
-            // --- 響應式設定 ---
             const isMobile = window.innerWidth <= 768;
             const titleLeft = isMobile ? '12%' : '90px';
-            const kLineTitleTop = isMobile ? '10%' : '9%';
+            const kLineTitleTop = isMobile ? '7.5%' : '9%';
             const indicatorTitleTopOffset = isMobile ? -2.5 : -3;
             const kLineNameFontSize = isMobile ? 13 : 14;
             const kLineLabelFontSize = isMobile ? 11 : 12;
             const kLinePadding = isMobile ? [0, 5, 0, 2] : [0, 10, 0, 2];
-            // --- End of 響應式設定 ---
 
             const kLineText = isMobile
                 ? `{name|K線} {label|收:} {val|${candle.close}} {change|${changeSign}${changePercent}%}\n{labelMA5|MA5:} {valMA5|${ma5Value}} {labelMA10|MA10:} {valMA10|${ma10Value}}`
                 : `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${ma5Value}}  {labelMA10|MA10:} {valMA10|${ma10Value}}  {labelMA20|MA20:} {valMA20|${ma20Value}}  {labelMA60|MA60:} {valMA60|${ma60Value}}`;
 
-            const newTitles = [
+            const titles = [
                 { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
                 {
                     left: titleLeft,
@@ -3132,7 +3028,7 @@
                     const difValue = macdResult.dif[dataIndex]?.toFixed(2) || 'N/A';
                     const macdValue = macdResult.macd[dataIndex]?.toFixed(2) || 'N/A';
                     const dmValue = macdResult.dm[dataIndex]?.toFixed(2) || 'N/A';
-                    newTitles.push({
+                    titles.push({
                         left: titleLeft,
                         top: `${currentTitleTop + indicatorTitleTopOffset}%`,
                         text: `{name|MACD}   {labelDIF|DIF:} {valDIF|${difValue}}   {labelMACD|MACD:} {valMACD|${macdValue}}   {label|D-M:} {val|${dmValue}}`,
@@ -3151,7 +3047,7 @@
                 } else if (indicator === 'kd') {
                     const kValue = kdResult.k[dataIndex]?.toFixed(2) || 'N/A';
                     const dValue = kdResult.d[dataIndex]?.toFixed(2) || 'N/A';
-                    newTitles.push({
+                    titles.push({
                         left: titleLeft,
                         top: `${currentTitleTop + indicatorTitleTopOffset}%`,
                         text: `{name|KD}   {labelK|K(9):} {valK|${kValue}}   {labelD|D(9):} {valD|${dValue}}`,
@@ -3168,7 +3064,7 @@
                 } else if (indicator === 'rsi') {
                     const rsi5Value = rsi5[dataIndex]?.toFixed(2) || 'N/A';
                     const rsi10Value = rsi10[dataIndex]?.toFixed(2) || 'N/A';
-                    newTitles.push({
+                    titles.push({
                         left: titleLeft,
                         top: `${currentTitleTop + indicatorTitleTopOffset}%`,
                         text: `{name|RSI}   {labelRSI5|RSI(5T):} {valRSI5|${rsi5Value}}   {labelRSI10|RSI(10T):} {valRSI10|${rsi10Value}}`,
@@ -3186,9 +3082,19 @@
                 currentTitleTop += 11.5 + spacingBetweenCharts;
             });
 
-            myChart.setOption({
-                title: newTitles
-            }, false);
+            return titles;
+        }
+
+        function updateTitles(dataIndex) {
+            const currentOption = myChart.getOption();
+            if (!currentOption || !currentOption.grid || currentOption.grid.length === 0) return;
+            const kLineHeight = parseFloat(currentOption.grid[0].height);
+            const newTitles = generateTitles(dataIndex, kLineHeight);
+            if (newTitles.length > 0) {
+                myChart.setOption({
+                    title: newTitles
+                }, false);
+            }
         }
 
         controlButtons.forEach(button => {
