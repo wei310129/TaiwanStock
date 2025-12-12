@@ -3283,18 +3283,37 @@
                 const totalIndicatorSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
 
                 const dataZoomSectionHeight = 3 + spacingBetweenCharts; // dataZoom 元件高度(3) + 其頂部間距
-                const kLineHeight = 100 - 12 - (indicatorCount * indicatorHeight) - totalIndicatorSpacing - dataZoomSectionHeight;
 
                 // --- 響應式設定 ---
-                const isMobile = window.innerWidth <= 768;
-                const gridLeft = isMobile ? '12%' : '80px';
+                const screenWidth = window.innerWidth;
+                const isMobilePortrait = screenWidth <= 768;
+                const isTabletOrLandscape = screenWidth > 768 && screenWidth <= 1024;
+                const gridLeft = isMobilePortrait ? '12%' : '80px';
+
+                // 根據螢幕模式計算標題需要的額外空間
+                // 手機直式：K線標題本身 2 行 + MA 行數（每 3 個 MA 換一行）
+                // 手機橫式/平板：K線標題本身 1 行 + MA 1 行
+                // 桌面：只有 1 行
+                const enabledMaCount = maConfig.filter(m => m.enabled).length;
+                const mobileExtraLines = Math.ceil(enabledMaCount / 3); // MA 需要的額外行數
+                let titleExtraTop = 0;
+                if (isMobilePortrait) {
+                    // 手機直式：2 行 K 線資訊 + MA 行數，每行約 2.5%
+                    titleExtraTop = (1 + mobileExtraLines) * 2.5;
+                } else if (isTabletOrLandscape) {
+                    // 手機橫式/平板：1 行 MA 值
+                    titleExtraTop = 2.5;
+                }
+
+                const baseKLineTop = 12 + titleExtraTop; // 基準 top 加上標題額外空間
+                const kLineHeight = 100 - baseKLineTop - (indicatorCount * indicatorHeight) - totalIndicatorSpacing - dataZoomSectionHeight;
 
                 // 建立網格配置
-                const grids = [{ left: gridLeft, right: '5%', top: '12%', height: `${kLineHeight}%` }];
+                const grids = [{ left: gridLeft, right: '5%', top: `${baseKLineTop}%`, height: `${kLineHeight}%` }];
 
                 const titles = generateTitles(resampledData.length - 1, kLineHeight);
 
-                let currentTop = 12 + kLineHeight + spacingBetweenCharts; // 當前位置
+                let currentTop = baseKLineTop + kLineHeight + spacingBetweenCharts; // 當前位置
                 let gridIndex = 1;
                 const xAxisConfigs = [{ type: 'category', data: resampledData.map(d => d.date), axisLabel: { show: false } }];
                 const yAxisConfigs = [{
@@ -3858,7 +3877,19 @@
                 ];
 
                 const spacingBetweenCharts = (currentPeriod === 'daily') ? 6 : 8;
-                let currentTitleTop = 12 + parseFloat(kLineHeight) + spacingBetweenCharts;
+
+                // 計算標題額外空間（與 updateChart 中的邏輯保持一致）
+                const enabledMaCount = maConfig.filter(m => m.enabled).length;
+                const mobileExtraLines = Math.ceil(enabledMaCount / 3);
+                let titleExtraTop = 0;
+                if (isMobilePortrait) {
+                    titleExtraTop = (1 + mobileExtraLines) * 2.5;
+                } else if (isTabletOrLandscape) {
+                    titleExtraTop = 2.5;
+                }
+                const baseKLineTop = 12 + titleExtraTop;
+
+                let currentTitleTop = baseKLineTop + parseFloat(kLineHeight) + spacingBetweenCharts;
                 const visibleIndicators = [];
                 if (indicatorVisible.macd) visibleIndicators.push('macd');
                 if (indicatorVisible.kd) visibleIndicators.push('kd');
@@ -4451,15 +4482,18 @@
                 clearCrosshairBtn.click();
             });
 
+            let resizeTimeout;
             window.addEventListener('resize', function () {
                 myChart.resize();
-                // 螢幕旋轉或尺寸變化時，重新計算標題以適應新的螢幕寬度
-                if (currentChartData && currentChartData.resampledData) {
-                    const dataIndex = lastClickedIndex !== null
-                        ? lastClickedIndex
-                        : currentChartData.resampledData.length - 1;
-                    updateTitles(dataIndex);
-                }
+
+                // 使用 debounce 避免頻繁觸發重建
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function () {
+                    // 螢幕旋轉或尺寸變化時，重新建構整個圖表佈局
+                    if (currentChartData && currentChartData.resampledData) {
+                        updateChart(currentPeriod);
+                    }
+                }, 150);
             });
         }
 
