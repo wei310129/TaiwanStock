@@ -1113,6 +1113,30 @@
                 margin-bottom: calc(70px + 12px + env(safe-area-inset-bottom));
             }
         }
+
+        /* 手機橫式時不抬高 */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .sidebar {
+                height: 56px;
+            }
+
+            .sidebar-bookmark {
+                justify-content: center;
+                padding: 8px 4px;
+            }
+
+            .floating-panel.open {
+                bottom: 56px;
+            }
+
+            #chart {
+                margin-bottom: 60px;
+            }
+
+            .card {
+                margin-bottom: 70px;
+            }
+        }
     </style>
 </head>
 
