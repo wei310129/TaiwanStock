@@ -3277,18 +3277,22 @@
                 if (indicatorVisible.rsi) visibleIndicators.push('rsi');
 
                 const indicatorCount = visibleIndicators.length;
-                const indicatorHeight = 11.5; // 每個指標高度百分比
-
-                const spacingBetweenCharts = (periodType === 'daily') ? 6 : 8;
-                const totalIndicatorSpacing = indicatorCount > 0 ? indicatorCount * spacingBetweenCharts : 0;
-
-                const dataZoomSectionHeight = 3 + spacingBetweenCharts; // dataZoom 元件高度(3) + 其頂部間距
 
                 // --- 響應式設定 ---
                 const screenWidth = window.innerWidth;
                 const isMobilePortrait = screenWidth <= 768;
                 const isTabletOrLandscape = screenWidth > 768 && screenWidth <= 1024;
                 const gridLeft = isMobilePortrait ? '12%' : '80px';
+
+                // 手機直式時縮小指標圖高度，確保 K 線圖維持較大的相對高度
+                const indicatorHeight = isMobilePortrait ? 9 : 11.5; // 每個指標高度百分比
+                // 根據週期調整技術線圖間距，手機直式時額外減少以騰出空間給 K 線圖
+                // const basePeriodSpacing = (periodType === 'daily') ? 6 : 8;
+                const baseSpacingBetweenCharts = 7;
+                const spacingBetweenCharts = (periodType === 'daily') ? baseSpacingBetweenCharts : 9;
+                const totalIndicatorSpacing = indicatorCount > 0 ? indicatorCount * baseSpacingBetweenCharts : 0;
+
+                const dataZoomSectionHeight = 3 + baseSpacingBetweenCharts; // dataZoom 元件高度(3) + 其頂部間距
 
                 // 根據螢幕模式計算標題需要的額外空間
                 // 手機直式：K線標題本身 2 行 + MA 行數（每 3 個 MA 換一行）
@@ -3812,8 +3816,8 @@
                 const isDesktop = screenWidth > 1024;
 
                 const titleLeft = isMobilePortrait ? '12%' : '90px';
-                const kLineTitleTop = isMobilePortrait ? '10.5%' : '9%';
-                const indicatorTitleTopOffset = isMobilePortrait ? -2.5 : -3;
+                const kLineTitleTop = isMobilePortrait ? '15%' : '9%';
+                const indicatorTitleTopOffset = isMobilePortrait ? -3.5 : -3;
                 const kLineNameFontSize = isMobilePortrait ? 13 : 14;
                 const kLineLabelFontSize = isMobilePortrait ? 11 : 12;
                 const kLinePadding = isMobilePortrait ? [0, 5, 0, 2] : [0, 10, 0, 2];
@@ -3878,7 +3882,9 @@
                     }
                 ];
 
-                const spacingBetweenCharts = (currentPeriod === 'daily') ? 6 : 8;
+                // 手機直式時縮小指標圖高度（與 updateChart 保持一致）
+                const indicatorHeight = isMobilePortrait ? 9 : 11.5;
+                const spacingBetweenCharts = (currentPeriod === 'daily') ? 7 : 9; // 根據週期調整技術線圖間距
 
                 // 計算標題額外空間（與 updateChart 中的邏輯保持一致）
                 const enabledMaCount = maConfig.filter(m => m.enabled).length;
@@ -3955,7 +3961,7 @@
                             }
                         });
                     }
-                    currentTitleTop += 11.5 + spacingBetweenCharts;
+                    currentTitleTop += indicatorHeight + spacingBetweenCharts;
                 });
 
                 return titles;
