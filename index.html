@@ -658,6 +658,81 @@
             color: var(--text-muted);
         }
 
+        /* 均線設定面板樣式 */
+        .ma-setting-item {
+            padding: 12px !important;
+        }
+
+        .ma-setting-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .ma-label {
+            font-size: 0.95em;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .ma-period-input {
+            width: 60px;
+            padding: 6px 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .ma-period-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .ma-color-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-left: 64px;
+        }
+
+        .ma-color-row label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .ma-color-input {
+            width: 40px;
+            height: 30px;
+            padding: 0;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            background: transparent;
+        }
+
+        .ma-color-input::-webkit-color-swatch-wrapper {
+            padding: 2px;
+        }
+
+        .ma-color-input::-webkit-color-swatch {
+            border-radius: 4px;
+            border: none;
+        }
+
+        .ma-color-preview {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-secondary);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
         .master-toggle {
             background: var(--gradient-danger);
             color: white;
@@ -921,12 +996,16 @@
             <span class="sidebar-bookmark-text">MACD反轉</span>
         </div>
         <div class="sidebar-bookmark" id="highPriceAreaBookmark">
-            <span class="sidebar-bookmark-icon">📈</span>
+            <span class="sidebar-bookmark-icon">🔴</span>
             <span class="sidebar-bookmark-text">高檔區域</span>
         </div>
         <div class="sidebar-bookmark" id="lowPriceAreaBookmark">
-            <span class="sidebar-bookmark-icon">📊</span>
+            <span class="sidebar-bookmark-icon">🟢</span>
             <span class="sidebar-bookmark-text">低檔區域</span>
+        </div>
+        <div class="sidebar-bookmark" id="maSettingsBookmark">
+            <span class="sidebar-bookmark-icon">📈</span>
+            <span class="sidebar-bookmark-text">均線設定</span>
         </div>
     </div>
 
@@ -1257,6 +1336,108 @@
         </div>
     </div>
 
+    <!-- 均線設定浮動控制面板 -->
+    <div class="floating-panel" id="maSettingsPanel">
+        <button class="panel-toggle" id="maSettingsPanelToggle">⚙️</button>
+        <div class="panel-content">
+            <div class="panel-section">
+                <h3>📈 移動平均線設定</h3>
+                <p style="font-size: 0.85em; color: var(--text-muted); margin: 0 0 12px 0;">
+                    自訂每條MA的週期數和顏色
+                </p>
+            </div>
+
+            <!-- MA1 設定 -->
+            <div class="panel-section ma-setting-item">
+                <div class="ma-setting-header">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ma1Enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="ma-label">MA</span>
+                    <input type="number" id="ma1Period" class="ma-period-input" min="1" max="200" value="5">
+                </div>
+                <div class="ma-color-row">
+                    <label>顏色：</label>
+                    <input type="color" id="ma1Color" class="ma-color-input" value="#FFBF00">
+                    <span class="ma-color-preview" id="ma1ColorPreview" style="background-color: #FFBF00;"></span>
+                </div>
+            </div>
+
+            <!-- MA2 設定 -->
+            <div class="panel-section ma-setting-item">
+                <div class="ma-setting-header">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ma2Enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="ma-label">MA</span>
+                    <input type="number" id="ma2Period" class="ma-period-input" min="1" max="200" value="10">
+                </div>
+                <div class="ma-color-row">
+                    <label>顏色：</label>
+                    <input type="color" id="ma2Color" class="ma-color-input" value="#8A2BE2">
+                    <span class="ma-color-preview" id="ma2ColorPreview" style="background-color: #8A2BE2;"></span>
+                </div>
+            </div>
+
+            <!-- MA3 設定 -->
+            <div class="panel-section ma-setting-item">
+                <div class="ma-setting-header">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ma3Enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="ma-label">MA</span>
+                    <input type="number" id="ma3Period" class="ma-period-input" min="1" max="200" value="20">
+                </div>
+                <div class="ma-color-row">
+                    <label>顏色：</label>
+                    <input type="color" id="ma3Color" class="ma-color-input" value="#32CD32">
+                    <span class="ma-color-preview" id="ma3ColorPreview" style="background-color: #32CD32;"></span>
+                </div>
+            </div>
+
+            <!-- MA4 設定 -->
+            <div class="panel-section ma-setting-item">
+                <div class="ma-setting-header">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ma4Enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="ma-label">MA</span>
+                    <input type="number" id="ma4Period" class="ma-period-input" min="1" max="200" value="40">
+                </div>
+                <div class="ma-color-row">
+                    <label>顏色：</label>
+                    <input type="color" id="ma4Color" class="ma-color-input" value="#FF6347">
+                    <span class="ma-color-preview" id="ma4ColorPreview" style="background-color: #FF6347;"></span>
+                </div>
+            </div>
+
+            <!-- MA5 設定 -->
+            <div class="panel-section ma-setting-item">
+                <div class="ma-setting-header">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="ma5Enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="ma-label">MA</span>
+                    <input type="number" id="ma5Period" class="ma-period-input" min="1" max="200" value="60">
+                </div>
+                <div class="ma-color-row">
+                    <label>顏色：</label>
+                    <input type="color" id="ma5Color" class="ma-color-input" value="#FF1493">
+                    <span class="ma-color-preview" id="ma5ColorPreview" style="background-color: #FF1493;"></span>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <button id="applyMaSettings" class="master-toggle active">套用設定</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- 0. 設定 Day.js ---
         dayjs.extend(window.dayjs_plugin_weekOfYear);
@@ -1560,30 +1741,46 @@
             const myChart = echarts.init(chartDom);
             const controlButtons = document.querySelectorAll('.btn');
 
-            const LINE_COLORS = {
-                MA5: '#FFBF00',
-                MA10: '#8A2BE2',
-                MA20: '#32CD32',
-                MA40: '#FF6347',
-                MA60: '#FF1493',
-                DIF: '#DA6EE8',
-                MACD: '#00D5FA',
-                K: '#FF6B6B',
-                D: '#4ECDC4',
-                RSI5: '#FF8C00',
-                RSI10: '#9370DB'
-            };
+            // MA 配置狀態
+            const maConfig = [
+                { enabled: true, period: 5, color: '#FFBF00' },
+                { enabled: true, period: 10, color: '#8A2BE2' },
+                { enabled: true, period: 20, color: '#32CD32' },
+                { enabled: true, period: 40, color: '#FF6347' },
+                { enabled: true, period: 60, color: '#FF1493' }
+            ];
+
+            // 動態生成 LINE_COLORS
+            function getLineColors() {
+                const colors = {
+                    DIF: '#DA6EE8',
+                    MACD: '#00D5FA',
+                    K: '#FF6B6B',
+                    D: '#4ECDC4',
+                    RSI5: '#FF8C00',
+                    RSI10: '#9370DB'
+                };
+                maConfig.forEach((ma, idx) => {
+                    colors[`MA${idx + 1}`] = ma.color;
+                });
+                return colors;
+            }
+
+            let LINE_COLORS = getLineColors();
 
             // 浮動面板控制
             const macdReversalPanel = document.getElementById('macdReversalPanel');
             const highPricePanel = document.getElementById('highPricePanel');
             const lowPricePanel = document.getElementById('lowPricePanel');
+            const maSettingsPanel = document.getElementById('maSettingsPanel');
             const macdReversalPanelToggle = document.getElementById('macdReversalPanelToggle');
             const highPanelToggle = document.getElementById('highPanelToggle');
             const lowPanelToggle = document.getElementById('lowPanelToggle');
+            const maSettingsPanelToggle = document.getElementById('maSettingsPanelToggle');
             const macdReversalBookmark = document.getElementById('macdReversalBookmark');
             const highPriceAreaBookmark = document.getElementById('highPriceAreaBookmark');
             const lowPriceAreaBookmark = document.getElementById('lowPriceAreaBookmark');
+            const maSettingsBookmark = document.getElementById('maSettingsBookmark');
             const sidebar = document.querySelector('.sidebar');
 
             // 關閉所有面板
@@ -1591,10 +1788,12 @@
                 macdReversalPanel.classList.remove('open');
                 highPricePanel.classList.remove('open');
                 lowPricePanel.classList.remove('open');
+                maSettingsPanel.classList.remove('open');
                 sidebar.classList.remove('panel-open');
                 macdReversalBookmark.classList.remove('active');
                 highPriceAreaBookmark.classList.remove('active');
                 lowPriceAreaBookmark.classList.remove('active');
+                maSettingsBookmark.classList.remove('active');
             }
 
             // 切換MACD反轉面板
@@ -1627,6 +1826,17 @@
                     lowPricePanel.classList.add('open');
                     sidebar.classList.add('panel-open');
                     lowPriceAreaBookmark.classList.add('active');
+                }
+            }
+
+            // 切換均線設定面板
+            function toggleMaSettingsPanel() {
+                const wasOpen = maSettingsPanel.classList.contains('open');
+                closeAllPanels();
+                if (!wasOpen) {
+                    maSettingsPanel.classList.add('open');
+                    sidebar.classList.add('panel-open');
+                    maSettingsBookmark.classList.add('active');
                 }
             }
 
@@ -1663,16 +1873,28 @@
                 toggleLowPanel();
             });
 
+            // 綁定均線設定書籤和面板切換按鈕
+            maSettingsPanelToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMaSettingsPanel();
+            });
+
+            maSettingsBookmark.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMaSettingsPanel();
+            });
+
             // 點擊面板外部關閉面板
             document.addEventListener('click', (e) => {
                 const isClickInsideMacdReversalPanel = macdReversalPanel.contains(e.target);
                 const isClickInsideHighPanel = highPricePanel.contains(e.target);
                 const isClickInsideLowPanel = lowPricePanel.contains(e.target);
+                const isClickInsideMaSettingsPanel = maSettingsPanel.contains(e.target);
                 const isClickOnSidebar = sidebar.contains(e.target);
-                const isAnyPanelOpen = macdReversalPanel.classList.contains('open') || highPricePanel.classList.contains('open') || lowPricePanel.classList.contains('open');
+                const isAnyPanelOpen = macdReversalPanel.classList.contains('open') || highPricePanel.classList.contains('open') || lowPricePanel.classList.contains('open') || maSettingsPanel.classList.contains('open');
 
                 // 如果有面板是開啟的，且點擊不在任何面板內，也不在側邊欄上，則關閉所有面板
-                if (isAnyPanelOpen && !isClickInsideMacdReversalPanel && !isClickInsideHighPanel && !isClickInsideLowPanel && !isClickOnSidebar) {
+                if (isAnyPanelOpen && !isClickInsideMacdReversalPanel && !isClickInsideHighPanel && !isClickInsideLowPanel && !isClickInsideMaSettingsPanel && !isClickOnSidebar) {
                     closeAllPanels();
                 }
             });
@@ -1687,6 +1909,10 @@
             });
 
             lowPricePanel.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+
+            maSettingsPanel.addEventListener('click', (e) => {
                 e.stopPropagation();
             });
 
@@ -2135,6 +2361,37 @@
                 macdBuyThresholdRange.value = value;
                 zoneMarkingState.macdBuySell.buyThreshold = value;
                 updateChartMarkingsOnly();
+            });
+
+            // === MA 設定控制 ===
+            // 顏色預覽更新
+            for (let i = 1; i <= 5; i++) {
+                const colorInput = document.getElementById(`ma${i}Color`);
+                const colorPreview = document.getElementById(`ma${i}ColorPreview`);
+                colorInput.addEventListener('input', () => {
+                    colorPreview.style.backgroundColor = colorInput.value;
+                });
+            }
+
+            // 套用設定按鈕
+            const applyMaSettingsBtn = document.getElementById('applyMaSettings');
+            applyMaSettingsBtn.addEventListener('click', () => {
+                // 更新 maConfig
+                for (let i = 1; i <= 5; i++) {
+                    const enabledInput = document.getElementById(`ma${i}Enabled`);
+                    const periodInput = document.getElementById(`ma${i}Period`);
+                    const colorInput = document.getElementById(`ma${i}Color`);
+
+                    maConfig[i - 1].enabled = enabledInput.checked;
+                    maConfig[i - 1].period = parseInt(periodInput.value) || maConfig[i - 1].period;
+                    maConfig[i - 1].color = colorInput.value;
+                }
+
+                // 更新 LINE_COLORS
+                LINE_COLORS = getLineColors();
+
+                // 重新繪製圖表
+                updateChart(currentPeriod);
             });
 
             // 儲存當前圖表數據，供標記更新使用
@@ -2911,11 +3168,11 @@
                 const kdResult = TechUtils.calculateKD(resampledData);
                 const rsi5 = TechUtils.calculateRSI(closePrices, 5);  // 快線 (一週)
                 const rsi10 = TechUtils.calculateRSI(closePrices, 10); // 慢線 (兩週)
-                const ma5 = TechUtils.calculateSMA(closePrices, 5);
-                const ma10 = TechUtils.calculateSMA(closePrices, 10);
-                const ma20 = TechUtils.calculateSMA(closePrices, 20);
-                const ma40 = TechUtils.calculateSMA(closePrices, 40);
-                const ma60 = TechUtils.calculateSMA(closePrices, 60);
+
+                // 動態計算 MA（根據 maConfig）
+                const maData = maConfig.map(config =>
+                    TechUtils.calculateSMA(closePrices, config.period)
+                );
 
                 const periodMap = { 'daily': '日線', 'weekly': '周線', 'bi-weekly': '雙周線', 'tri-weekly': '三周線', 'monthly': '月線' };
                 const periodName = periodMap[periodType];
@@ -2926,11 +3183,8 @@
                     kdResult,
                     rsi5,
                     rsi10,
-                    ma5,
-                    ma10,
-                    ma20,
-                    ma40,
-                    ma60,
+                    maData,
+                    maConfig,
                     macdResult,
                     periodName: periodName
                 };
@@ -3201,21 +3455,30 @@
                             }
                         },
                         z: 12
-                    },
-                    { name: 'MA5', type: 'line', data: ma5, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA5 }, symbol: 'none' },
-                    { name: 'MA10', type: 'line', data: ma10, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA10 }, symbol: 'none' },
-                    { name: 'MA20', type: 'line', data: ma20, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA20 }, symbol: 'none' },
-                    { name: 'MA40', type: 'line', data: ma40, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA40 }, symbol: 'none' },
-                    { name: 'MA60', type: 'line', data: ma60, smooth: true, lineStyle: { width: 1.5, color: LINE_COLORS.MA60 }, symbol: 'none' }
+                    }
                 ];
 
-                const legendData = [
-                    { name: 'MA5', itemStyle: { color: LINE_COLORS.MA5 } },
-                    { name: 'MA10', itemStyle: { color: LINE_COLORS.MA10 } },
-                    { name: 'MA20', itemStyle: { color: LINE_COLORS.MA20 } },
-                    { name: 'MA40', itemStyle: { color: LINE_COLORS.MA40 } },
-                    { name: 'MA60', itemStyle: { color: LINE_COLORS.MA60 } }
-                ];
+                // 動態添加 MA 系列（根據 maConfig）
+                maConfig.forEach((config, idx) => {
+                    if (config.enabled) {
+                        series.push({
+                            name: `MA${config.period}`,
+                            type: 'line',
+                            data: maData[idx],
+                            smooth: true,
+                            lineStyle: { width: 1.5, color: config.color },
+                            symbol: 'none'
+                        });
+                    }
+                });
+
+                // 動態生成 MA 圖例
+                const legendData = maConfig
+                    .filter(config => config.enabled)
+                    .map(config => ({
+                        name: `MA${config.period}`,
+                        itemStyle: { color: config.color }
+                    }));
 
                 // 根據可見性添加指標系列
                 visibleIndicators.forEach((indicator, idx) => {
@@ -3436,15 +3699,18 @@
                     dataIndex = currentChartData.resampledData.length - 1;
                 }
 
-                const { resampledData, kdResult, rsi5, rsi10, ma5, ma10, ma20, ma60, macdResult, periodName } = currentChartData;
+                const { resampledData, kdResult, rsi5, rsi10, maData, maConfig, macdResult, periodName } = currentChartData;
 
                 const candle = resampledData[dataIndex];
                 if (!candle) return [];
 
-                const ma5Value = ma5[dataIndex]?.toFixed(2) || 'N/A';
-                const ma10Value = ma10[dataIndex]?.toFixed(2) || 'N/A';
-                const ma20Value = ma20[dataIndex]?.toFixed(2) || 'N/A';
-                const ma60Value = ma60[dataIndex]?.toFixed(2) || 'N/A';
+                // 動態生成 MA 值
+                const maValues = maData.map((data, idx) => ({
+                    period: maConfig[idx].period,
+                    value: data[dataIndex]?.toFixed(2) || 'N/A',
+                    color: maConfig[idx].color,
+                    enabled: maConfig[idx].enabled
+                }));
 
                 const changePercent = ((candle.close - candle.open) / candle.open * 100).toFixed(2);
                 const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
@@ -3458,9 +3724,30 @@
                 const kLineLabelFontSize = isMobile ? 11 : 12;
                 const kLinePadding = isMobile ? [0, 5, 0, 2] : [0, 10, 0, 2];
 
+                // 動態生成 MA 顯示文字
+                const enabledMaValues = maValues.filter(ma => ma.enabled);
+                const maMobileText = enabledMaValues.slice(0, 2).map((ma, i) =>
+                    `{labelMA${i}|MA${ma.period}:} {valMA${i}|${ma.value}}`
+                ).join(' ');
+                const maDesktopText = enabledMaValues.map((ma, i) =>
+                    `{labelMA${i}|MA${ma.period}:} {valMA${i}|${ma.value}}`
+                ).join('  ');
+
                 const kLineText = isMobile
-                    ? `{name|K線} {label|收:} {val|${candle.close}} {change|${changeSign}${changePercent}%}\n{labelMA5|MA5:} {valMA5|${ma5Value}} {labelMA10|MA10:} {valMA10|${ma10Value}}`
-                    : `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  {labelMA5|MA5:} {valMA5|${ma5Value}}  {labelMA10|MA10:} {valMA10|${ma10Value}}  {labelMA20|MA20:} {valMA20|${ma20Value}}  {labelMA60|MA60:} {valMA60|${ma60Value}}`;
+                    ? `{name|K線} {label|收:} {val|${candle.close}} {change|${changeSign}${changePercent}%}\n${maMobileText}`
+                    : `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  ${maDesktopText}`;
+
+                // 動態生成rich樣式
+                const richStyles = {
+                    name: { fontSize: kLineNameFontSize, fontWeight: 'bold', color: '#333' },
+                    label: { fontSize: kLineLabelFontSize, color: '#555' },
+                    val: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: '#2c3e50', padding: kLinePadding },
+                    change: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: changeColor, padding: kLinePadding }
+                };
+                enabledMaValues.forEach((ma, i) => {
+                    richStyles[`labelMA${i}`] = { fontSize: kLineLabelFontSize, color: ma.color };
+                    richStyles[`valMA${i}`] = { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: ma.color, padding: kLinePadding };
+                });
 
                 const titles = [
                     { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
@@ -3469,20 +3756,7 @@
                         top: kLineTitleTop,
                         text: kLineText,
                         textStyle: {
-                            rich: {
-                                name: { fontSize: kLineNameFontSize, fontWeight: 'bold', color: '#333' },
-                                label: { fontSize: kLineLabelFontSize, color: '#555' },
-                                val: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: '#2c3e50', padding: kLinePadding },
-                                change: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: changeColor, padding: kLinePadding },
-                                labelMA5: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA5 },
-                                valMA5: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA5, padding: kLinePadding },
-                                labelMA10: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA10 },
-                                valMA10: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA10, padding: kLinePadding },
-                                labelMA20: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA20 },
-                                valMA20: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA20, padding: kLinePadding },
-                                labelMA60: { fontSize: kLineLabelFontSize, color: LINE_COLORS.MA60 },
-                                valMA60: { fontSize: kLineLabelFontSize, fontWeight: 'bold', color: LINE_COLORS.MA60, padding: kLinePadding }
-                            }
+                            rich: richStyles
                         }
                     }
                 ];
