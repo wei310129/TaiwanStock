@@ -1002,7 +1002,7 @@
             background: var(--accent-secondary);
         }
 
-        @media (max-width: 768px) {
+        @media (max-width: 500px) {
             body {
                 padding: 12px;
             }
@@ -3425,8 +3425,8 @@
 
                 // --- 響應式設定 ---
                 const screenWidth = window.innerWidth;
-                const isMobilePortrait = screenWidth <= 768;
-                const isTabletOrLandscape = screenWidth > 768 && screenWidth <= 1024;
+                const isMobilePortrait = screenWidth <= 500;
+                const isTabletOrLandscape = screenWidth > 500 && screenWidth <= 1024;
                 const gridLeft = isMobilePortrait ? '12%' : '80px';
 
                 // 手機直式時縮小指標圖高度，確保 K 線圖維持較大的相對高度
@@ -3954,10 +3954,10 @@
                 const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
                 const changeSign = changePercent >= 0 ? '+' : '';
 
-                // 響應式顯示模式：手機直式 (<=768px)、平板/手機橫式 (769-1024px)、桌面 (>1024px)
+                // 響應式顯示模式：手機直式 (<=500px)、平板/手機橫式 (769-1024px)、桌面 (>1024px)
                 const screenWidth = window.innerWidth;
-                const isMobilePortrait = screenWidth <= 768;
-                const isTabletOrLandscape = screenWidth > 768 && screenWidth <= 1024;
+                const isMobilePortrait = screenWidth <= 500;
+                const isTabletOrLandscape = screenWidth > 500 && screenWidth <= 1024;
                 const isDesktop = screenWidth > 1024;
 
                 const titleLeft = isMobilePortrait ? '12%' : '90px';
