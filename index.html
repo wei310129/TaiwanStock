@@ -977,11 +977,79 @@
             }
 
             .sidebar {
-                display: none;
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transform: none;
+                width: 100%;
+                height: 56px;
+                flex-direction: row;
+                display: flex;
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+                border: 1px solid var(--border-color);
+                border-bottom: none;
+                justify-content: space-around;
+                z-index: 1001;
+            }
+
+            .sidebar:hover {
+                width: 100%;
+            }
+
+            .sidebar-bookmark {
+                flex: 1;
+                flex-direction: column;
+                justify-content: center;
+                padding: 8px 4px;
+                border-bottom: none;
+                border-right: 1px solid var(--border-color);
+                text-align: center;
+            }
+
+            .sidebar-bookmark:last-child {
+                border-right: none;
+            }
+
+            .sidebar-bookmark-icon {
+                min-width: auto;
+                font-size: 18px;
+                margin-right: 0;
+                margin-bottom: 2px;
+            }
+
+            .sidebar-bookmark-text {
+                font-size: 10px;
+                opacity: 1;
+                display: block;
+            }
+
+            .sidebar:hover .sidebar-bookmark-text {
+                opacity: 1;
+            }
+
+            .sidebar.panel-open {
+                right: 0;
+            }
+
+            .floating-panel.open {
+                width: 100%;
+                max-width: 100%;
+                border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+                bottom: 56px;
+                top: auto;
+                transform: none;
+                max-height: 60vh;
             }
 
             #chart {
                 height: 600px;
+                margin-bottom: 60px;
+            }
+
+            .card {
+                margin-bottom: 70px;
             }
         }
     </style>
@@ -997,11 +1065,11 @@
         </div>
         <div class="sidebar-bookmark" id="highPriceAreaBookmark">
             <span class="sidebar-bookmark-icon">🔴</span>
-            <span class="sidebar-bookmark-text">高檔區域</span>
+            <span class="sidebar-bookmark-text">高檔標記</span>
         </div>
         <div class="sidebar-bookmark" id="lowPriceAreaBookmark">
             <span class="sidebar-bookmark-icon">🟢</span>
-            <span class="sidebar-bookmark-text">低檔區域</span>
+            <span class="sidebar-bookmark-text">低檔標記</span>
         </div>
         <div class="sidebar-bookmark" id="maSettingsBookmark">
             <span class="sidebar-bookmark-icon">📈</span>
