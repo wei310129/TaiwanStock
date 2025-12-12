@@ -3296,6 +3296,8 @@
                 // 桌面：只有 1 行
                 const enabledMaCount = maConfig.filter(m => m.enabled).length;
                 const mobileExtraLines = Math.ceil(enabledMaCount / 3); // MA 需要的額外行數
+                // 手機直式基礎 top 需要更高以避開上方的技術指標開關
+                const baseMobileTop = isMobilePortrait ? 20 : 12;
                 let titleExtraTop = 0;
                 if (isMobilePortrait) {
                     // 手機直式：2 行 K 線資訊 + MA 行數，每行約 2.5%
@@ -3305,7 +3307,7 @@
                     titleExtraTop = 2.5;
                 }
 
-                const baseKLineTop = 12 + titleExtraTop; // 基準 top 加上標題額外空間
+                const baseKLineTop = baseMobileTop + titleExtraTop; // 基準 top 加上標題額外空間
                 const kLineHeight = 100 - baseKLineTop - (indicatorCount * indicatorHeight) - totalIndicatorSpacing - dataZoomSectionHeight;
 
                 // 建立網格配置
@@ -3887,7 +3889,9 @@
                 } else if (isTabletOrLandscape) {
                     titleExtraTop = 2.5;
                 }
-                const baseKLineTop = 12 + titleExtraTop;
+                // 手機直式基礎 top 需要更高以避開上方的技術指標開關（與 updateChart 保持一致）
+                const baseMobileTop = isMobilePortrait ? 15 : 12;
+                const baseKLineTop = baseMobileTop + titleExtraTop;
 
                 let currentTitleTop = baseKLineTop + parseFloat(kLineHeight) + spacingBetweenCharts;
                 const visibleIndicators = [];
