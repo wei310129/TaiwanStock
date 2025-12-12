@@ -3812,7 +3812,7 @@
                 const isDesktop = screenWidth > 1024;
 
                 const titleLeft = isMobilePortrait ? '12%' : '90px';
-                const kLineTitleTop = isMobilePortrait ? '7.5%' : '9%';
+                const kLineTitleTop = isMobilePortrait ? '10.5%' : '9%';
                 const indicatorTitleTopOffset = isMobilePortrait ? -2.5 : -3;
                 const kLineNameFontSize = isMobilePortrait ? 13 : 14;
                 const kLineLabelFontSize = isMobilePortrait ? 11 : 12;
@@ -3890,7 +3890,7 @@
                     titleExtraTop = 2.5;
                 }
                 // 手機直式基礎 top 需要更高以避開上方的技術指標開關（與 updateChart 保持一致）
-                const baseMobileTop = isMobilePortrait ? 15 : 12;
+                const baseMobileTop = isMobilePortrait ? 20 : 12;
                 const baseKLineTop = baseMobileTop + titleExtraTop;
 
                 let currentTitleTop = baseKLineTop + parseFloat(kLineHeight) + spacingBetweenCharts;
