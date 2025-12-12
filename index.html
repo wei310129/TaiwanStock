@@ -3784,26 +3784,54 @@
                 const changeColor = changePercent >= 0 ? '#e74c3c' : '#27ae60';
                 const changeSign = changePercent >= 0 ? '+' : '';
 
-                const isMobile = window.innerWidth <= 768;
-                const titleLeft = isMobile ? '12%' : '90px';
-                const kLineTitleTop = isMobile ? '7.5%' : '9%';
-                const indicatorTitleTopOffset = isMobile ? -2.5 : -3;
-                const kLineNameFontSize = isMobile ? 13 : 14;
-                const kLineLabelFontSize = isMobile ? 11 : 12;
-                const kLinePadding = isMobile ? [0, 5, 0, 2] : [0, 10, 0, 2];
+                // 響應式顯示模式：手機直式 (<=768px)、平板/手機橫式 (769-1024px)、桌面 (>1024px)
+                const screenWidth = window.innerWidth;
+                const isMobilePortrait = screenWidth <= 768;
+                const isTabletOrLandscape = screenWidth > 768 && screenWidth <= 1024;
+                const isDesktop = screenWidth > 1024;
+
+                const titleLeft = isMobilePortrait ? '12%' : '90px';
+                const kLineTitleTop = isMobilePortrait ? '7.5%' : '9%';
+                const indicatorTitleTopOffset = isMobilePortrait ? -2.5 : -3;
+                const kLineNameFontSize = isMobilePortrait ? 13 : 14;
+                const kLineLabelFontSize = isMobilePortrait ? 11 : 12;
+                const kLinePadding = isMobilePortrait ? [0, 5, 0, 2] : [0, 10, 0, 2];
 
                 // 動態生成 MA 顯示文字
                 const enabledMaValues = maValues.filter(ma => ma.enabled);
-                const maMobileText = enabledMaValues.slice(0, 2).map((ma, i) =>
-                    `{labelMA${i}|MA${ma.period}:} {valMA${i}|${ma.value}}`
-                ).join(' ');
+
+                // 手機直式：將 MA 值分成多行，每行最多 3 個
+                const maMobileLines = [];
+                for (let i = 0; i < enabledMaValues.length; i += 3) {
+                    const lineItems = enabledMaValues.slice(i, i + 3).map((ma, idx) => {
+                        const globalIdx = i + idx;
+                        return `{labelMA${globalIdx}|MA${ma.period}:}{valMA${globalIdx}|${ma.value}}`;
+                    });
+                    maMobileLines.push(lineItems.join(' '));
+                }
+                const maMobileText = maMobileLines.join('\n');
+
+                // 桌面/平板模式的 MA 文字（全部在同一行）
                 const maDesktopText = enabledMaValues.map((ma, i) =>
                     `{labelMA${i}|MA${ma.period}:} {valMA${i}|${ma.value}}`
                 ).join('  ');
 
-                const kLineText = isMobile
-                    ? `{name|K線} {label|收:} {val|${candle.close}} {change|${changeSign}${changePercent}%}\n${maMobileText}`
-                    : `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  ${maDesktopText}`;
+                // 統一 K 線文字內容 - 根據螢幕寬度動態調整換行
+                // 手機直式需要分行，否則後面的內容會被截斷
+                let kLineText;
+                if (isMobilePortrait) {
+                    // 手機直式：分行顯示確保完整資訊可見
+                    // 第一行: K線 開 高 低
+                    // 第二行: 收 漲跌幅
+                    // 第三行起: MA 值
+                    kLineText = `{name|K線}  {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}\n{label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}\n${maMobileText}`;
+                } else if (isTabletOrLandscape) {
+                    // 手機橫式/平板：K線資訊一行，MA 值換行
+                    kLineText = `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}\n${maDesktopText}`;
+                } else {
+                    // 桌面：全部在同一行
+                    kLineText = `{name|K線}   {label|開:} {val|${candle.open}}  {label|高:} {val|${candle.high}}  {label|低:} {val|${candle.low}}  {label|收:} {val|${candle.close}}  {label|漲跌幅:} {change|${changeSign}${changePercent}%}  ${maDesktopText}`;
+                }
 
                 // 動態生成rich樣式
                 const richStyles = {
@@ -4423,7 +4451,16 @@
                 clearCrosshairBtn.click();
             });
 
-            window.addEventListener('resize', myChart.resize);
+            window.addEventListener('resize', function () {
+                myChart.resize();
+                // 螢幕旋轉或尺寸變化時，重新計算標題以適應新的螢幕寬度
+                if (currentChartData && currentChartData.resampledData) {
+                    const dataIndex = lastClickedIndex !== null
+                        ? lastClickedIndex
+                        : currentChartData.resampledData.length - 1;
+                    updateTitles(dataIndex);
+                }
+            });
         }
 
         initApp();
