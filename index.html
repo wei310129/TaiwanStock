@@ -4641,13 +4641,17 @@
             let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
 
             window.addEventListener('resize', function () {
-                const chartElement = document.getElementById('chart');
                 const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
                 const isMobileDevice = window.innerWidth <= 1024 || window.innerHeight <= 1024;
 
-                // 手機設備螢幕方向變化時，自動設定寬度為 100%
+                // 手機設備螢幕方向變化時，強制 viewport 重新計算
                 if (isMobileDevice && currentOrientation !== lastOrientation) {
-                    chartElement.style.width = '100%';
+                    // 重設 viewport 讓頁面寬度自動對齊螢幕
+                    const viewportMeta = document.querySelector('meta[name="viewport"]');
+                    viewportMeta.content = 'width=device-width, initial-scale=1.0';
+                    // 強制重繪
+                    document.body.style.width = '100vw';
+                    document.body.style.overflowX = 'hidden';
                     lastOrientation = currentOrientation;
                 }
 
