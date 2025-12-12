@@ -4638,7 +4638,19 @@
             });
 
             let resizeTimeout;
+            let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+
             window.addEventListener('resize', function () {
+                const chartElement = document.getElementById('chart');
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+                const isMobileDevice = window.innerWidth <= 1024 || window.innerHeight <= 1024;
+
+                // 手機設備螢幕方向變化時，自動設定寬度為 100%
+                if (isMobileDevice && currentOrientation !== lastOrientation) {
+                    chartElement.style.width = '100%';
+                    lastOrientation = currentOrientation;
+                }
+
                 myChart.resize();
 
                 // 使用 debounce 避免頻繁觸發重建
