@@ -661,7 +661,7 @@
         <div class="panel-section" data-indicator="kd" id="highKdSection">
             <h3>📊 KD 指標設定</h3>
             <div class="range-input">
-                <label>超買區域 (高於):</label>
+                <label>超買區域 (K值高於):</label>
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
@@ -760,7 +760,7 @@
         <div class="panel-section" data-indicator="kd">
             <h3>📊 KD 指標設定</h3>
             <div class="range-input">
-                <label>超賣區域 (低於):</label>
+                <label>超賣區域 (K值低於):</label>
                 <div class="range-control">
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
@@ -1786,7 +1786,7 @@
                                        zoneMarkingState.composite.useRSI ||
                                        zoneMarkingState.composite.useMACD;
 
-                // KD 低檔區域標記（K 和 D 都低於閾值才標記）
+                // KD 低檔區域標記（K值低於閾值才標記）
                 if (indicatorVisible.kd && zoneMarkingState.composite.useKD) {
                 let inZone = false;
                 let zoneStart = null;
@@ -1797,8 +1797,8 @@
                     const dValue = kdResult.d[i];
 
                     if (kValue !== null && dValue !== null) {
-                        // K 和 D 都必須低於閾值（交集）
-                        const isLow = kValue < zoneMarkingState.kd.threshold && dValue < zoneMarkingState.kd.threshold;
+                        // K值低於閾值
+                        const isLow = kValue < zoneMarkingState.kd.threshold;
 
                         if (isLow && !inZone) {
                             inZone = true;
@@ -1955,12 +1955,11 @@
                 for (let i = 0; i < resampledData.length; i++) {
                     let allConditionsMet = true;
 
-                    // 檢查 KD 條件（K 和 D 都必須低於閾值）
+                    // 檢查 KD 條件（K值必須低於閾值）
                     if (zoneMarkingState.composite.useKD) {
                         const kValue = kdResult.k[i];
                         const dValue = kdResult.d[i];
-                        if (kValue === null || dValue === null ||
-                            kValue >= zoneMarkingState.kd.threshold || dValue >= zoneMarkingState.kd.threshold) {
+                        if (kValue === null || kValue >= zoneMarkingState.kd.threshold) {
                             allConditionsMet = false;
                         }
                     }
@@ -2015,9 +2014,7 @@
                         const macdValue = macdResult.dif[zoneEndIndex];
 
                         const kdOK = (!zoneMarkingState.composite.useKD) ||
-                                     (kValue !== null && dValue !== null &&
-                                      kValue < zoneMarkingState.kd.threshold &&
-                                      dValue < zoneMarkingState.kd.threshold);
+                                     (kValue !== null && kValue < zoneMarkingState.kd.threshold);
                         const rsiOK = (!zoneMarkingState.composite.useRSI) ||
                                       (rsiValue !== null && rsiValue < zoneMarkingState.rsi.threshold);
                         const macdOK = (!zoneMarkingState.composite.useMACD) ||
@@ -2075,7 +2072,7 @@
                                            zoneMarkingState.highComposite.useRSI ||
                                            zoneMarkingState.highComposite.useMACD;
 
-                // KD 高檔區域標記（K 和 D 都高於閾值才標記）
+                // KD 高檔區域標記（K值高於閾值才標記）
                 if (indicatorVisible.kd && zoneMarkingState.highComposite.useKD) {
                     let inZone = false;
                     let zoneStart = null;
@@ -2086,7 +2083,7 @@
                         const dValue = kdResult.d[i];
 
                         if (kValue !== null && dValue !== null) {
-                            const isHigh = kValue > zoneMarkingState.highKd.threshold && dValue > zoneMarkingState.highKd.threshold;
+                            const isHigh = kValue > zoneMarkingState.highKd.threshold;
 
                             if (isHigh && !inZone) {
                                 inZone = true;
@@ -2238,8 +2235,7 @@
                         if (zoneMarkingState.highComposite.useKD) {
                             const kValue = kdResult.k[i];
                             const dValue = kdResult.d[i];
-                            if (kValue === null || dValue === null ||
-                                kValue <= zoneMarkingState.highKd.threshold || dValue <= zoneMarkingState.highKd.threshold) {
+                            if (kValue === null || kValue <= zoneMarkingState.highKd.threshold) {
                                 allConditionsMet = false;
                             }
                         }
@@ -2289,9 +2285,7 @@
                                 const macdValue = macdResult.dif[zoneEndIndex];
 
                                 const kdOK = (!zoneMarkingState.highComposite.useKD) ||
-                                             (kValue !== null && dValue !== null &&
-                                              kValue > zoneMarkingState.highKd.threshold &&
-                                              dValue > zoneMarkingState.highKd.threshold);
+                                             (kValue !== null && kValue > zoneMarkingState.highKd.threshold);
                                 const rsiOK = (!zoneMarkingState.highComposite.useRSI) ||
                                               (rsiValue !== null && rsiValue > zoneMarkingState.highRsi.threshold);
                                 const macdOK = (!zoneMarkingState.highComposite.useMACD) ||
