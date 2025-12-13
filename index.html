@@ -1207,6 +1207,123 @@
                 margin-bottom: 12px;
             }
         }
+
+        /* ===== 股票搜尋樣式 ===== */
+        .stock-search-container {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+
+        .stock-search-input {
+            width: 100%;
+            padding: 10px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.9em;
+            transition: all var(--transition-normal);
+        }
+
+        .stock-search-input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .stock-search-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .stock-search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            max-height: 300px;
+            overflow-y: auto;
+            z-index: 1002;
+            margin-top: 4px;
+        }
+
+        .stock-search-results.hidden {
+            display: none;
+        }
+
+        .stock-search-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: background var(--transition-fast);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stock-search-item:last-child {
+            border-bottom: none;
+        }
+
+        .stock-search-item:hover {
+            background: var(--bg-hover);
+        }
+
+        .stock-search-item.active {
+            background: rgba(59, 130, 246, 0.15);
+        }
+
+        .stock-search-item .stock-id {
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-right: 8px;
+        }
+
+        .stock-search-item .stock-name {
+            color: var(--text-primary);
+        }
+
+        .stock-search-item .stock-type {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            background: rgba(100, 116, 139, 0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .stock-search-loading {
+            padding: 16px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .stock-search-empty {
+            padding: 16px;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .current-stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: var(--radius-md);
+            color: var(--accent-primary);
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .current-stock-badge .stock-id {
+            font-weight: 700;
+        }
     </style>
 </head>
 
@@ -1241,6 +1358,11 @@
         </h2>
         <div class="status" id="status">系統狀態：初始化...</div>
         <div class="controls">
+            <div class="stock-search-container">
+                <input type="text" id="stockSearchInput" class="stock-search-input" placeholder="🔍 搜尋股票代號或名稱..."
+                    autocomplete="off">
+                <div id="stockSearchResults" class="stock-search-results hidden"></div>
+            </div>
             <button class="btn active" data-period="daily">日線</button>
             <button class="btn" data-period="weekly">周線</button>
             <button class="btn" data-period="bi-weekly">雙周線</button>
@@ -1958,6 +2080,73 @@
                         values: [open, close, low, high]
                     };
                 });
+            },
+
+            // 取得所有股票清單
+            fetchStockList: async () => {
+                const API_URL = 'https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockInfo';
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result.data && result.data.length > 0) {
+                        // 過濾出有效的股票（排除無效的資料）
+                        const validStocks = result.data.filter(item =>
+                            item.stock_id &&
+                            item.stock_name &&
+                            item.stock_id.length <= 6 // 排除過長的代號
+                        );
+                        // 加入大盤選項
+                        return [
+                            { stock_id: 'TAIEX', stock_name: '加權指數', type: '指數' },
+                            ...validStocks.map(item => ({
+                                stock_id: item.stock_id,
+                                stock_name: item.stock_name,
+                                type: item.type || '股票'
+                            }))
+                        ];
+                    } else {
+                        throw new Error('No stock list received from API');
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch stock list:", error);
+                    // 回傳預設大盤選項
+                    return [{ stock_id: 'TAIEX', stock_name: '加權指數', type: '指數' }];
+                }
+            },
+
+            // 取得個股歷史資料
+            fetchStockData: async (stockId) => {
+                // 如果是大盤，使用原本的 API
+                if (stockId === 'TAIEX') {
+                    return DataService.fetchRealData();
+                }
+
+                const API_URL = `https://api.finmindtrade.com/api/v4/data?dataset=TaiwanStockPrice&data_id=${stockId}&start_date=1997-01-01`;
+                try {
+                    const response = await fetch(API_URL);
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status}`);
+                    }
+                    const result = await response.json();
+                    if (result.data && result.data.length > 0) {
+                        return result.data.map(item => ({
+                            date: item.date,
+                            open: item.open,
+                            high: item.max,
+                            low: item.min,
+                            close: item.close,
+                            values: [item.open, item.close, item.min, item.max]
+                        }));
+                    } else {
+                        throw new Error('No data received from API');
+                    }
+                } catch (error) {
+                    console.error(`Failed to fetch stock data for ${stockId}:`, error);
+                    return [];
+                }
             }
         };
 
@@ -1968,6 +2157,13 @@
             const chartDom = document.getElementById('chart');
             const myChart = echarts.init(chartDom);
             const controlButtons = document.querySelectorAll('.btn');
+
+            // 股票搜尋相關
+            const stockSearchInput = document.getElementById('stockSearchInput');
+            const stockSearchResults = document.getElementById('stockSearchResults');
+            let allStocks = []; // 所有股票清單
+            let currentStock = { id: 'TAIEX', name: '加權指數' }; // 當前選中的股票
+            let searchDebounceTimer = null;
 
             // MA 配置狀態
             const maConfig = [
@@ -2178,7 +2374,7 @@
             statusEl.innerHTML = `系統狀態：<span style="color: #3498db;">正在從 FinMind API 獲取真實台股加權指數歷史資料...</span>`;
 
             console.time("FetchRealData");
-            const dailyData = await DataService.fetchRealData();
+            let dailyData = await DataService.fetchRealData();
             console.timeEnd("FetchRealData");
 
             if (dailyData.length === 0) {
@@ -2187,6 +2383,141 @@
             }
 
             statusEl.innerHTML = `系統狀態：真實資料載入成功，請選擇時間週期。`;
+
+            // 載入股票清單（背景執行，不阻塞主要載入流程）
+            DataService.fetchStockList().then(stocks => {
+                allStocks = stocks;
+                console.log(`✅ 已載入 ${allStocks.length} 檔股票清單`);
+            });
+
+            // 搜尋股票過濾邏輯
+            function filterStocks(query) {
+                if (!query || query.trim() === '') {
+                    return [];
+                }
+                const lowerQuery = query.toLowerCase().trim();
+                return allStocks.filter(stock =>
+                    stock.stock_id.toLowerCase().includes(lowerQuery) ||
+                    stock.stock_name.toLowerCase().includes(lowerQuery)
+                ).slice(0, 10); // 最多顯示 10 筆
+            }
+
+            // 更新搜尋結果顯示
+            function updateSearchResults(results) {
+                if (results.length === 0) {
+                    stockSearchResults.innerHTML = '<div class="stock-search-empty">找不到符合的股票</div>';
+                    stockSearchResults.classList.remove('hidden');
+                    return;
+                }
+
+                stockSearchResults.innerHTML = results.map(stock => `
+                    <div class="stock-search-item" data-stock-id="${stock.stock_id}" data-stock-name="${stock.stock_name}">
+                        <div>
+                            <span class="stock-id">${stock.stock_id}</span>
+                            <span class="stock-name">${stock.stock_name}</span>
+                        </div>
+                        <span class="stock-type">${stock.type || '股票'}</span>
+                    </div>
+                `).join('');
+                stockSearchResults.classList.remove('hidden');
+
+                // 綁定點擊事件
+                stockSearchResults.querySelectorAll('.stock-search-item').forEach(item => {
+                    item.addEventListener('click', async () => {
+                        const stockId = item.dataset.stockId;
+                        const stockName = item.dataset.stockName;
+                        await switchStock(stockId, stockName);
+                    });
+                });
+            }
+
+            // 切換股票
+            async function switchStock(stockId, stockName) {
+                if (stockId === currentStock.id) {
+                    stockSearchResults.classList.add('hidden');
+                    stockSearchInput.value = '';
+                    return;
+                }
+
+                // 更新搜尋框和隱藏結果
+                stockSearchInput.value = '';
+                stockSearchResults.classList.add('hidden');
+
+                // 顯示載入狀態
+                statusEl.innerHTML = `系統狀態：<span style="color: #3498db;">正在載入 ${stockName} (${stockId}) 的歷史資料...</span>`;
+                chartTitleEl.innerHTML = `
+                    <span>📈 ${stockName} (${stockId})</span>
+                    <span class="badge">Loading...</span>
+                    <span style="color: var(--text-muted); font-size: 0.5em; font-weight: normal;">建議使用電腦版以獲得最佳體驗</span>
+                `;
+
+                // 取得新股票資料
+                console.time(`FetchStockData-${stockId}`);
+                const newData = await DataService.fetchStockData(stockId);
+                console.timeEnd(`FetchStockData-${stockId}`);
+
+                if (newData.length === 0) {
+                    statusEl.innerHTML = `系統狀態：<span style="color: red;">獲取 ${stockName} 的資料失敗，請稍後再試。</span>`;
+                    chartTitleEl.innerHTML = `
+                        <span>📈 ${currentStock.name} (${currentStock.id})</span>
+                        <span class="badge">Real Data</span>
+                        <span style="color: var(--text-muted); font-size: 0.5em; font-weight: normal;">建議使用電腦版以獲得最佳體驗</span>
+                    `;
+                    return;
+                }
+
+                // 更新當前股票和資料
+                currentStock = { id: stockId, name: stockName };
+                dailyData = newData;
+
+                // 更新標題
+                chartTitleEl.innerHTML = `
+                    <span>📈 ${stockName} (${stockId})</span>
+                    <span class="badge">Real Data</span>
+                    <span style="color: var(--text-muted); font-size: 0.5em; font-weight: normal;">建議使用電腦版以獲得最佳體驗</span>
+                `;
+
+                // 重新渲染圖表
+                updateChart(currentPeriod);
+            }
+
+            // 搜尋框事件
+            stockSearchInput.addEventListener('input', () => {
+                clearTimeout(searchDebounceTimer);
+                const query = stockSearchInput.value;
+
+                if (!query || query.trim() === '') {
+                    stockSearchResults.classList.add('hidden');
+                    return;
+                }
+
+                // Debounce 搜尋
+                searchDebounceTimer = setTimeout(() => {
+                    if (allStocks.length === 0) {
+                        stockSearchResults.innerHTML = '<div class="stock-search-loading">載入股票清單中...</div>';
+                        stockSearchResults.classList.remove('hidden');
+                        return;
+                    }
+                    const results = filterStocks(query);
+                    updateSearchResults(results);
+                }, 200);
+            });
+
+            // 點擊外部時隱藏搜尋結果
+            document.addEventListener('click', (e) => {
+                if (!stockSearchInput.contains(e.target) && !stockSearchResults.contains(e.target)) {
+                    stockSearchResults.classList.add('hidden');
+                }
+            });
+
+            // 搜尋框獲得焦點時，若有查詢文字則顯示結果
+            stockSearchInput.addEventListener('focus', () => {
+                const query = stockSearchInput.value;
+                if (query && query.trim() !== '' && allStocks.length > 0) {
+                    const results = filterStocks(query);
+                    updateSearchResults(results);
+                }
+            });
 
             let currentPeriod = 'daily';
             let lastClickedIndex = null; // 用於追蹤點擊的K棒，實現十字線切換
@@ -3423,7 +3754,7 @@
                 console.log('✅ markAreas.highPostZoneMarkers:', markAreas.highPostZoneMarkers);
 
                 chartTitleEl.innerHTML = `
-                    <span>📈 台灣加權指數歷史回測</span>
+                    <span>📈 ${currentStock.name} (${currentStock.id})</span>
                     <span class="badge">Real Data</span>
                     <span style="color: var(--text-muted); font-size: 0.5em; font-weight: normal;">建議使用電腦版以獲得最佳體驗</span>
                 `;
@@ -4035,7 +4366,7 @@
                 });
 
                 const titles = [
-                    { text: `台灣加權指數 (${periodName})`, left: 'center', top: 0 },
+                    { text: `${currentStock.name} (${periodName})`, left: 'center', top: 0 },
                     {
                         left: titleLeft,
                         top: kLineTitleTop,
