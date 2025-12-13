@@ -4647,33 +4647,20 @@
             });
 
             let resizeTimeout;
-            let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
 
             window.addEventListener('resize', function () {
-                const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-                const isMobileDevice = window.innerWidth <= 1024 || window.innerHeight <= 1024;
-
-                // 手機設備螢幕方向變化時，強制 viewport 重新計算
-                if (isMobileDevice && currentOrientation !== lastOrientation) {
-                    // 重設 viewport 讓頁面寬度自動對齊螢幕
-                    const viewportMeta = document.querySelector('meta[name="viewport"]');
-                    viewportMeta.content = 'width=device-width, initial-scale=1.0';
-                    // 強制重繪
-                    document.body.style.width = '100vw';
-                    document.body.style.overflowX = 'hidden';
-                    lastOrientation = currentOrientation;
-                }
-
+                // 瀏覽器會根據 viewport meta 標籤自動處理旋轉時的寬度適應。
+                // 我們只需要確保 ECharts 圖表也跟著調整大小，並在延遲後重建佈局以適應新的尺寸。
                 myChart.resize();
 
-                // 使用 debounce 避免頻繁觸發重建
+                // 使用 debounce 避免在尺寸變化過程中頻繁重建圖表，提升效能。
                 clearTimeout(resizeTimeout);
                 resizeTimeout = setTimeout(function () {
-                    // 螢幕旋轉或尺寸變化時，重新建構整個圖表佈局
+                    // 螢幕尺寸穩定後，重新計算並繪製整個圖表佈局
                     if (currentChartData && currentChartData.resampledData) {
                         updateChart(currentPeriod);
                     }
-                }, 150);
+                }, 250); // 稍微增加延遲，讓旋轉動畫更流暢
             });
         }
 
