@@ -1393,7 +1393,7 @@
                 推薦配置：
                 <select id="configDropdown" class="config-dropdown">
                     <option value="">-- 請選擇配置 --</option>
-                    <option value="easyMonthly">輕鬆月放</option>
+                    <option value="easyMonthly">輕鬆月放（建議用於加權指數）</option>
                 </select>
             </label>
             <div id="configNotes" class="config-notes hidden">
@@ -3760,7 +3760,7 @@
                 `;
 
                 statusEl.innerHTML = `
-                統計範圍：<b>${dailyData[0].date}</b> 至 <b>${dailyData[dailyData.length - 1].date}</b><br>
+                統計範圍：<b>${dailyData[0].date}</b> 至 <b>${dailyData[dailyData.length - 1].date}</b>
                 原始日K：${dailyData.length.toLocaleString()} 筆 |
                 聚合${periodName}：${resampledData.length.toLocaleString()} 筆
             `;
@@ -4541,7 +4541,7 @@
                     name: '輕鬆月放',
                     period: 'monthly',
                     notes: [
-                        '原則上在綠色點出現時買進、紫色點出現時賣出',
+                        '原則上在綠色點出現時買進、紫色點出現時賣出（建議用於加權指數）',
                         '若綠色點跌破盤整也要自行賣出',
                         '若想最大化收益，可從自行預測綠點的出現來提早買在谷底'
                     ],
