@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>台灣加權指數歷史回測(Beta 版)</title>
+    <title>台灣加權指數歷史回測</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/weekOfYear.js"></script>
@@ -200,7 +200,8 @@
 
         .card {
             width: 100%;
-            margin: 0 auto; /* 自動置中 */
+            margin: 0 auto;
+            /* 自動置中 */
             background: var(--bg-card);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -226,7 +227,7 @@
 
         h2 {
             margin-top: 0;
-            margin-bottom: 24px;
+            margin-bottom: 10px;
             color: var(--text-primary);
             font-size: 1.75rem;
             font-weight: 700;
@@ -258,7 +259,7 @@
         }
 
         .status {
-            margin-bottom: 20px;
+            margin-bottom: 10px;
             color: var(--text-secondary);
             font-size: 0.9em;
             font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
@@ -312,7 +313,7 @@
         }
 
         .controls {
-            margin-bottom: 24px;
+            margin-bottom: 10px;
             display: flex;
             flex-wrap: wrap;
             align-items: center;
@@ -1232,7 +1233,13 @@
     </div>
 
     <div class="card">
-        <h2 id="chart-title">📈 台灣加權指數歷史回測(Beta 版) <span class="badge">Real Data</span></h2>
+        <h2 id="chart-title"
+            style="display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: baseline; gap: 8px;">
+            <span>📈 台灣加權指數歷史回測</span>
+            <span class="badge">Real Data</span>
+            <span style="color: var(--text-muted); font-size: 0.5em; font-weight: normal;">建議使用電腦版以獲得最佳體驗</span>
+        </h2>
+        <div class="status" id="status">系統狀態：初始化...</div>
         <div class="controls">
             <button class="btn active" data-period="daily">日線</button>
             <button class="btn" data-period="weekly">周線</button>
@@ -1272,7 +1279,6 @@
                 <ol id="configNotesList"></ol>
             </div>
         </div>
-        <div class="status" id="status">系統狀態：初始化...</div>
         <div id="chart"></div>
     </div>
 
@@ -3416,7 +3422,11 @@
                 console.log('✅ markAreas.postZoneMarkers:', markAreas.postZoneMarkers);
                 console.log('✅ markAreas.highPostZoneMarkers:', markAreas.highPostZoneMarkers);
 
-                chartTitleEl.innerHTML = `📈 台灣加權指數歷史回測 (Beta 版) <span class="badge">Real Data</span>`;
+                chartTitleEl.innerHTML = `
+                    <span>📈 台灣加權指數歷史回測</span>
+                    <span class="badge">Real Data</span>
+                    <span style="color: var(--text-muted); font-size: 0.5em; font-weight: normal;">建議使用電腦版以獲得最佳體驗</span>
+                `;
 
                 statusEl.innerHTML = `
                 統計範圍：<b>${dailyData[0].date}</b> 至 <b>${dailyData[dailyData.length - 1].date}</b><br>
